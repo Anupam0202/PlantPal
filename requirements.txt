@@ -1,7 +1,0 @@
-# This file lists the JavaScript libraries loaded via CDN through the importmap in index.html.
-# For a typical Node.js/npm project, these would be managed in package.json.
-
-react@^19.1.0
-react-dom@^19.1.0 (specifically react-dom/client)
-@google/genai@^1.2.0
-xlsx@0.18.5
