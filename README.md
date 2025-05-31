@@ -35,45 +35,6 @@ PlantPal is an AI-powered urban sustainability platform designed to assist city 
 *   **Excel Export:** SheetJS (xlsx)
 *   **Build/Serving:** Served as static files with ES Modules via import maps.
 
-## Prerequisites
-
-*   A modern web browser (e.g., Chrome, Firefox, Safari, Edge).
-*   A valid Gemini API Key.
-
-## Getting Started
-
-### 1. API Key Configuration (Administrator/Developer Task)
-
-PlantPal requires a Google Gemini API key to function. This key **must** be configured as an environment variable named `API_KEY` by the administrator or developer *before* the application is built or served.
-
-**The application code (`services/geminiService.ts`) is designed to read this key directly from `process.env.API_KEY`. Users of the application do not (and cannot) enter the API key through the UI.**
-
-If you are developing or deploying this application, ensure that the environment where the application's JavaScript is processed (e.g., during a build step or on a server that pre-processes JS) has access to this `API_KEY`. For simple static serving without a build process that injects environment variables, you might need to manually replace `process.env.API_KEY` in `geminiService.ts` with your actual key (this is generally **not recommended for production** due to security concerns but might be necessary for local testing if no build process is used).
-
-Example (conceptual, how `process.env.API_KEY` is used):
-```javascript
-// In services/geminiService.ts
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-```
-
-### 2. Serving the Application
-
-Since this project is set up with ES Modules and `importmap` in `index.html`, you can serve it using any simple HTTP server.
-
-1.  **Clone/Download:** Get the project files (`index.html`, `index.tsx`, `App.tsx`, `components/`, `services/`, `types.ts`, `constants.ts`).
-2.  **Navigate to Project Directory:** Open your terminal or command prompt and go to the root directory of the project.
-3.  **Start an HTTP Server:**
-    *   If you have Node.js installed, you can use `npx serve`:
-        ```bash
-        npx serve
-        ```
-    *   If you have Python installed:
-        ```bash
-        python -m http.server
-        ```
-    *   Or use any other static file server.
-4.  **Access in Browser:** Open your web browser and navigate to the address provided by the server (e.g., `http://localhost:3000` or `http://localhost:8000`).
-
 ## How to Use PlantPal
 
 1.  **Initialization:** The app will first validate the pre-configured Gemini API key.
