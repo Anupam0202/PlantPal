@@ -1,3 +1,5 @@
+<img width="854" height="866" alt="Screenshot 2025-08-12 004422" src="https://github.com/user-attachments/assets/fdd7ea88-5db7-480d-9dae-c2016f091929" />
+
 
 # PlantPal: Green Urban Planning Assistant
 
