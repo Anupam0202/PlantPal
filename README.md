@@ -37,16 +37,15 @@ PlantPal is an AI-powered urban sustainability platform designed to assist city 
 
 ## How to Use PlantPal
 
-1.  **Initialization:** The app will first validate the pre-configured Gemini API key.
-2.  **Step 1: Location & Environment**
+1.  **Step 1: Location & Environment**
     *   **Use My Current Location:** Click this button and grant location permissions to automatically fetch your coordinates and local weather data.
     *   **Or Enter Manually:** Provide a location name (optional), latitude, and longitude.
     *   Click "Set Location & Continue".
-3.  **Step 2: Your Preferences**
+2.  **Step 2: Your Preferences**
     *   The "Environmental Snapshot" will display current weather conditions for the chosen location.
     *   Fill out the form detailing your preferences for sunlight, watering, space, plant types, and project goals.
     *   Click "Get PlantPal Recommendations".
-4.  **Step 3: Plant Recommendations**
+3.  **Step 3: Plant Recommendations**
     *   View the AI-generated list of recommended plants. Click on any plant card to see more details in a modal (description, suitability, benefits, maintenance).
     *   Mark plants as favorites.
     *   Review suggested Green Infrastructure Ideas.
@@ -54,7 +53,31 @@ PlantPal is an AI-powered urban sustainability platform designed to assist city 
     *   **Download Excel:** Save the recommendations for offline use.
     *   **Refine Preferences:** Go back to Step 2 to adjust your inputs and get new recommendations.
     *   **Start New Plan:** Reset the application and begin from Step 1.
-5.  **Theme Toggle:** Use the sun/moon icon in the top right corner to switch between light and dark modes.
+4.  **Theme Toggle:** Use the sun/moon icon in the top right corner to switch between light and dark modes.
+
+## Local Development
+
+To run PlantPal locally, follow these steps:
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/plantpal.git
+    cd plantpal
+    ```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+3.  **Set up your API Key:**
+    Create a `.env` file in the root of the project and add your Gemini API key:
+    ```
+    API_KEY=YOUR_GEMINI_API_KEY
+    ```
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+5.  Open your browser and navigate to `http://localhost:3000`.
 
 ## Project Structure (Key Files)
 
@@ -68,7 +91,6 @@ PlantPal is an AI-powered urban sustainability platform designed to assist city 
 ├── requirements.txt        # List of CDN libraries used
 ├── components/             # UI components
 │   ├── common/             # Reusable common components (Button, Select, etc.)
-│   ├── ApiKeyInput.tsx     # (Note: API key input by user is NOT part of current flow)
 │   ├── EnvironmentalDataDisplay.tsx
 │   ├── LocationInput.tsx
 │   ├── PlantCard.tsx
