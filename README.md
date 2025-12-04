@@ -8,6 +8,7 @@ PlantPal is an AI-powered urban sustainability platform designed to assist city 
 ## Features
 
 *   **AI-Powered Recommendations:** Get tailored suggestions for plants and green infrastructure powered by Google's Gemini API.
+*   **AI-Powered Image Generation:** Visualizes recommended plants using Google's Imagen model to provide realistic previews of your green space.
 *   **Location-Based Analysis:**
     *   Automatically fetch environmental data using your current browser location.
     *   Manually input latitude and longitude for specific site analysis.
@@ -33,9 +34,10 @@ PlantPal is an AI-powered urban sustainability platform designed to assist city 
 
 *   **Frontend:** React, TypeScript, Tailwind CSS
 *   **AI Model:** Google Gemini API (via `@google/genai` library)
+*   **Image Generation:** Google Imagen 3 (via Gemini API)
 *   **Weather Data:** Open-Meteo API
 *   **Excel Export:** SheetJS (xlsx)
-*   **Build/Serving:** Served as static files with ES Modules via import maps.
+*   **Build Tool:** Vite
 
 ## How to Use PlantPal
 

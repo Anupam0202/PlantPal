@@ -1,6 +1,7 @@
-
 import React from 'react';
 import type { PlantInfo } from '../types';
+import { HeartIcon, ChevronRightIcon } from '../constants';
+import { ImageSkeleton } from './common/Loader';
 
 interface PlantCardProps {
   plant: PlantInfo;
@@ -8,62 +9,229 @@ interface PlantCardProps {
   onClick: () => void;
   onAddToFavorites: () => void;
   isFavorite: boolean;
+  index?: number;
+  viewMode?: 'grid' | 'list';
 }
 
-export const PlantCard: React.FC<PlantCardProps> = ({ plant, isSelected, onClick, onAddToFavorites, isFavorite }) => {
+export const PlantCard: React.FC<PlantCardProps> = ({
+  plant,
+  isSelected,
+  onClick,
+  onAddToFavorites,
+  isFavorite,
+  index = 0,
+  viewMode = 'grid'
+}) => {
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddToFavorites();
+  };
+
+  if (viewMode === 'list') {
+    return (
+      <div
+        onClick={onClick}
+        className={`
+          flex items-center gap-4 p-4 rounded-xl cursor-pointer
+          transition-all duration-300 ease-out
+          bg-white dark:bg-slate-800 border
+          ${isSelected
+            ? 'border-emerald-500 shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/20'
+            : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-md'
+          }
+          animate-fade-in
+        `}
+        style={{ animationDelay: `${index * 50}ms` }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
+      >
+        {/* Image */}
+        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 relative">
+          {plant.imageLoading ? (
+            <ImageSkeleton className="w-full h-full" />
+          ) : plant.imageUrl ? (
+            <img
+              src={plant.imageUrl}
+              alt={plant.commonName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 flex items-center justify-center">
+              <span className="text-2xl">🌱</span>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+            {plant.commonName}
+          </h3>
+          {plant.scientificName && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 italic truncate">
+              {plant.scientificName}
+            </p>
+          )}
+          {plant.description && (
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-1">
+              {plant.description}
+            </p>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleFavoriteClick}
+            className={`
+              p-2 rounded-full transition-all duration-200
+              ${isFavorite
+                ? 'text-rose-500 bg-rose-50 dark:bg-rose-900/30'
+                : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }
+            `}
+          >
+            <HeartIcon className="w-5 h-5" filled={isFavorite} />
+          </button>
+          <ChevronRightIcon className="w-5 h-5 text-slate-400" />
+        </div>
+      </div>
+    );
+  }
+
+  // Grid view (default)
   return (
     <div
-      className={`bg-white dark:bg-slate-700 rounded-xl shadow-lg p-3.5 sm:p-4 cursor-pointer transition-all duration-200 group
-                  border ${isSelected
-                    ? 'ring-2 ring-emerald-500 dark:ring-emerald-400 bg-emerald-50 dark:bg-emerald-800/30 border-transparent' // Selected: strong ring, distinct bg tint, transparent base border
-                    : 'border-slate-200 dark:border-slate-600 hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20' // Normal/Hover: subtle tint and border change
-                  }`}
       onClick={onClick}
+      className={`
+        group relative rounded-xl overflow-hidden cursor-pointer
+        transition-all duration-300 ease-out
+        bg-white dark:bg-slate-800 border
+        ${isSelected
+          ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 ring-2 ring-emerald-500/20 scale-[1.02]'
+          : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-xl hover:-translate-y-1'
+        }
+        animate-plant-grow
+      `}
+      style={{ animationDelay: `${index * 100}ms` }}
       role="button"
-      aria-pressed={isSelected}
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
       aria-label={`View details for ${plant.commonName}`}
     >
-      <div className="flex flex-col justify-center min-h-[60px]">
-        <h3 className={`text-md sm:text-lg font-semibold truncate transition-colors ${isSelected ? 'text-emerald-700 dark:text-emerald-100' : 'text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-300'}`} title={plant.commonName}>
+      {/* Favorite button - top right */}
+      <button
+        onClick={handleFavoriteClick}
+        className={`
+          absolute top-3 right-3 z-20 p-2 rounded-full
+          transition-all duration-200 backdrop-blur-sm
+          ${isFavorite
+            ? 'bg-rose-500 text-white shadow-lg'
+            : 'bg-white/80 dark:bg-slate-800/80 text-slate-400 hover:text-rose-500 hover:bg-white dark:hover:bg-slate-700'
+          }
+        `}
+        aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      >
+        <HeartIcon className="w-5 h-5" filled={isFavorite} />
+      </button>
+
+      {/* Image container */}
+      <div className="relative h-48 overflow-hidden">
+        {plant.imageLoading ? (
+          <ImageSkeleton className="w-full h-full" />
+        ) : plant.imageUrl ? (
+          <>
+            <img
+              src={plant.imageUrl}
+              alt={plant.commonName}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          </>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 flex items-center justify-center">
+            <div className="text-center">
+              <span className="text-5xl block mb-2">🌿</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                {plant.imageError ? 'Image unavailable' : 'Generating image...'}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-4">
+        <h3 className={`
+          font-semibold text-lg mb-0.5 truncate transition-colors
+          ${isSelected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-100'}
+        `}>
           {plant.commonName}
         </h3>
+
         {plant.scientificName && (
-          <p className={`text-xs italic truncate transition-colors ${isSelected ? 'text-emerald-600 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400'}`} title={plant.scientificName}>
+          <p className="text-xs text-slate-500 dark:text-slate-400 italic truncate mb-2">
             {plant.scientificName}
           </p>
         )}
+
+        {plant.description && (
+          <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3">
+            {plant.description}
+          </p>
+        )}
+
+        {/* View details prompt */}
+        <div className={`
+          flex items-center justify-center gap-1 py-2 rounded-lg text-sm font-medium
+          transition-all duration-200
+          ${isSelected
+            ? 'bg-emerald-500 text-white'
+            : 'bg-slate-100 dark:bg-slate-700/50 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white'
+          }
+        `}>
+          <span>View Details</span>
+          <ChevronRightIcon className="w-4 h-4" />
+        </div>
       </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onAddToFavorites();
-        }}
-        className={`w-full mt-2 py-1.5 px-2.5 text-xs font-medium rounded-md transition-all duration-200 ease-in-out group
-                    focus:outline-none focus:ring-2 focus:ring-offset-1 ${isFavorite ? 'dark:focus:ring-offset-emerald-800/30' : 'dark:focus:ring-offset-slate-700'}
-                    ${isFavorite
-                      ? 'bg-emerald-500 text-white hover:bg-emerald-600 focus:ring-emerald-400'
-                      : `bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-500 focus:ring-slate-400 dark:focus:ring-slate-500 ${
-                          isSelected ? '!bg-emerald-100 dark:!bg-emerald-700/50 !text-emerald-700 dark:!text-emerald-200 hover:!bg-emerald-200 dark:hover:!bg-emerald-600/50' : ''
-                        }`
-                    }`}
-        aria-label={isFavorite ? `Remove ${plant.commonName} from favorites` : `Add ${plant.commonName} to favorites`}
-        aria-pressed={isFavorite}
+    </div>
+  );
+};
+
+// Skeleton component for loading state
+export const PlantCardSkeleton: React.FC<{ index?: number; viewMode?: 'grid' | 'list' }> = ({
+  index = 0,
+  viewMode = 'grid'
+}) => {
+  if (viewMode === 'list') {
+    return (
+      <div
+        className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-fade-in"
+        style={{ animationDelay: `${index * 50}ms` }}
       >
-        <span className="flex items-center justify-center">
-          {isFavorite ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          )}
-          {isFavorite ? 'Favorited' : 'Favorite'}
-        </span>
-      </button>
+        <div className="w-20 h-20 rounded-lg bg-slate-200 dark:bg-slate-700 animate-pulse" />
+        <div className="flex-1">
+          <div className="h-5 w-2/3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
+          <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="rounded-xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-fade-in"
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
+      <div className="h-48 bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      <div className="p-4">
+        <div className="h-5 w-3/4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
+        <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-3" />
+        <div className="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
+        <div className="h-4 w-5/6 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-3" />
+        <div className="h-9 w-full bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse" />
+      </div>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { LocationInput } from './components/LocationInput';
 import { EnvironmentalDataDisplay } from './components/EnvironmentalDataDisplay';
@@ -6,7 +5,7 @@ import { PreferencesForm } from './components/PreferencesForm';
 import { RecommendationsDisplay } from './components/RecommendationsDisplay';
 import { ProgressBar } from './components/common/ProgressBar';
 import { Loader } from './components/common/Loader';
-import { PlantPalIcon, MoonIcon, SunIcon as ThemeSunIcon } from './constants';
+import { PlantPalIcon } from './constants';
 import type { LocationData, WeatherData, UserPreferences, AppStep, Theme } from './types';
 import { getPlantRecommendationsFromGemini } from './services/geminiService';
 import { fetchWeatherData } from './services/weatherService';
@@ -21,7 +20,7 @@ const App: React.FC = () => {
   const [environmentalData, setEnvironmentalData] = useState<WeatherData | null>(null);
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
   const [recommendations, setRecommendations] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [initializationError, setInitializationError] = useState<string | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
@@ -31,6 +30,16 @@ const App: React.FC = () => {
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initialTheme = storedTheme || (prefersDark ? 'dark' : 'light');
     setTheme(initialTheme);
+
+    // Simulate initialization and check for API key
+    const timer = setTimeout(() => {
+      if (!process.env.API_KEY) {
+        setInitializationError("API_KEY environment variable is not set.");
+      }
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -141,7 +150,7 @@ const App: React.FC = () => {
     setActionLoading(true);
     setStepError(null);
     setUserPreferences(prefs);
-    
+
     try {
       const prompt = constructPrompt(location, environmentalData, prefs);
       const result = await getPlantRecommendationsFromGemini(prompt);
@@ -155,7 +164,7 @@ const App: React.FC = () => {
       setActionLoading(false);
     }
   }, [location, environmentalData, constructPrompt]);
-  
+
   const handleReset = useCallback(() => {
     setCurrentStep(1);
     setLocation(null);
@@ -165,9 +174,9 @@ const App: React.FC = () => {
     setStepError(null);
     setActionLoading(false);
   }, []);
-  
+
   const handleRefine = useCallback(() => {
-    setCurrentStep(2); 
+    setCurrentStep(2);
     setRecommendations(null);
     setStepError(null);
     setActionLoading(false);
@@ -175,10 +184,10 @@ const App: React.FC = () => {
 
   const currentStepName = useMemo((): string => {
     switch (currentStep) {
-        case 1: return "Location & Environment";
-        case 2: return "Your Preferences";
-        case 3: return "Plant Recommendations";
-        default: return "";
+      case 1: return "Location & Environment";
+      case 2: return "Your Preferences";
+      case 3: return "Plant Recommendations";
+      default: return "";
     }
   }, [currentStep]);
 
@@ -188,13 +197,13 @@ const App: React.FC = () => {
         <PlantPalIcon className="w-24 h-24 sm:w-32 sm:h-32 text-white mb-6 animate-pulse" />
         <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-3" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.2)' }}>PlantPal</h1>
         <div className="space-x-1 mb-6">
-            <span className="inline-block w-3 h-3 bg-white rounded-full animate-bounce animation-delay-0"></span>
-            <span className="inline-block w-3 h-3 bg-white rounded-full animate-bounce animation-delay-200"></span>
-            <span className="inline-block w-3 h-3 bg-white rounded-full animate-bounce animation-delay-400"></span>
+          <span className="inline-block w-3 h-3 bg-white rounded-full animate-bounce animation-delay-0"></span>
+          <span className="inline-block w-3 h-3 bg-white rounded-full animate-bounce animation-delay-200"></span>
+          <span className="inline-block w-3 h-3 bg-white rounded-full animate-bounce animation-delay-400"></span>
         </div>
-        <Loader text="Initializing your green planning assistant..." size="md" loaderColor="text-white" textColor="text-emerald-100"/>
+        <Loader text="Initializing your green planning assistant..." size="md" loaderColor="text-white" textColor="text-emerald-100" />
         <p className="mt-4 text-lg text-emerald-100 font-medium">Cultivating sustainable futures...</p>
-         <footer className="absolute bottom-8 text-sm text-emerald-200">
+        <footer className="absolute bottom-8 text-sm text-emerald-200">
           <p>&copy; {new Date().getFullYear()} PlantPal.</p>
         </footer>
       </div>
@@ -213,7 +222,7 @@ const App: React.FC = () => {
             PlantPal could not start.
           </p>
           <p className="text-sm text-slate-700 mb-3">
-             <strong>Details:</strong> {initializationError}
+            <strong>Details:</strong> {initializationError}
           </p>
           <p className="text-sm text-slate-600">
             Please ensure the administrator has correctly configured the <code>API_KEY</code>.
@@ -230,9 +239,9 @@ const App: React.FC = () => {
     const animationKey = `step-${currentStep}`;
 
     if (actionLoading) {
-        return <div className="flex flex-col justify-center items-center h-96"><Loader size="lg" text="Processing..." loaderColor="text-emerald-500 dark:text-emerald-400" textColor="text-emerald-600 dark:text-emerald-300" /><p className="mt-3 text-lg text-emerald-600 dark:text-emerald-400">Fetching your data...</p></div>;
+      return <div className="flex flex-col justify-center items-center h-96"><Loader size="lg" text="Processing..." loaderColor="text-emerald-500 dark:text-emerald-400" textColor="text-emerald-600 dark:text-emerald-300" /><p className="mt-3 text-lg text-emerald-600 dark:text-emerald-400">Fetching your data...</p></div>;
     }
-    
+
     switch (currentStep) {
       case 1:
         return (
@@ -242,26 +251,26 @@ const App: React.FC = () => {
           </div>
         );
       case 2:
-        if (!location || !environmentalData) { 
-            handleReset(); 
-            return null;
-        } 
+        if (!location || !environmentalData) {
+          handleReset();
+          return null;
+        }
         return (
           <div key={animationKey} className="step-transition">
             <EnvironmentalDataDisplay data={environmentalData} locationName={location.name} />
-            <PreferencesForm 
-              onSubmit={handlePreferencesSubmit} 
-              isLoading={actionLoading} 
+            <PreferencesForm
+              onSubmit={handlePreferencesSubmit}
+              isLoading={actionLoading}
               initialPreferences={userPreferences}
             />
             {stepError && <p className="mt-4 p-3 bg-red-50 dark:bg-red-800/30 text-red-600 dark:text-red-400 rounded-lg shadow-sm text-sm border border-red-200 dark:border-red-600/30">{stepError}</p>}
           </div>
         );
       case 3:
-        if (!userPreferences) { 
-            handleRefine(); 
-            return null; 
-        } 
+        if (!userPreferences) {
+          handleRefine();
+          return null;
+        }
         return (
           <div key={animationKey} className="step-transition">
             <RecommendationsDisplay
@@ -276,7 +285,7 @@ const App: React.FC = () => {
           </div>
         );
       default:
-        handleReset(); 
+        handleReset();
         return <p className="text-center text-red-500 dark:text-red-400">An unexpected error occurred. Resetting...</p>;
     }
   };
@@ -289,7 +298,7 @@ const App: React.FC = () => {
           <h1 className="text-4xl sm:text-5xl font-extrabold text-green-800 dark:text-green-200 tracking-tight">
             PlantPal
           </h1>
-           <div className="flex space-x-1.5">
+          <div className="flex space-x-1.5">
             <span className="inline-block w-2.5 h-2.5 bg-emerald-500 dark:bg-emerald-400 rounded-full"></span>
             <span className="inline-block w-2.5 h-2.5 bg-emerald-500 dark:bg-emerald-400 rounded-full opacity-80"></span>
             <span className="inline-block w-2.5 h-2.5 bg-emerald-500 dark:bg-emerald-400 rounded-full opacity-60"></span>
@@ -301,8 +310,8 @@ const App: React.FC = () => {
 
       <main className="w-full max-w-xl lg:max-w-3xl bg-white dark:bg-slate-800 p-5 sm:p-8 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700">
         <div className="mb-6 sm:mb-8">
-             <p className="text-sm font-medium text-green-700 dark:text-green-300 mb-1.5 text-center">Step {currentStep} of {TOTAL_STEPS_USER_FACING}: <span className="font-semibold text-emerald-700 dark:text-emerald-300">{currentStepName}</span></p>
-             <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS_USER_FACING} />
+          <p className="text-sm font-medium text-green-700 dark:text-green-300 mb-1.5 text-center">Step {currentStep} of {TOTAL_STEPS_USER_FACING}: <span className="font-semibold text-emerald-700 dark:text-emerald-300">{currentStepName}</span></p>
+          <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS_USER_FACING} />
         </div>
         {renderStepContent()}
       </main>

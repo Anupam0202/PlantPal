@@ -1,7 +1,8 @@
 import React from 'react';
 import type { PlantInfo } from '../types';
 import { Button } from './common/Button';
-// Image related icons (PlantPalIcon, ImagePlaceholderIcon, ImageErrorIcon) are removed as image display is removed.
+import { CloseIcon, HeartIcon, SparklesIcon, ExternalLinkIcon } from '../constants';
+import { ImageSkeleton } from './common/Loader';
 
 interface PlantDetailModalProps {
   plant: PlantInfo | null;
@@ -10,78 +11,174 @@ interface PlantDetailModalProps {
   isFavorite: boolean;
 }
 
-const DetailSection: React.FC<{ title: string; content?: string }> = ({ title, content }) => {
+const DetailSection: React.FC<{
+  title: string;
+  content?: string;
+  icon?: React.ReactNode;
+}> = ({ title, content, icon }) => {
   if (!content) return null;
   return (
-    <div className="py-1"> {/* Added padding for better separation */}
-      <h4 className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-1 uppercase tracking-wider">{title}</h4> {/* Enhanced title styling */}
-      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{content}</p> {/* Dark mode text and pre-line for newlines */}
+    <div className="py-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+      <h4 className="flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-2 uppercase tracking-wider">
+        {icon && <span className="w-4 h-4">{icon}</span>}
+        {title}
+      </h4>
+      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+        {content}
+      </p>
     </div>
   );
 };
 
-export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({ plant, onClose, onAddToFavorites, isFavorite }) => {
+export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
+  plant,
+  onClose,
+  onAddToFavorites,
+  isFavorite
+}) => {
   if (!plant) return null;
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
   return (
     <div
-      className="fixed inset-0 bg-slate-800/75 dark:bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
       aria-labelledby="plant-detail-title"
     >
       <div
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-5 sm:p-6 max-w-lg w-full max-h-[85vh] overflow-y-auto transform transition-all duration-300 ease-out scale-95 opacity-0 animate-modalShow border border-slate-200 dark:border-slate-700 flex flex-col" // Added flex flex-col
+        className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-modal-show"
         onClick={(e) => e.stopPropagation()}
-        style={{animationName: 'modalShowAnim', animationDuration: '0.3s', animationFillMode: 'forwards'}}
       >
-        <style>{`
-          @keyframes modalShowAnim {
-            to { opacity: 1; transform: scale(1); }
-          }
-        `}</style>
-        <div className="flex justify-between items-start mb-3 sm:mb-4 flex-shrink-0">
-          <div>
-            <h2 id="plant-detail-title" className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-300">{plant.commonName}</h2>
-            {plant.scientificName && <p className="text-xs text-slate-500 dark:text-slate-400 italic">({plant.scientificName})</p>}
-          </div>
-          <button
-            onClick={onClose}
-            className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1 -mr-1 -mt-1 rounded-full focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
-            aria-label="Close plant details"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors backdrop-blur-sm"
+          aria-label="Close modal"
+        >
+          <CloseIcon className="w-5 h-5" />
+        </button>
 
-        {/* Image display section removed */}
+        {/* Favorite button */}
+        <button
+          onClick={onAddToFavorites}
+          className={`
+            absolute top-4 left-4 z-20 p-2 rounded-full transition-all backdrop-blur-sm
+            ${isFavorite
+              ? 'bg-rose-500 text-white'
+              : 'bg-black/20 hover:bg-black/40 text-white'
+            }
+          `}
+          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <HeartIcon className="w-5 h-5" filled={isFavorite} />
+        </button>
 
-        <div className="space-y-3 sm:space-y-4 flex-grow overflow-y-auto pr-1"> {/* Added pr-1 for scrollbar spacing */}
-          <DetailSection title="Description" content={plant.description} />
-          <DetailSection title="Suitability" content={plant.suitability} />
-          <DetailSection title="Key Benefits" content={plant.keyBenefits} />
-          <DetailSection title="Maintenance Tips" content={plant.maintenanceTips} />
-        </div>
+        {/* Header with image */}
+        <div className="relative h-64 overflow-hidden">
+          {plant.imageLoading ? (
+            <ImageSkeleton className="w-full h-full" />
+          ) : plant.imageUrl ? (
+            <>
+              <img
+                src={plant.imageUrl}
+                alt={plant.commonName}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            </>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+              <span className="text-8xl">🌿</span>
+            </div>
+          )}
 
-        <div className="mt-5 sm:mt-6 flex-shrink-0"> {/*Ensure button is always at bottom */}
-            <Button
-                onClick={onAddToFavorites}
-                variant={isFavorite ? "secondary" : "primary"}
-                size="md"
-                className="w-full"
-                icon={isFavorite ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                )}
+          {/* Plant name overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <h2
+              id="plant-detail-title"
+              className="text-2xl md:text-3xl font-bold text-white mb-1"
             >
-                {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+              {plant.commonName}
+            </h2>
+            {plant.scientificName && (
+              <p className="text-white/80 italic">
+                {plant.scientificName}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-16rem)]">
+          {/* Quick stats */}
+          {(plant.growthRate || plant.category) && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {plant.category && (
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
+                  {plant.category}
+                </span>
+              )}
+              {plant.growthRate && (
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300">
+                  {plant.growthRate} growth
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Detail sections */}
+          <div className="space-y-1">
+            <DetailSection
+              title="Description"
+              content={plant.description}
+              icon={<SparklesIcon className="w-4 h-4" />}
+            />
+            <DetailSection
+              title="Suitability"
+              content={plant.suitability}
+            />
+            <DetailSection
+              title="Key Benefits"
+              content={plant.keyBenefits}
+            />
+            <DetailSection
+              title="Maintenance Tips"
+              content={plant.maintenanceTips}
+            />
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <Button
+              onClick={onAddToFavorites}
+              variant={isFavorite ? "secondary" : "primary"}
+              size="lg"
+              fullWidth
+              icon={<HeartIcon className="w-5 h-5" filled={isFavorite} />}
+            >
+              {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
             </Button>
+            <Button
+              as="a"
+              href={`https://www.google.com/search?q=${encodeURIComponent(plant.commonName + ' plant care')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="outline"
+              size="lg"
+              fullWidth
+              icon={<ExternalLinkIcon className="w-5 h-5" />}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              Learn More
+            </Button>
+          </div>
         </div>
       </div>
     </div>
