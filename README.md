@@ -12,7 +12,7 @@
 
 *Transform urban spaces into climate-resilient, biodiverse, and livable environments*
 
-<img width="854" alt="PlantPal Screenshot" src="https://github.com/user-attachments/assets/fdd7ea88-5db7-480d-9dae-c2016f091929" />
+<img width="1907" height="858" alt="Image" src="https://github.com/user-attachments/assets/ece20b46-d688-4048-a409-96e783168fe4" />
 
 </div>
 
