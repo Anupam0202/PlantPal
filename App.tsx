@@ -5,9 +5,15 @@ import { PreferencesForm } from './components/PreferencesForm';
 import { RecommendationsDisplay } from './components/RecommendationsDisplay';
 import { ProgressBar } from './components/common/ProgressBar';
 import { Loader } from './components/common/Loader';
+import { ApiKeyModal } from './components/ApiKeyModal';
 import { PlantPalIcon } from './constants';
 import type { LocationData, WeatherData, UserPreferences, AppStep, Theme } from './types';
-import { getPlantRecommendationsFromGemini } from './services/geminiService';
+import {
+  getPlantRecommendationsFromGemini,
+  QuotaExceededError,
+  setUserApiKey,
+  hasUserApiKey
+} from './services/geminiService';
 import { fetchWeatherData } from './services/weatherService';
 import { ThemeToggle } from './components/ThemeToggle';
 
@@ -21,9 +27,13 @@ const App: React.FC = () => {
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
   const [recommendations, setRecommendations] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [initializationError, setInitializationError] = useState<string | null>(null);
+
   const [stepError, setStepError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+
+  // API Key Modal state
+  const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
+  const [quotaErrorMessage, setQuotaErrorMessage] = useState<string>('');
 
   useEffect(() => {
     const storedTheme = localStorage.getItem('plantpal-theme') as Theme | null;
@@ -32,9 +42,15 @@ const App: React.FC = () => {
     setTheme(initialTheme);
 
     // Simulate initialization and check for API key
+    // Allow app to work if user provides their own API key
     const timer = setTimeout(() => {
-      if (!process.env.API_KEY) {
-        setInitializationError("API_KEY environment variable is not set.");
+      const hasEnvKey = !!process.env.GEMINI_API_KEY;
+      const hasUserKey = hasUserApiKey();
+
+      if (!hasEnvKey && !hasUserKey) {
+        // No API key available at all - show modal to get one
+        setQuotaErrorMessage('No API key configured. Please provide your Gemini API key to use PlantPal.');
+        setShowApiKeyModal(true);
       }
       setIsLoading(false);
     }, 1500);
@@ -157,8 +173,15 @@ const App: React.FC = () => {
       setRecommendations(result);
       setCurrentStep(3);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "An unknown error occurred while fetching recommendations.";
-      setStepError(`Failed to get recommendations: ${message}. You can try adjusting preferences or try again.`);
+      // Check if it's a quota exceeded error
+      if (err instanceof QuotaExceededError) {
+        setQuotaErrorMessage(err.message);
+        setShowApiKeyModal(true);
+        setStepError('API quota exceeded. Please add your own API key to continue.');
+      } else {
+        const message = err instanceof Error ? err.message : "An unknown error occurred while fetching recommendations.";
+        setStepError(`Failed to get recommendations: ${message}. You can try adjusting preferences or try again.`);
+      }
       setRecommendations(null);
     } finally {
       setActionLoading(false);
@@ -181,6 +204,21 @@ const App: React.FC = () => {
     setStepError(null);
     setActionLoading(false);
   }, []);
+
+  // API Key handlers
+  const handleSaveApiKey = useCallback((apiKey: string) => {
+    setUserApiKey(apiKey);
+    setShowApiKeyModal(false);
+    setQuotaErrorMessage('');
+    setStepError(null);
+    // If user was on step 2, they can try again now
+    console.log('API key saved successfully');
+  }, []);
+
+  const handleCloseApiKeyModal = useCallback(() => {
+    setShowApiKeyModal(false);
+  }, []);
+
 
   const currentStepName = useMemo((): string => {
     switch (currentStep) {
@@ -210,30 +248,6 @@ const App: React.FC = () => {
     );
   }
 
-  if (initializationError) {
-    return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-red-400 via-pink-500 to-rose-500 p-6 text-center">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-20 h-20 sm:w-24 sm:h-24 text-white mb-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.008v.008H12v-.008z" />
-        </svg>
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">Application Error</h1>
-        <div className="bg-white/90 p-6 sm:p-8 rounded-xl shadow-2xl max-w-md sm:max-w-lg backdrop-blur-sm">
-          <p className="text-lg text-red-700 mb-2 font-semibold">
-            PlantPal could not start.
-          </p>
-          <p className="text-sm text-slate-700 mb-3">
-            <strong>Details:</strong> {initializationError}
-          </p>
-          <p className="text-sm text-slate-600">
-            Please ensure the administrator has correctly configured the <code>API_KEY</code>.
-          </p>
-        </div>
-        <footer className="absolute bottom-8 text-sm text-red-100">
-          <p>&copy; {new Date().getFullYear()} PlantPal. We apologize for the inconvenience.</p>
-        </footer>
-      </div>
-    );
-  }
 
   const renderStepContent = () => {
     const animationKey = `step-${currentStep}`;
@@ -319,6 +333,14 @@ const App: React.FC = () => {
         <p>&copy; {new Date().getFullYear()} PlantPal. Cultivating a greener tomorrow.</p>
         <p className="text-xs mt-1">AI recommendations. Always consult local experts.</p>
       </footer>
+
+      {/* API Key Modal */}
+      <ApiKeyModal
+        isOpen={showApiKeyModal}
+        onClose={handleCloseApiKeyModal}
+        onSave={handleSaveApiKey}
+        errorMessage={quotaErrorMessage}
+      />
     </div>
   );
 };

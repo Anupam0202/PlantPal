@@ -45,6 +45,7 @@ export const PlantCard: React.FC<PlantCardProps> = ({
         role="button"
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
+        aria-label={`View details for ${plant.commonName}`}
       >
         {/* Image */}
         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 relative">
@@ -85,16 +86,17 @@ export const PlantCard: React.FC<PlantCardProps> = ({
           <button
             onClick={handleFavoriteClick}
             className={`
-              p-2 rounded-full transition-all duration-200
+              p-2.5 rounded-full transition-all duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center
               ${isFavorite
                 ? 'text-rose-500 bg-rose-50 dark:bg-rose-900/30'
                 : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-700'
               }
             `}
+            aria-label={isFavorite ? `Remove ${plant.commonName} from favorites` : `Add ${plant.commonName} to favorites`}
           >
             <HeartIcon className="w-5 h-5" filled={isFavorite} />
           </button>
-          <ChevronRightIcon className="w-5 h-5 text-slate-400" />
+          <ChevronRightIcon className="w-5 h-5 text-slate-400" aria-hidden="true" />
         </div>
       </div>
     );

@@ -135,7 +135,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({ onSubmit }) => {
         <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 text-center">
           How would you like to set your location?
         </h3>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <ModeButton
             active={mode === 'auto'}
             onClick={() => setMode('auto')}

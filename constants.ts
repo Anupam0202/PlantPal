@@ -3,23 +3,22 @@ import type { SunlightExposure, WateringFrequency, PlantingAreaSize, HeightClear
 import { SunlightExposure as SE, WateringFrequency as WF, PlantingAreaSize as PAS, HeightClearance as HC } from './types';
 
 // Gemini Model Configuration with Fallbacks
+// Models are ordered by preference - newest/most stable first
+// Use the model names exactly as they appear in the Google AI API (v1beta)
+// Reference: https://ai.google.dev/gemini-api/docs/models
 export const GEMINI_MODELS = [
+  // Gemini 2.5 Flash (latest, best price-performance)
+  'gemini-2.5-flash',
+
+  // Gemini 2.0 Flash (stable versions)
   'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-latest',
-  'gemini-1.5-pro',
-  'gemini-pro',
+  'gemini-2.0-flash-001',
+
+  // Gemini 2.0 Flash (experimental - may have higher rate limits)
+  'gemini-2.0-flash-exp',
 ] as const;
 
 export const GEMINI_MODEL_NAME = GEMINI_MODELS[0];
-
-// Image Generation Models
-export const GEMINI_IMAGE_MODEL_NAME = 'imagen-3.0-generate-002';
-export const GEMINI_IMAGE_FALLBACK_MODELS = [
-  'imagen-3.0-generate-002',
-  'imagen-3.0-generate-001',
-] as const;
 
 // Planning Goals
 export const PLANNING_GOALS: string[] = [

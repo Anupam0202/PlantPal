@@ -1,183 +1,157 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { GEMINI_MODEL_NAME, GEMINI_IMAGE_FALLBACK_MODELS } from '../constants';
-import type { ImageGenerationResult } from '../types';
+import { GEMINI_MODELS } from '../constants';
 
-// Initialize the GenAI client
-const getGenAIClient = (): GoogleGenAI => {
-  if (!process.env.API_KEY) {
-    console.error("API_KEY environment variable is not set.");
-    throw new Error("API_KEY environment variable is not set. Please add GEMINI_API_KEY to your .env file.");
+// LocalStorage key for user's API key
+const USER_API_KEY_STORAGE_KEY = 'plantpal-user-gemini-api-key';
+
+// Custom error class for quota exceeded
+export class QuotaExceededError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'QuotaExceededError';
   }
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+}
+
+// API Key Management Functions
+export const getUserApiKey = (): string | null => {
+  try {
+    return localStorage.getItem(USER_API_KEY_STORAGE_KEY);
+  } catch {
+    return null;
+  }
 };
 
-// Get plant recommendations from Gemini
+export const setUserApiKey = (apiKey: string): void => {
+  try {
+    localStorage.setItem(USER_API_KEY_STORAGE_KEY, apiKey);
+  } catch (error) {
+    console.error('Failed to save API key to localStorage:', error);
+  }
+};
+
+export const clearUserApiKey = (): void => {
+  try {
+    localStorage.removeItem(USER_API_KEY_STORAGE_KEY);
+  } catch (error) {
+    console.error('Failed to clear API key from localStorage:', error);
+  }
+};
+
+// Check if a user API key is set
+export const hasUserApiKey = (): boolean => {
+  return !!getUserApiKey();
+};
+
+// Initialize the GenAI client - prioritizes user's API key over environment variable
+const getGenAIClient = (): GoogleGenAI => {
+  // First, check for user-provided API key in localStorage
+  const userApiKey = getUserApiKey();
+  if (userApiKey) {
+    console.log('Using user-provided API key');
+    return new GoogleGenAI({ apiKey: userApiKey });
+  }
+
+  // Fall back to environment variable
+  if (!process.env.GEMINI_API_KEY) {
+    console.error("GEMINI_API_KEY environment variable is not set.");
+    throw new Error("GEMINI_API_KEY environment variable is not set. Please add GEMINI_API_KEY to your .env file.");
+  }
+  console.log('Using environment API key');
+  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+};
+
+// Check if error is a model-related error that should trigger fallback
+const isModelNotFoundError = (error: unknown): boolean => {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return message.includes('not found') ||
+      message.includes('not supported') ||
+      message.includes('does not exist') ||
+      message.includes('invalid model');
+  }
+  return false;
+};
+
+// Check if error is a rate limit error (429)
+const isRateLimitError = (error: unknown): boolean => {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return message.includes('429') ||
+      message.includes('quota') ||
+      message.includes('rate limit') ||
+      message.includes('resource_exhausted') ||
+      message.includes('exceeded');
+  }
+  return false;
+};
+
+// Helper to add delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Get plant recommendations from Gemini with model fallback
 export const getPlantRecommendationsFromGemini = async (prompt: string): Promise<string> => {
   const ai = getGenAIClient();
-  try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: prompt,
-      config: {
-        temperature: 0.7,
-        topP: 0.95,
-        topK: 40,
-      }
-    });
+  let lastError: Error | null = null;
+  const errors: string[] = [];
 
-    const textResponse = response.text;
-
-    if (textResponse === undefined || textResponse === null) {
-      throw new Error("Received an empty or undefined response from Gemini API.");
-    }
-    return textResponse;
-
-  } catch (error) {
-    console.error("Error fetching recommendations from Gemini:", error);
-    if (error instanceof Error) {
-      throw new Error(`Gemini API error: ${error.message}`);
-    }
-    throw new Error("An unknown error occurred while communicating with Gemini API.");
-  }
-};
-
-// Generate plant image using Gemini/Imagen API
-export const generatePlantImage = async (
-  plantName: string,
-  scientificName?: string
-): Promise<ImageGenerationResult> => {
-  // Check if API key is available
-  if (!process.env.API_KEY) {
-    console.warn("No API key available for image generation");
-    return {
-      success: false,
-      error: "API key not configured for image generation",
-    };
-  }
-
-  const ai = getGenAIClient();
-
-  // Build detailed prompt for better image quality
-  const prompt = `A beautiful, detailed botanical illustration of ${plantName}${scientificName ? ` (${scientificName})` : ''
-    }. Show the plant in a natural garden setting with vibrant colors, 
-  healthy green leaves, and any flowers or features typical of this species. 
-  Professional quality, photorealistic style with soft natural lighting. 
-  The plant should be the main focus, well-centered in the frame.`;
-
-  // Try each model in the fallback list
-  for (const modelName of GEMINI_IMAGE_FALLBACK_MODELS) {
+  // Try each model in order until one works
+  for (let i = 0; i < GEMINI_MODELS.length; i++) {
+    const modelName = GEMINI_MODELS[i];
     try {
-      console.log(`Attempting image generation for "${plantName}" with model: ${modelName}`);
-
-      const response = await ai.models.generateImages({
+      console.log(`Trying model: ${modelName}`);
+      const response: GenerateContentResponse = await ai.models.generateContent({
         model: modelName,
-        prompt: prompt,
+        contents: prompt,
         config: {
-          numberOfImages: 1,
-          aspectRatio: "1:1",
-          outputMimeType: "image/png",
-        },
+          temperature: 0.7,
+          topP: 0.95,
+          topK: 40,
+        }
       });
 
-      // Check if we got valid images
-      if (response.generatedImages && response.generatedImages.length > 0) {
-        const imageData = response.generatedImages[0];
+      const textResponse = response.text;
 
-        // Handle different response formats
-        if (imageData.image?.imageBytes) {
-          // Convert bytes to base64
-          const bytes: unknown = imageData.image.imageBytes;
-          let base64String: string;
+      if (textResponse === undefined || textResponse === null) {
+        throw new Error("Received an empty or undefined response from Gemini API.");
+      }
 
-          if (typeof bytes === 'string') {
-            // Already a base64 string
-            base64String = bytes;
-          } else if (bytes instanceof Uint8Array) {
-            // Convert Uint8Array to base64
-            base64String = btoa(
-              Array.from(bytes)
-                .map((byte: number) => String.fromCharCode(byte))
-                .join('')
-            );
-          } else if (bytes instanceof ArrayBuffer) {
-            // Convert ArrayBuffer to base64
-            base64String = btoa(
-              Array.from(new Uint8Array(bytes))
-                .map((byte: number) => String.fromCharCode(byte))
-                .join('')
-            );
-          } else {
-            // Try to handle as array-like object
-            const byteArray = Array.isArray(bytes) ? bytes as number[] : Object.values(bytes as object) as number[];
-            base64String = btoa(
-              byteArray.map((byte: number) => String.fromCharCode(byte)).join('')
-            );
-          }
+      console.log(`Successfully used model: ${modelName}`);
+      return textResponse;
 
-          const imageUrl = `data:image/png;base64,${base64String}`;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn(`Model ${modelName} failed:`, errorMessage);
+      lastError = error instanceof Error ? error : new Error(String(error));
+      errors.push(`${modelName}: ${errorMessage.substring(0, 100)}`);
 
-          console.log(`Successfully generated image for ${plantName}`);
-          return {
-            success: true,
-            imageUrl,
-          };
+      // If it's a model-not-found or rate limit error, try the next model
+      // (different models have separate quotas)
+      if (isModelNotFoundError(error) || isRateLimitError(error)) {
+        // Add a small delay before trying the next model to avoid hammering the API
+        if (i < GEMINI_MODELS.length - 1) {
+          console.log(`Waiting 1s before trying next model...`);
+          await delay(1000);
         }
+        continue;
       }
 
-      console.log(`No valid image data from model ${modelName}`);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.warn(`Image generation failed with model ${modelName}:`, errorMessage);
-      // Continue to next model in fallback list
+      // For other errors (network, auth, etc.), throw immediately
+      throw new Error(`Gemini API error: ${lastError.message}`);
     }
   }
 
-  // All Imagen models failed - return with informative message
-  console.log(`All image generation models failed for ${plantName}`);
-  return {
-    success: false,
-    error: "Image generation not available. Your Gemini API key may not have access to the Imagen models.",
-  };
-};
+  // All models failed - provide helpful error message
+  console.error("All Gemini models failed:", errors);
 
-// Batch generate images for multiple plants with rate limiting
-export const generatePlantImages = async (
-  plants: Array<{ id: string; commonName: string; scientificName?: string }>,
-  onProgress?: (completed: number, total: number) => void,
-  onImageGenerated?: (plantId: string, result: ImageGenerationResult) => void
-): Promise<Map<string, ImageGenerationResult>> => {
-  const results = new Map<string, ImageGenerationResult>();
-  const total = plants.length;
-  let completed = 0;
-
-  // Process sequentially with delay to avoid rate limiting
-  for (const plant of plants) {
-    try {
-      // Add delay between requests (2 seconds) to avoid rate limiting
-      if (completed > 0) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-
-      const result = await generatePlantImage(plant.commonName, plant.scientificName);
-      results.set(plant.id, result);
-
-      completed++;
-      onProgress?.(completed, total);
-      onImageGenerated?.(plant.id, result);
-    } catch (error) {
-      console.error(`Failed to generate image for ${plant.commonName}:`, error);
-      const errorResult: ImageGenerationResult = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-      results.set(plant.id, errorResult);
-      completed++;
-      onProgress?.(completed, total);
-      onImageGenerated?.(plant.id, errorResult);
-    }
+  // Check if all failures were rate limits - throw special error for UI handling
+  const allRateLimited = errors.every(e => e.toLowerCase().includes('429') || e.toLowerCase().includes('quota'));
+  if (allRateLimited) {
+    throw new QuotaExceededError(
+      `API quota exceeded for all models. You can add your own API key to continue using PlantPal.`
+    );
   }
 
-  return results;
+  throw new Error(`All Gemini models failed. Last error: ${lastError?.message || 'Unknown error'}`);
 };
 
 // Helper function to build enhanced recommendation prompt

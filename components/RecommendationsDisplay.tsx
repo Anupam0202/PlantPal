@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { Button } from './common/Button';
 import { Loader } from './common/Loader';
-import { MiniProgress } from './common/ProgressBar';
 import { PlantCard } from './PlantCard';
 import { PlantDetailModal } from './PlantDetailModal';
 import type { LocationData, UserPreferences, PlantInfo, InfrastructureInfo, ViewMode } from '../types';
@@ -16,7 +15,6 @@ import {
   ShareIcon,
   SparklesIcon,
 } from '../constants';
-import { generatePlantImage } from '../services/geminiService';
 
 // Parser for Gemini response
 const parseGeminiRecommendations = (markdownText: string | null): {
@@ -168,71 +166,14 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
   const [favoritedPlants, setFavoritedPlants] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [plantsWithImages, setPlantsWithImages] = useState<PlantInfo[]>([]);
-  const [imageGenerationProgress, setImageGenerationProgress] = useState({ current: 0, total: 0 });
-  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
 
   // Parse recommendations
   const { plants: parsedPlants, infrastructure, conclusion } = useMemo(() => {
     return parseGeminiRecommendations(rawRecommendations);
   }, [rawRecommendations]);
 
-  // Generate images for plants
-  const generateImagesForPlants = useCallback(async (plants: PlantInfo[]) => {
-    if (plants.length === 0) return;
-
-    setIsGeneratingImages(true);
-    setImageGenerationProgress({ current: 0, total: plants.length });
-
-    // Initialize plants with loading state
-    const initialPlants = plants.map(p => ({ ...p, imageLoading: true }));
-    setPlantsWithImages(initialPlants);
-
-    for (let i = 0; i < plants.length; i++) {
-      const plant = plants[i];
-
-      try {
-        const result = await generatePlantImage(plant.commonName, plant.scientificName);
-
-        setPlantsWithImages(prev => prev.map(p =>
-          p.id === plant.id
-            ? {
-              ...p,
-              imageUrl: result.success ? result.imageUrl : undefined,
-              imageLoading: false,
-              imageError: !result.success,
-            }
-            : p
-        ));
-      } catch (err) {
-        console.error(`Failed to generate image for ${plant.commonName}:`, err);
-        setPlantsWithImages(prev => prev.map(p =>
-          p.id === plant.id
-            ? { ...p, imageLoading: false, imageError: true }
-            : p
-        ));
-      }
-
-      setImageGenerationProgress({ current: i + 1, total: plants.length });
-
-      // Add delay between requests to avoid rate limiting
-      if (i < plants.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-      }
-    }
-
-    setIsGeneratingImages(false);
-  }, []);
-
-  // Effect to generate images when plants change
-  useEffect(() => {
-    if (parsedPlants.length > 0 && plantsWithImages.length === 0) {
-      generateImagesForPlants(parsedPlants);
-    }
-  }, [parsedPlants, plantsWithImages.length, generateImagesForPlants]);
-
-  // Use plants with images if available, otherwise parsed plants
-  const displayPlants = plantsWithImages.length > 0 ? plantsWithImages : parsedPlants;
+  // Use parsed plants directly
+  const displayPlants = parsedPlants;
 
   // Filter plants
   const filteredPlants = useMemo(() => {
@@ -400,35 +341,16 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
         </p>
       </div>
 
-      {/* Image generation progress */}
-      {isGeneratingImages && (
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
-              <SparklesIcon className="w-4 h-4 text-white animate-pulse" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                Generating plant images ({imageGenerationProgress.current}/{imageGenerationProgress.total})
-              </p>
-              <MiniProgress
-                progress={(imageGenerationProgress.current / imageGenerationProgress.total) * 100}
-                size="sm"
-                showLabel={false}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 sm:gap-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 sm:p-4">
         {/* View toggle */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
           <div className="flex rounded-lg bg-white dark:bg-slate-700 p-1 shadow-sm">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md transition-colors ${viewMode === 'grid'
+              className={`p-2.5 sm:p-2 rounded-md transition-colors ${viewMode === 'grid'
                 ? 'bg-emerald-500 text-white'
                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
@@ -438,7 +360,7 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md transition-colors ${viewMode === 'list'
+              className={`p-2.5 sm:p-2 rounded-md transition-colors ${viewMode === 'list'
                 ? 'bg-emerald-500 text-white'
                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
@@ -452,15 +374,16 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
           <button
             onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
             className={`
-              flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+              flex items-center gap-2 px-4 py-2.5 sm:px-3 sm:py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] sm:min-h-0
               ${showFavoritesOnly
                 ? 'bg-rose-500 text-white'
                 : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'
               }
             `}
+            aria-label={showFavoritesOnly ? 'Show all plants' : 'Show favorites only'}
           >
-            <HeartIcon className="w-4 h-4" filled={showFavoritesOnly} />
-            <span className="hidden sm:inline">Favorites</span>
+            <HeartIcon className="w-5 h-5 sm:w-4 sm:h-4" filled={showFavoritesOnly} />
+            <span>Favorites</span>
             {favoritedPlants.length > 0 && (
               <span className={`
                 px-1.5 py-0.5 rounded-full text-xs
@@ -473,12 +396,12 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
-          <Button onClick={handleShare} variant="ghost" size="sm" icon={<ShareIcon className="w-4 h-4" />}>
-            <span className="hidden sm:inline">Share</span>
+        <div className="flex items-center justify-end sm:justify-start gap-2">
+          <Button onClick={handleShare} variant="ghost" size="sm" icon={<ShareIcon className="w-4 h-4" />} className="min-h-[44px] sm:min-h-0">
+            <span className="sm:hidden md:inline">Share</span>
           </Button>
-          <Button onClick={handleDownloadExcel} variant="secondary" size="sm" icon={<DownloadIcon className="w-4 h-4" />}>
-            <span className="hidden sm:inline">Export</span>
+          <Button onClick={handleDownloadExcel} variant="secondary" size="sm" icon={<DownloadIcon className="w-4 h-4" />} className="min-h-[44px] sm:min-h-0">
+            <span className="sm:hidden md:inline">Export</span>
           </Button>
         </div>
       </div>
