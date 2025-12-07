@@ -227,7 +227,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ### 🌱 Cultivating a greener tomorrow, one plant at a time.
 
-Made with 💚 by the Anupam
+Made with 💚 by Anupam
 
 *AI recommendations are suggestions only. Always consult local horticultural experts for specific advice.*
 
