@@ -44,19 +44,13 @@ export const hasUserApiKey = (): boolean => {
 
 // Initialize the GenAI client - prioritizes user's API key over environment variable
 const getGenAIClient = (): GoogleGenAI => {
-  // First, check for user-provided API key in localStorage
   const userApiKey = getUserApiKey();
   if (userApiKey) {
-    console.log('Using user-provided API key');
     return new GoogleGenAI({ apiKey: userApiKey });
   }
-
-  // Fall back to environment variable
   if (!process.env.GEMINI_API_KEY) {
-    console.error("GEMINI_API_KEY environment variable is not set.");
-    throw new Error("GEMINI_API_KEY environment variable is not set. Please add GEMINI_API_KEY to your .env file.");
+    throw new Error("No API key available. Please provide your Gemini API key to use PlantPal.");
   }
-  console.log('Using environment API key');
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 };
 
@@ -80,7 +74,10 @@ const isRateLimitError = (error: unknown): boolean => {
       message.includes('quota') ||
       message.includes('rate limit') ||
       message.includes('resource_exhausted') ||
-      message.includes('exceeded');
+      message.includes('exceeded') ||
+      message.includes('permission_denied') ||
+      message.includes('billing') ||
+      message.includes('too many requests');
   }
   return false;
 };
@@ -98,7 +95,6 @@ export const getPlantRecommendationsFromGemini = async (prompt: string): Promise
   for (let i = 0; i < GEMINI_MODELS.length; i++) {
     const modelName = GEMINI_MODELS[i];
     try {
-      console.log(`Trying model: ${modelName}`);
       const response: GenerateContentResponse = await ai.models.generateContent({
         model: modelName,
         contents: prompt,
@@ -115,7 +111,6 @@ export const getPlantRecommendationsFromGemini = async (prompt: string): Promise
         throw new Error("Received an empty or undefined response from Gemini API.");
       }
 
-      console.log(`Successfully used model: ${modelName}`);
       return textResponse;
 
     } catch (error) {
@@ -124,12 +119,8 @@ export const getPlantRecommendationsFromGemini = async (prompt: string): Promise
       lastError = error instanceof Error ? error : new Error(String(error));
       errors.push(`${modelName}: ${errorMessage.substring(0, 100)}`);
 
-      // If it's a model-not-found or rate limit error, try the next model
-      // (different models have separate quotas)
       if (isModelNotFoundError(error) || isRateLimitError(error)) {
-        // Add a small delay before trying the next model to avoid hammering the API
         if (i < GEMINI_MODELS.length - 1) {
-          console.log(`Waiting 1s before trying next model...`);
           await delay(1000);
         }
         continue;
@@ -154,72 +145,78 @@ export const getPlantRecommendationsFromGemini = async (prompt: string): Promise
   throw new Error(`All Gemini models failed. Last error: ${lastError?.message || 'Unknown error'}`);
 };
 
-// Helper function to build enhanced recommendation prompt
-export const buildRecommendationPrompt = (
-  latitude: number,
-  longitude: number,
-  locationName: string | undefined,
-  temperature: number,
-  humidity: number,
-  weatherDescription: string | undefined,
-  preferences: {
-    sunlightExposure: string;
-    sunlightHours: number;
-    wateringFrequency: string;
-    droughtTolerant: boolean;
-    plantingAreaSize: string;
-    heightClearance: string;
-    plantType: string;
-    planningGoals: string[];
-    projectArea: string;
+// Get AI-generated garden insights
+export const getGardenInsights = async (prompt: string): Promise<string> => {
+  const ai = getGenAIClient();
+  const errors: string[] = [];
+
+  for (let i = 0; i < GEMINI_MODELS.length; i++) {
+    const modelName = GEMINI_MODELS[i];
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: prompt,
+        config: { temperature: 0.6, topP: 0.9, topK: 30 },
+      });
+      if (response.text) return response.text;
+      throw new Error('Empty response from Gemini API.');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      errors.push(`${modelName}: ${msg.substring(0, 80)}`);
+      if (i < GEMINI_MODELS.length - 1 && (isModelNotFoundError(error) || isRateLimitError(error))) {
+        await delay(500);
+        continue;
+      }
+      // Last model or non-recoverable error
+      if (i === GEMINI_MODELS.length - 1 || (!isModelNotFoundError(error) && !isRateLimitError(error))) {
+        // Check if it's a quota issue
+        const allQuota = errors.every(e => e.toLowerCase().includes('429') || e.toLowerCase().includes('quota') || e.toLowerCase().includes('exceeded') || e.toLowerCase().includes('rate limit'));
+        if (allQuota || isRateLimitError(error)) {
+          throw new QuotaExceededError('API quota exceeded. Please provide your own Gemini API key to continue.');
+        }
+        throw new Error(`Unable to generate insights: ${msg}`);
+      }
+    }
   }
-): string => {
-  return `You are PlantPal, an expert AI assistant for urban sustainability and green planning.
-Generate plant and green infrastructure recommendations based on the following information:
-
-**Location:**
-- Coordinates: Latitude ${latitude.toFixed(4)}, Longitude ${longitude.toFixed(4)}.
-- Name/Description: ${locationName || 'Not specified'}.
-
-**Current Environmental Conditions:**
-- Temperature: ${temperature}°C
-- Relative Humidity: ${humidity}%
-- Weather: ${weatherDescription || 'Unknown'}
-
-**User Preferences & Project Details:**
-- Sunlight Exposure: ${preferences.sunlightExposure}
-- Hours of Direct Sunlight: ${preferences.sunlightHours} hours/day
-- Watering Frequency: ${preferences.wateringFrequency}
-- Drought Tolerance Preference: ${preferences.droughtTolerant ? 'Yes, prefers drought-tolerant plants' : 'No, fine with regular watering'}
-- Planting Area Size: ${preferences.plantingAreaSize}
-- Max Plant Height: ${preferences.heightClearance}
-- Desired Plant Type(s): ${preferences.plantType.trim() || 'Any suitable type'}
-- Overall Project Area (approximate): ${preferences.projectArea.trim() || 'Not specified'}
-- Key Urban Planning Goals: ${preferences.planningGoals.length > 0 ? preferences.planningGoals.join(', ') : 'General beautification and sustainability'}
-
-**Recommendation Guidelines:**
-- Prioritize native or well-adapted species for the specified location and climate.
-- Consider typical soil types and topography for urban/regional areas.
-- Aim to enhance local biodiversity and ecological resilience.
-- Suggest plants that are relatively low-maintenance and suitable for urban environments.
-
-**Output Format (Use Markdown - CRITICAL: FOLLOW THIS STRUCTURE PRECISELY):**
-Provide a list of 5-7 specific plant recommendations. For each plant, use the following numbered format:
-
-1. **Common Name** (Scientific Name)
-2. **Description:** Brief overview of the plant (2-3 sentences).
-3. **Suitability:** Why it fits the user's criteria.
-4. **Key Benefits:** e.g., Pollinator-friendly, edible, air purifying, etc.
-5. **Maintenance Tips:** Brief, essential care notes.
-
-Then, include a section titled:
-### Green Infrastructure Ideas
-Suggest 2-3 green infrastructure ideas relevant to the user's goals. For each:
-- **Idea Title:** (e.g., **Rain Garden**)
-- **Explanation:** Why it is suitable.
-
-Finally, conclude with:
-### Conclusion
-A friendly, encouraging remark and a reminder to consult local experts.
-`;
+  throw new Error('Unable to generate garden insights at this time.');
 };
+
+// Analyze image with Gemini Vision
+export const analyzeImageWithAI = async (base64Data: string, mimeType: string, prompt: string): Promise<string> => {
+  const ai = getGenAIClient();
+  const errors: string[] = [];
+
+  for (let i = 0; i < GEMINI_MODELS.length; i++) {
+    const modelName = GEMINI_MODELS[i];
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: [{
+          role: 'user',
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType, data: base64Data } }
+          ]
+        }],
+        config: { temperature: 0.3, topP: 0.9, topK: 30 },
+      });
+      if (response.text) return response.text;
+      throw new Error('Empty response from Gemini API.');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      errors.push(`${modelName}: ${msg.substring(0, 80)}`);
+      if (i < GEMINI_MODELS.length - 1 && (isModelNotFoundError(error) || isRateLimitError(error))) {
+        await delay(500);
+        continue;
+      }
+      if (i === GEMINI_MODELS.length - 1 || (!isModelNotFoundError(error) && !isRateLimitError(error))) {
+        const allQuota = errors.every(e => e.toLowerCase().includes('429') || e.toLowerCase().includes('quota') || e.toLowerCase().includes('exceeded') || e.toLowerCase().includes('rate limit'));
+        if (allQuota || isRateLimitError(error)) {
+          throw new QuotaExceededError('API quota exceeded. Please provide your own Gemini API key to continue.');
+        }
+        throw new Error(`Unable to analyze image: ${msg}`);
+      }
+    }
+  }
+  throw new Error('Unable to analyze image at this time.');
+};

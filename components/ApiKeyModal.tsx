@@ -16,14 +16,26 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
 }) => {
     const [apiKey, setApiKey] = useState('');
     const [showKey, setShowKey] = useState(false);
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     if (!isOpen) return null;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (apiKey.trim()) {
-            onSave(apiKey.trim());
+        const trimmed = apiKey.trim();
+        if (!trimmed) return;
+
+        // Validate API key format
+        if (!trimmed.startsWith('AIza')) {
+            setValidationError('API key should start with "AIza". Please check your key.');
+            return;
         }
+        if (trimmed.length < 30) {
+            setValidationError('API key seems too short. Please paste the complete key.');
+            return;
+        }
+        setValidationError(null);
+        onSave(trimmed);
     };
 
     return (
@@ -95,6 +107,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
                                 onChange={(e) => setApiKey(e.target.value)}
                                 placeholder="Enter your API key (starts with AIza...)"
                                 className="w-full px-4 py-3 pr-12 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent transition-all"
+                                autoFocus
                             />
                             <button
                                 type="button"
@@ -104,6 +117,14 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
                                 {showKey ? 'Hide' : 'Show'}
                             </button>
                         </div>
+                        {validationError && (
+                            <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
+                                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {validationError}
+                            </p>
+                        )}
                     </div>
 
                     {/* Get API Key Link */}

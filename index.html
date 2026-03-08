@@ -35,6 +35,63 @@
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2310B981'/%3E%3Cstop offset='100%25' style='stop-color:%23059669'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)'/%3E%3Cpath d='M50 25c-8 0-15 12-15 25s7 25 15 25 15-12 15-25-7-25-15-25zm0 5c5 0 10 9 10 20s-5 20-10 20-10-9-10-20 5-20 10-20z' fill='white' opacity='0.9'/%3E%3C/svg%3E">
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            display: ['Playfair Display', 'serif'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out forwards',
+            'slide-in': 'slideIn 0.4s ease-out forwards',
+            'scale-in': 'scaleIn 0.3s ease-out forwards',
+            'modal-show': 'modalShow 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'plant-grow': 'plantGrow 0.5s ease-out forwards',
+            'shimmer': 'shimmer 1.5s infinite',
+            'float': 'float 3s ease-in-out infinite',
+            'glow': 'glow 2s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(12px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            slideIn: {
+              '0%': { opacity: '0', transform: 'translateX(-12px)' },
+              '100%': { opacity: '1', transform: 'translateX(0)' },
+            },
+            scaleIn: {
+              '0%': { opacity: '0', transform: 'scale(0.95)' },
+              '100%': { opacity: '1', transform: 'scale(1)' },
+            },
+            modalShow: {
+              '0%': { opacity: '0', transform: 'scale(0.9) translateY(10px)' },
+              '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+            },
+            plantGrow: {
+              '0%': { opacity: '0', transform: 'scale(0.9) translateY(8px)' },
+              '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+            },
+            shimmer: {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-8px)' },
+            },
+            glow: {
+              '0%, 100%': { opacity: '1' },
+              '50%': { opacity: '0.7' },
+            },
+          },
+        },
+      },
+    };
+  </script>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700&display=swap"
     rel="stylesheet">
@@ -57,11 +114,12 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 50%, #ECFDF5 100%);
       min-height: 100vh;
-      transition: background 0.3s ease, color 0.3s ease;
+      transition: background 0.4s ease, color 0.3s ease;
     }
 
     html.dark body {
-      background: linear-gradient(180deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+      background: linear-gradient(180deg, #0B1120 0%, #111827 50%, #0B1120 100%);
+      color: #E2E8F0;
     }
 
     /* Custom Scrollbar */
@@ -76,7 +134,7 @@
     }
 
     html.dark ::-webkit-scrollbar-track {
-      background: rgba(30, 41, 59, 0.5);
+      background: rgba(15, 23, 42, 0.6);
     }
 
     ::-webkit-scrollbar-thumb {
@@ -90,89 +148,12 @@
       background: linear-gradient(135deg, #059669, #047857);
     }
 
-    /* Animations */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
+    /* Animation Delay Utilities */
+    .animation-delay-0 { animation-delay: 0ms; }
+    .animation-delay-200 { animation-delay: 200ms; }
+    .animation-delay-400 { animation-delay: 400ms; }
 
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(-20px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    @keyframes scaleIn {
-      from {
-        opacity: 0;
-        transform: scale(0.95);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.5;
-      }
-    }
-
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-
-      100% {
-        background-position: 200% 0;
-      }
-    }
-
-    @keyframes float {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-10px);
-      }
-    }
-
-    @keyframes glow {
-
-      0%,
-      100% {
-        box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
-      }
-
-      50% {
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.8);
-      }
-    }
-
+    /* Core Animations */
     .step-transition {
       animation: fadeIn 0.5s ease-out forwards;
     }
@@ -187,19 +168,19 @@
     }
 
     html.dark .card-hover:hover {
-      box-shadow: 0 20px 40px -12px rgba(16, 185, 129, 0.15);
+      box-shadow: 0 20px 40px -12px rgba(16, 185, 129, 0.2);
     }
 
     .glass-effect {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     html.dark .glass-effect {
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.15);
     }
 
     .gradient-text {
@@ -238,7 +219,7 @@
     html.dark .shimmer {
       background: linear-gradient(90deg,
           rgba(255, 255, 255, 0) 0%,
-          rgba(255, 255, 255, 0.1) 50%,
+          rgba(255, 255, 255, 0.05) 50%,
           rgba(255, 255, 255, 0) 100%);
       background-size: 200% 100%;
     }
@@ -278,8 +259,24 @@
     }
 
     html.dark .card-glass {
-      background: rgba(30, 41, 59, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    /* Enhanced Dark Mode Overrides for visibility */
+    html.dark select option {
+      background-color: #1E293B;
+      color: #E2E8F0;
+    }
+
+    html.dark input[type="range"]::-webkit-slider-thumb {
+      background: #10B981;
+      border-color: #059669;
+    }
+
+    html.dark input[type="range"]::-moz-range-thumb {
+      background: #10B981;
+      border-color: #059669;
     }
 
     /* Focus Styles */
@@ -292,6 +289,69 @@
     ::selection {
       background: rgba(16, 185, 129, 0.3);
       color: inherit;
+    }
+
+    html.dark ::selection {
+      background: rgba(16, 185, 129, 0.4);
+    }
+
+    /* Scroll to top button */
+    .scroll-to-top {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 40;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+    .scroll-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Print Styles */
+    @media print {
+      body { background: white !important; }
+      .no-print { display: none !important; }
+    }
+
+    /* Extra small device adjustments */
+    @media (max-width: 380px) {
+      .text-4xl { font-size: 1.75rem; }
+      .text-3xl { font-size: 1.5rem; }
+      .sm\:text-5xl { font-size: 1.875rem; }
+    }
+
+    /* Thin scrollbar for horizontal scroll containers */
+    .scrollbar-thin::-webkit-scrollbar {
+      height: 4px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: rgba(16, 185, 129, 0.3);
+      border-radius: 4px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: rgba(16, 185, 129, 0.5);
+    }
+
+    /* Extra small breakpoint: show elements marked with xs:inline etc. */
+    @media (min-width: 360px) {
+      .xs\:inline { display: inline !important; }
+      .xs\:flex { display: flex !important; }
+      .xs\:block { display: block !important; }
+    }
+
+    /* Ensure touch targets on mobile */
+    @media (pointer: coarse) {
+      button, a, [role="button"] {
+        min-height: 40px;
+      }
     }
   </style>
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { PlantInfo } from '../types';
 import { Button } from './common/Button';
 import { CloseIcon, HeartIcon, SparklesIcon, ExternalLinkIcon } from '../constants';
@@ -36,6 +36,16 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
   onAddToFavorites,
   isFavorite
 }) => {
+  // Escape key to close
+  useEffect(() => {
+    if (!plant) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [plant, onClose]);
+
   if (!plant) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {

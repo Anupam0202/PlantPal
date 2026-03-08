@@ -5,6 +5,7 @@ import { Loader } from './common/Loader';
 import { PlantCard } from './PlantCard';
 import { PlantDetailModal } from './PlantDetailModal';
 import type { LocationData, UserPreferences, PlantInfo, InfrastructureInfo, ViewMode } from '../types';
+import { isPlantInGarden } from '../services/gardenService';
 import {
   PlantPalIcon,
   DownloadIcon,
@@ -151,6 +152,8 @@ interface RecommendationsDisplayProps {
   onRefine: () => void;
   location: LocationData | null;
   preferences: UserPreferences | null;
+  onAddToGarden?: (plant: PlantInfo) => void;
+  onOpenGarden?: () => void;
 }
 
 export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
@@ -161,11 +164,14 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
   onRefine,
   location,
   preferences,
+  onAddToGarden,
+  onOpenGarden,
 }) => {
   const [selectedPlant, setSelectedPlant] = useState<PlantInfo | null>(null);
   const [favoritedPlants, setFavoritedPlants] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [gardenPlantIds, setGardenPlantIds] = useState<Set<string>>(new Set());
 
   // Parse recommendations
   const { plants: parsedPlants, infrastructure, conclusion } = useMemo(() => {
@@ -197,19 +203,21 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err) {
-        // User cancelled or share failed
-        console.log('Share cancelled or failed');
+      } catch {
+        // User cancelled share - no action needed
       }
     } else {
       // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
-        alert('Link copied to clipboard!');
       } catch (err) {
         console.error('Failed to copy to clipboard');
       }
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const handleDownloadExcel = () => {
@@ -344,7 +352,7 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
 
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 sm:gap-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 sm:p-4">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 sm:gap-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 sm:p-4 no-print">
         {/* View toggle */}
         <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
           <div className="flex rounded-lg bg-white dark:bg-slate-700 p-1 shadow-sm">
@@ -400,6 +408,9 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
           <Button onClick={handleShare} variant="ghost" size="sm" icon={<ShareIcon className="w-4 h-4" />} className="min-h-[44px] sm:min-h-0">
             <span className="sm:hidden md:inline">Share</span>
           </Button>
+          <Button onClick={handlePrint} variant="ghost" size="sm" icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18.25 7.034l.056.006" /></svg>} className="min-h-[44px] sm:min-h-0">
+            <span className="sm:hidden md:inline">Print</span>
+          </Button>
           <Button onClick={handleDownloadExcel} variant="secondary" size="sm" icon={<DownloadIcon className="w-4 h-4" />} className="min-h-[44px] sm:min-h-0">
             <span className="sm:hidden md:inline">Export</span>
           </Button>
@@ -423,6 +434,11 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
               isFavorite={favoritedPlants.includes(plant.id)}
               index={index}
               viewMode={viewMode}
+              onAddToGarden={onAddToGarden ? () => {
+                onAddToGarden(plant);
+                setGardenPlantIds(prev => new Set(prev).add(plant.id));
+              } : undefined}
+              isInGarden={gardenPlantIds.has(plant.id) || isPlantInGarden(plant.id)}
             />
           ))}
         </div>
@@ -494,7 +510,12 @@ export const RecommendationsDisplay: React.FC<RecommendationsDisplayProps> = ({
         <Button onClick={handleDownloadExcel} variant="secondary" size="lg" icon={<DownloadIcon className="w-5 h-5" />}>
           Download Excel
         </Button>
-        <Button onClick={onReset} variant="primary" size="lg">
+        {onOpenGarden && (
+          <Button onClick={onOpenGarden} variant="primary" size="lg">
+            🌿 View My Garden
+          </Button>
+        )}
+        <Button onClick={onReset} variant="outline" size="lg">
           Start New Plan
         </Button>
       </div>

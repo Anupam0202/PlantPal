@@ -1,5 +1,5 @@
 import React from 'react';
-import type { SunlightExposure, WateringFrequency, PlantingAreaSize, HeightClearance } from './types';
+import type { SunlightExposure, WateringFrequency, PlantingAreaSize, HeightClearance, BadgeDefinition, MilestoneType, CalendarEventType, SeasonalChallenge, CompanionEntry, ZoneDirection, WindExposure, DrainageSpeed } from './types';
 import { SunlightExposure as SE, WateringFrequency as WF, PlantingAreaSize as PAS, HeightClearance as HC } from './types';
 
 // Gemini Model Configuration with Fallbacks
@@ -8,14 +8,23 @@ import { SunlightExposure as SE, WateringFrequency as WF, PlantingAreaSize as PA
 // Reference: https://ai.google.dev/gemini-api/docs/models
 export const GEMINI_MODELS = [
   // Gemini 2.5 Flash (latest, best price-performance)
+  'gemini-2.5-flash-preview-05-20',
   'gemini-2.5-flash',
 
-  // Gemini 2.0 Flash (stable versions)
+  // Gemini 2.0 Flash (stable production-ready)
   'gemini-2.0-flash',
   'gemini-2.0-flash-001',
 
+  // Gemini 2.0 Flash Lite (lighter, faster, separate quota)
+  'gemini-2.0-flash-lite',
+  'gemini-2.0-flash-lite-001',
+
   // Gemini 2.0 Flash (experimental - may have higher rate limits)
   'gemini-2.0-flash-exp',
+
+  // Gemini 1.5 Flash (legacy stable fallback)
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-001',
 ] as const;
 
 export const GEMINI_MODEL_NAME = GEMINI_MODELS[0];
@@ -468,3 +477,145 @@ export const WindIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => Reac
   strokeLinejoin: "round",
   d: "M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
 }));
+
+// ===== GARDEN & GAMIFICATION CONSTANTS =====
+
+export const BADGE_DEFINITIONS: BadgeDefinition[] = [
+  { id: 'first-seed', name: 'First Seed', icon: '🌱', description: 'Add plants to your garden', tiers: [{ tier: 'bronze', target: 1 }, { tier: 'silver', target: 5 }, { tier: 'gold', target: 10 }] },
+  { id: 'green-thumb', name: 'Green Thumb', icon: '🪴', description: 'Log journal entries', tiers: [{ tier: 'bronze', target: 5 }, { tier: 'silver', target: 25 }, { tier: 'gold', target: 100 }] },
+  { id: 'first-bloom', name: 'First Bloom', icon: '🌸', description: 'Record flowers blooming', tiers: [{ tier: 'bronze', target: 1 }, { tier: 'silver', target: 5 }, { tier: 'gold', target: 15 }] },
+  { id: 'harvest-hero', name: 'Harvest Hero', icon: '🍅', description: 'Record harvests', tiers: [{ tier: 'bronze', target: 1 }, { tier: 'silver', target: 10 }, { tier: 'gold', target: 50 }] },
+  { id: 'streak-master', name: 'Streak Master', icon: '🔥', description: 'Consecutive active days', tiers: [{ tier: 'bronze', target: 7 }, { tier: 'silver', target: 30 }, { tier: 'gold', target: 100 }] },
+  { id: 'plant-scholar', name: 'Plant Scholar', icon: '📚', description: 'Record observations', tiers: [{ tier: 'bronze', target: 10 }, { tier: 'silver', target: 50 }, { tier: 'gold', target: 200 }] },
+  { id: 'water-wise', name: 'Water Wise', icon: '💧', description: 'Log waterings', tiers: [{ tier: 'bronze', target: 10 }, { tier: 'silver', target: 50 }, { tier: 'gold', target: 200 }] },
+  { id: 'measure-master', name: 'Measure Master', icon: '📏', description: 'Record measurements', tiers: [{ tier: 'bronze', target: 5 }, { tier: 'silver', target: 25 }, { tier: 'gold', target: 100 }] },
+  { id: 'pollinator-friend', name: 'Pollinator Friend', icon: '🦋', description: 'Grow pollinator-friendly plants', tiers: [{ tier: 'bronze', target: 2 }, { tier: 'silver', target: 5 }, { tier: 'gold', target: 10 }] },
+  { id: 'carbon-champion', name: 'Carbon Champion', icon: '🌍', description: 'Grow trees & large plants', tiers: [{ tier: 'bronze', target: 1 }, { tier: 'silver', target: 3 }, { tier: 'gold', target: 5 }] },
+  { id: 'community-grower', name: 'Community Grower', icon: '🤝', description: 'Share garden knowledge', tiers: [{ tier: 'bronze', target: 1 }, { tier: 'silver', target: 5 }, { tier: 'gold', target: 10 }] },
+  { id: 'master-gardener', name: 'Master Gardener', icon: '🏆', description: 'Reach high garden health', tiers: [{ tier: 'bronze', target: 1 }, { tier: 'silver', target: 3 }, { tier: 'gold', target: 10 }] },
+];
+
+export const XP_VALUES = {
+  addPlant: 20,
+  logEntry: 10,
+  addPhoto: 15,
+  completeWatering: 5,
+  earnBadge: 100,
+  createPlan: 50,
+  seasonalChallenge: 200,
+};
+
+export const LEVEL_THRESHOLDS = [
+  { level: 1, xp: 0, name: 'Seedling' },
+  { level: 5, xp: 200, name: 'Seedling' },
+  { level: 10, xp: 500, name: 'Sprout' },
+  { level: 20, xp: 2000, name: 'Sapling' },
+  { level: 30, xp: 4000, name: 'Sapling' },
+  { level: 40, xp: 7000, name: 'Growing Tree' },
+  { level: 50, xp: 12000, name: 'Mature Tree' },
+  { level: 75, xp: 25000, name: 'Mature Tree' },
+  { level: 100, xp: 50000, name: 'Ancient Forest' },
+];
+
+export const MILESTONE_OPTIONS: { value: MilestoneType; label: string; icon: string }[] = [
+  { value: 'planted', label: 'Planted', icon: '🌱' },
+  { value: 'sprouted', label: 'Sprouted', icon: '🌿' },
+  { value: 'first-flower', label: 'First Flower', icon: '🌸' },
+  { value: 'first-harvest', label: 'First Harvest', icon: '🍎' },
+  { value: 'pruned', label: 'Pruned', icon: '✂️' },
+  { value: 'repotted', label: 'Repotted', icon: '🪴' },
+  { value: 'pest-issue', label: 'Pest Issue', icon: '🐛' },
+  { value: 'watering', label: 'Watered', icon: '💧' },
+  { value: 'feeding', label: 'Fed / Fertilized', icon: '🧪' },
+  { value: 'measurement', label: 'Measurement', icon: '📏' },
+  { value: 'observation', label: 'Observation', icon: '👁️' },
+];
+
+export const CALENDAR_EVENT_COLORS: Record<CalendarEventType, string> = {
+  'seed-start': 'bg-purple-500',
+  'transplant': 'bg-blue-500',
+  'direct-sow': 'bg-green-600',
+  'growing': 'bg-emerald-400',
+  'bloom': 'bg-pink-500',
+  'harvest': 'bg-amber-500',
+  'dormancy': 'bg-gray-400',
+  'critical-care': 'bg-red-500',
+};
+
+export const SEASONAL_CHALLENGES: SeasonalChallenge[] = [
+  { id: 'spring-awakening', season: 'spring', title: 'Spring Awakening', description: 'Plant at least 3 new species this spring', icon: '🌷', target: 3, metric: 'plants-added', xpReward: 200 },
+  { id: 'summer-survivor', season: 'summer', title: 'Summer Survivor', description: 'Keep all plants watered for 14 consecutive days', icon: '☀️', target: 14, metric: 'streak', xpReward: 250 },
+  { id: 'autumn-harvest', season: 'autumn', title: 'Autumn Harvest', description: 'Record at least 5 harvests this fall', icon: '🍂', target: 5, metric: 'harvests', xpReward: 200 },
+  { id: 'winter-guardian', season: 'winter', title: 'Winter Guardian', description: 'Log 20 care entries during winter', icon: '❄️', target: 20, metric: 'entries-logged', xpReward: 250 },
+];
+
+export const WATER_CONSERVATION_TIPS: string[] = [
+  '💡 Switch to drip irrigation to reduce water usage by ~40%.',
+  '💡 Water in early morning (6-8am) to reduce evaporation by up to 30%.',
+  '💡 Add 2-3 inches of mulch around plants to retain soil moisture.',
+  '💡 A rain barrel can capture ~2,000 liters of free water per season.',
+  '💡 Group plants with similar water needs to avoid overwatering.',
+  '💡 Use a moisture meter — most plants only need water when soil is dry 2 inches deep.',
+];
+
+// ===== COMPANION PLANTING DATABASE =====
+export const COMPANION_DB: CompanionEntry[] = [
+  { a: 'tomato', b: 'basil', rel: 'good', why: 'Basil repels aphids and whiteflies from tomatoes. Many gardeners believe it improves tomato flavor. Plant within 18 inches.' },
+  { a: 'tomato', b: 'carrot', rel: 'good', why: 'Carrots loosen soil around tomato roots. Tomatoes provide light shade that carrots appreciate.' },
+  { a: 'tomato', b: 'marigold', rel: 'good', why: 'Marigold roots release substances that deter nematodes. Their flowers attract beneficial pollinators.' },
+  { a: 'tomato', b: 'parsley', rel: 'good', why: 'Parsley attracts hoverflies that prey on tomato aphids.' },
+  { a: 'tomato', b: 'pepper', rel: 'good', why: 'Both are nightshades with similar growing needs. They share pollinators effectively.' },
+  { a: 'tomato', b: 'onion', rel: 'good', why: 'Onions repel many pests that affect tomatoes. Both benefit from similar soil conditions.' },
+  { a: 'tomato', b: 'fennel', rel: 'bad', why: 'Fennel releases root chemicals that inhibit tomato growth. Keep fennel isolated in its own bed.' },
+  { a: 'tomato', b: 'cabbage', rel: 'bad', why: 'Both are heavy nitrogen feeders and compete for the same nutrients.' },
+  { a: 'tomato', b: 'corn', rel: 'bad', why: 'Both attract the tomato hornworm and corn earworm. Planting together increases pest pressure.' },
+  { a: 'tomato', b: 'dill', rel: 'bad', why: 'Mature dill inhibits tomato growth, though young dill is fine as a companion.' },
+  { a: 'tomato', b: 'potato', rel: 'bad', why: 'Both are nightshades susceptible to the same blight. Growing together spreads disease faster.' },
+  { a: 'basil', b: 'pepper', rel: 'good', why: 'Basil repels aphids, spider mites, and mosquitoes near peppers.' },
+  { a: 'basil', b: 'oregano', rel: 'good', why: 'Mediterranean herbs thrive together with similar water and sun needs.' },
+  { a: 'basil', b: 'sage', rel: 'bad', why: 'Sage and basil have different moisture needs. Sage prefers drier conditions.' },
+  { a: 'carrot', b: 'onion', rel: 'good', why: 'Onion smell masks carrot scent from carrot fly. Carrots repel onion fly.' },
+  { a: 'carrot', b: 'rosemary', rel: 'good', why: 'Rosemary repels carrot fly with its strong scent.' },
+  { a: 'carrot', b: 'lettuce', rel: 'good', why: 'Lettuce provides ground cover that keeps carrot roots cool and moist.' },
+  { a: 'carrot', b: 'dill', rel: 'bad', why: 'Dill and carrot are related and can cross-pollinate, affecting seed quality.' },
+  { a: 'bean', b: 'corn', rel: 'good', why: 'Classic "Three Sisters" pairing. Beans fix nitrogen. Corn provides a climbing pole for beans.' },
+  { a: 'bean', b: 'squash', rel: 'good', why: 'Part of "Three Sisters." Squash leaves shade the ground, reducing weeds and retaining moisture.' },
+  { a: 'bean', b: 'cucumber', rel: 'good', why: 'Beans fix nitrogen in the soil, which heavy-feeding cucumbers benefit from.' },
+  { a: 'bean', b: 'marigold', rel: 'good', why: 'Marigolds attract pollinators and deter bean beetles.' },
+  { a: 'bean', b: 'onion', rel: 'bad', why: 'Onions and garlic stunt bean growth due to chemical interference.' },
+  { a: 'bean', b: 'fennel', rel: 'bad', why: 'Fennel inhibits the growth of most plants including beans.' },
+  { a: 'corn', b: 'squash', rel: 'good', why: 'Squash shades the ground under corn, reducing weeds and water evaporation.' },
+  { a: 'cucumber', b: 'sunflower', rel: 'good', why: 'Sunflowers attract pollinators and can provide a trellis for cucumber vines.' },
+  { a: 'cucumber', b: 'radish', rel: 'good', why: 'Radishes repel cucumber beetles. They mature quickly before cucumbers need the space.' },
+  { a: 'cucumber', b: 'potato', rel: 'bad', why: 'Both are susceptible to blight. Cucumbers compete with potatoes for water and nutrients.' },
+  { a: 'lettuce', b: 'strawberry', rel: 'good', why: 'Lettuce acts as ground cover for strawberries. Both enjoy cool, moist conditions.' },
+  { a: 'lettuce', b: 'radish', rel: 'good', why: 'Fast-growing radishes help break up soil for lettuce roots.' },
+  { a: 'pea', b: 'carrot', rel: 'good', why: 'Peas fix nitrogen that carrots use. Both improve soil structure.' },
+  { a: 'pea', b: 'radish', rel: 'good', why: 'Radishes mature fast and vacate space before peas need room to spread.' },
+  { a: 'pea', b: 'garlic', rel: 'bad', why: 'Garlic releases substances that inhibit pea growth.' },
+  { a: 'garlic', b: 'rose', rel: 'good', why: 'Garlic repels aphids, a major rose pest. Plant garlic around rose bushes.' },
+  { a: 'lavender', b: 'rosemary', rel: 'good', why: 'Both are drought-tolerant Mediterranean herbs with similar soil and sun needs.' },
+  { a: 'lavender', b: 'rose', rel: 'good', why: 'Lavender repels whiteflies and attracts pollinators that benefit roses.' },
+  { a: 'rosemary', b: 'sage', rel: 'good', why: 'Both prefer well-drained, drier soil and full sun. Excellent companions.' },
+  { a: 'rosemary', b: 'thyme', rel: 'good', why: 'Mediterranean herb companions with identical growing requirements.' },
+  { a: 'mint', b: 'cabbage', rel: 'good', why: 'Mint deters cabbage moths. Keep mint in containers to prevent invasive spread.' },
+  { a: 'sunflower', b: 'corn', rel: 'good', why: 'Both are tall plants that attract similar pollinators. Good windbreak pairing.' },
+  { a: 'sunflower', b: 'potato', rel: 'bad', why: 'Sunflower roots release chemicals that inhibit potato growth.' },
+  { a: 'spinach', b: 'strawberry', rel: 'good', why: 'Spinach provides ground cover for strawberries. Both prefer cooler conditions.' },
+  { a: 'pepper', b: 'fennel', rel: 'bad', why: 'Fennel root secretions inhibit pepper growth. Keep at least 4 feet apart.' },
+  { a: 'potato', b: 'marigold', rel: 'good', why: 'Marigolds deter potato beetles and nematodes from the soil.' },
+  { a: 'cabbage', b: 'dill', rel: 'good', why: 'Dill attracts wasps that prey on cabbage worms.' },
+  { a: 'cabbage', b: 'strawberry', rel: 'bad', why: 'Both are susceptible to the same fungal diseases.' },
+];
+
+// ===== MICROCLIMATE ZONE PRESETS =====
+export const ZONE_PRESETS: { name: string; icon: string; direction: ZoneDirection; wind: WindExposure; nearStructure: boolean; drainage: DrainageSpeed; hasShade: boolean }[] = [
+  { name: 'South-facing wall', icon: '🧱', direction: 'south', wind: 'sheltered', nearStructure: true, drainage: 'fast', hasShade: false },
+  { name: 'Under large tree', icon: '🌳', direction: 'north', wind: 'sheltered', nearStructure: false, drainage: 'normal', hasShade: true },
+  { name: 'East-facing balcony', icon: '🏢', direction: 'east', wind: 'moderate', nearStructure: true, drainage: 'fast', hasShade: false },
+  { name: 'Rooftop', icon: '🏙️', direction: 'south', wind: 'exposed', nearStructure: true, drainage: 'fast', hasShade: false },
+  { name: 'Shaded courtyard', icon: '🏘️', direction: 'north', wind: 'sheltered', nearStructure: true, drainage: 'collects', hasShade: true },
+  { name: 'Open lawn', icon: '🌿', direction: 'south', wind: 'moderate', nearStructure: false, drainage: 'normal', hasShade: false },
+  { name: 'West-facing fence', icon: '🏡', direction: 'west', wind: 'moderate', nearStructure: true, drainage: 'normal', hasShade: false },
+  { name: 'Window box', icon: '🪟', direction: 'east', wind: 'sheltered', nearStructure: true, drainage: 'fast', hasShade: false },
+];

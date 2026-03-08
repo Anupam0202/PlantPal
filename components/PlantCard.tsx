@@ -11,6 +11,8 @@ interface PlantCardProps {
   isFavorite: boolean;
   index?: number;
   viewMode?: 'grid' | 'list';
+  onAddToGarden?: () => void;
+  isInGarden?: boolean;
 }
 
 export const PlantCard: React.FC<PlantCardProps> = ({
@@ -20,11 +22,17 @@ export const PlantCard: React.FC<PlantCardProps> = ({
   onAddToFavorites,
   isFavorite,
   index = 0,
-  viewMode = 'grid'
+  viewMode = 'grid',
+  onAddToGarden,
+  isInGarden = false,
 }) => {
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onAddToFavorites();
+  };
+  const handleGardenClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onAddToGarden && !isInGarden) onAddToGarden();
   };
 
   if (viewMode === 'list') {
@@ -81,18 +89,25 @@ export const PlantCard: React.FC<PlantCardProps> = ({
           )}
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2">
+          {onAddToGarden && (
+            <button
+              onClick={handleGardenClick}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all min-h-[36px] ${
+                isInGarden
+                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 cursor-default'
+                  : 'bg-emerald-500 text-white hover:bg-emerald-600'
+              }`}
+              aria-label={isInGarden ? 'Already in garden' : 'Add to garden'}
+            >
+              {isInGarden ? '✓ In Garden' : '+ Garden'}
+            </button>
+          )}
           <button
             onClick={handleFavoriteClick}
-            className={`
-              p-2.5 rounded-full transition-all duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center
-              ${isFavorite
-                ? 'text-rose-500 bg-rose-50 dark:bg-rose-900/30'
-                : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-700'
-              }
-            `}
-            aria-label={isFavorite ? `Remove ${plant.commonName} from favorites` : `Add ${plant.commonName} to favorites`}
+            className={`p-2.5 rounded-full transition-all duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center
+              ${isFavorite ? 'text-rose-500 bg-rose-50 dark:bg-rose-900/30' : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
             <HeartIcon className="w-5 h-5" filled={isFavorite} />
           </button>
@@ -184,17 +199,26 @@ export const PlantCard: React.FC<PlantCardProps> = ({
           </p>
         )}
 
-        {/* View details prompt */}
-        <div className={`
-          flex items-center justify-center gap-1 py-2 rounded-lg text-sm font-medium
-          transition-all duration-200
-          ${isSelected
-            ? 'bg-emerald-500 text-white'
-            : 'bg-slate-100 dark:bg-slate-700/50 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white'
-          }
-        `}>
-          <span>View Details</span>
-          <ChevronRightIcon className="w-4 h-4" />
+        {/* View details + garden button */}
+        <div className="flex gap-2">
+          {onAddToGarden && (
+            <button
+              onClick={handleGardenClick}
+              className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                isInGarden
+                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 cursor-default'
+                  : 'bg-emerald-500 text-white hover:bg-emerald-600'
+              }`}
+              aria-label={isInGarden ? 'Already in garden' : 'Add to garden'}
+            >
+              {isInGarden ? '✓ In Garden' : '+ My Garden'}
+            </button>
+          )}
+          <div className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-sm font-medium transition-all duration-200
+            ${isSelected ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-700/50 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white'}`}>
+            <span>View Details</span>
+            <ChevronRightIcon className="w-4 h-4" />
+          </div>
         </div>
       </div>
     </div>

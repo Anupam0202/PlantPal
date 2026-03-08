@@ -186,41 +186,354 @@ export interface RecommendationResult {
   generatedAt: Date;
 }
 
-// Image Generation Types
-export interface ImageGenerationResult {
-  success: boolean;
-  imageUrl?: string;
-  error?: string;
-}
-
-export interface PlantImageRequest {
-  plantId: string;
-  plantName: string;
-  scientificName?: string;
-}
-
-// Export Data Types
-export interface ExportData {
-  location: LocationData;
-  preferences: UserPreferences;
-  plants: PlantInfo[];
-  infrastructure: InfrastructureInfo[];
-  conclusion: string | null;
-  exportedAt: string;
-}
-
-// Favorite Item
-export interface FavoriteItem {
-  plantId: string;
-  plantName: string;
-  addedAt: Date;
-}
-
 // View Mode
 export type ViewMode = 'grid' | 'list';
 
-// Filter Options
-export interface FilterOptions {
-  showFavoritesOnly: boolean;
-  searchQuery: string;
+// ===== Garden Journal Types =====
+export type MilestoneType =
+  | 'planted' | 'sprouted' | 'first-flower' | 'first-harvest'
+  | 'pruned' | 'repotted' | 'pest-issue' | 'observation'
+  | 'watering' | 'feeding' | 'measurement';
+
+export interface GardenPlant {
+  id: string;
+  commonName: string;
+  scientificName?: string;
+  description?: string;
+  dateAdded: string;
+  status: 'active' | 'dormant' | 'removed';
+  location?: string;
 }
+
+export interface JournalEntry {
+  id: string;
+  plantId: string;
+  date: string;
+  type: MilestoneType;
+  title: string;
+  notes?: string;
+  photoUrl?: string;
+  measurements?: {
+    heightCm?: number;
+    spreadCm?: number;
+    leafCount?: number;
+    flowerCount?: number;
+    fruitCount?: number;
+  };
+  waterAmountLiters?: number;
+  weatherSnapshot?: {
+    temperature: number;
+    humidity: number;
+    description: string;
+  };
+}
+
+// ===== Gamification Types =====
+export type BadgeTier = 'bronze' | 'silver' | 'gold';
+
+export interface BadgeDefinition {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  tiers: { tier: BadgeTier; target: number }[];
+}
+
+export interface EarnedBadge {
+  badgeId: string;
+  tier: BadgeTier;
+  earnedDate: string;
+}
+
+export interface GardenProfile {
+  xp: number;
+  level: number;
+  streakDays: number;
+  lastActiveDate?: string;
+  joinedDate: string;
+  earnedBadges: EarnedBadge[];
+}
+
+// ===== Calendar Types =====
+export type CalendarEventType =
+  | 'seed-start' | 'transplant' | 'direct-sow'
+  | 'growing' | 'bloom' | 'harvest' | 'dormancy' | 'critical-care';
+
+export interface CalendarEvent {
+  plantName: string;
+  type: CalendarEventType;
+  monthStart: number;
+  monthEnd: number;
+  color: string;
+  label: string;
+}
+
+// ===== Watering Types =====
+export interface WateringTask {
+  plantId: string;
+  plantName: string;
+  action: 'water' | 'skip';
+  amountLiters?: number;
+  reason: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+export interface WeatherAlert {
+  type: 'heat-wave' | 'frost' | 'storm' | 'drought';
+  severity: 'warning' | 'critical';
+  title: string;
+  description: string;
+  actions: string[];
+}
+
+// ===== Water Usage =====
+export interface WaterUsage {
+  thisWeek: number;
+  thisMonth: number;
+  allTime: number;
+  avgPerPlant: number;
+  entryCount: number;
+}
+
+// ===== Growth Chart =====
+export interface GrowthDataPoint {
+  date: string;
+  heightCm?: number;
+  spreadCm?: number;
+  leafCount?: number;
+}
+
+// ===== Seasonal Challenge =====
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
+
+export interface SeasonalChallenge {
+  id: string;
+  season: Season;
+  title: string;
+  description: string;
+  icon: string;
+  target: number;
+  metric: 'plants-added' | 'entries-logged' | 'waterings' | 'harvests' | 'streak';
+  xpReward: number;
+}
+
+// ===== Upcoming Task =====
+export interface UpcomingTask {
+  plantName: string;
+  task: string;
+  dueDesc: string;
+  icon: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+// ===== Garden Stats =====
+export interface GardenStats {
+  totalPlants: number;
+  activePlants: number;
+  dormantPlants: number;
+  removedPlants: number;
+  totalEntries: number;
+  totalWaterings: number;
+  totalHarvests: number;
+  healthScore: number;
+  weekEntries: JournalEntry[];
+  waterUsage: WaterUsage;
+  upcomingTasks: UpcomingTask[];
+}
+
+// ===== Plant Health Scanner =====
+export type HealthRating = 'thriving' | 'healthy' | 'fair' | 'poor' | 'critical';
+export type ConfidenceLevel = 'high' | 'medium' | 'low';
+export type UrgencyLevel = 'immediate' | 'soon' | 'monitor';
+
+export interface HealthIssue {
+  name: string;
+  confidence: ConfidenceLevel;
+  cause: string;
+  urgency: UrgencyLevel;
+}
+
+export interface HealthReport {
+  rating: HealthRating;
+  plantName?: string;
+  issues: HealthIssue[];
+  treatmentPlan: string[];
+  preventionTips: string[];
+  summary: string;
+  analyzedAt: string;
+}
+
+// ===== Companion Planting =====
+export type CompanionRelation = 'good' | 'bad' | 'neutral';
+
+export interface CompanionEntry {
+  a: string;
+  b: string;
+  rel: CompanionRelation;
+  why: string;
+}
+
+// ===== Soil Intelligence =====
+export interface SoilProfile {
+  id: string;
+  createdAt: string;
+  method: 'photo-ai' | 'diy-jar' | 'diy-squeeze' | 'diy-ph' | 'diy-drainage' | 'professional';
+  soilType?: string;
+  ph?: number;
+  organicMatter?: string;
+  moisture?: string;
+  texture?: { sand: number; silt: number; clay: number };
+  nutrients?: { nitrogen: string; phosphorus: string; potassium: string };
+  drainage?: string;
+  notes?: string;
+  aiAnalysis?: string;
+  improvementPlan?: string;
+}
+
+// ===== Micro-Climate Mapper =====
+export type ZoneDirection = 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
+export type WindExposure = 'sheltered' | 'moderate' | 'exposed';
+export type DrainageSpeed = 'collects' | 'normal' | 'fast';
+
+export interface MicroClimateZone {
+  id: string;
+  name: string;
+  direction: ZoneDirection;
+  wind: WindExposure;
+  nearStructure: boolean;
+  drainage: DrainageSpeed;
+  hasShade: boolean;
+  aiAnalysis?: string;
+  recommendedPlants?: string;
+}
+
+// ===== Active Tool =====
+export type ActiveTool = 'main' | 'garden' | 'plant-doctor' | 'companion' | 'soil' | 'microclimate' | 'carbon' | 'biodiversity' | 'climate' | 'pollinator' | 'community-map' | 'swap' | 'harvest' | 'multi-garden' | 'ar-visualizer' | 'budget' | 'voice-assistant' | 'timelapse';
+
+// ===== Unified Environmental Profile =====
+// This is fetched in parallel from 8+ free APIs when the user shares their location.
+// Every component draws from this shared pool — no redundant API calls.
+
+export interface AirQualityData {
+  aqi: number;                // US AQI (0-500)
+  pm25: number;               // µg/m³
+  pm10: number;               // µg/m³
+  ozone: number;              // µg/m³
+  no2: number;                // µg/m³
+  so2: number;                // µg/m³
+  co: number;                 // µg/m³
+  europeanAqi?: number;
+  pollen?: {                  // grains/m³
+    alder: number;
+    birch: number;
+    grass: number;
+    mugwort: number;
+    olive: number;
+    ragweed: number;
+  };
+  fetchedAt: string;
+}
+
+export interface SoilGridsData {
+  ph: number;                 // pH at 0-5cm (divided by 10 from API)
+  clay: number;               // % at 0-5cm
+  sand: number;               // % at 0-5cm
+  silt: number;               // % at 0-5cm
+  organicCarbon: number;      // g/kg at 0-5cm
+  nitrogen: number;           // cg/kg at 0-5cm
+  bulkDensity: number;        // kg/dm³ at 0-5cm
+  cec: number;                // mmol(c)/kg cation exchange capacity
+  soilClass: string;          // Derived texture class (e.g., "Sandy Clay Loam")
+  fetchedAt: string;
+}
+
+export interface SunMoonData {
+  sunrise: string;
+  sunset: string;
+  solarNoon: string;
+  dayLength: number;          // hours
+  civilTwilightBegin: string;
+  civilTwilightEnd: string;
+  moonPhase: string;          // e.g., "Waxing Gibbous"
+  moonIllumination: number;   // 0-100%
+  fetchedAt: string;
+}
+
+export interface ElevationData {
+  elevation: number;          // meters above sea level
+  fetchedAt: string;
+}
+
+export interface SoilConditionsData {
+  temperature0to7cm: number;  // °C
+  temperature7to28cm: number; // °C
+  moisture0to7cm: number;     // m³/m³ (volumetric)
+  moisture7to28cm: number;    // m³/m³
+  evapotranspiration: number; // mm/day (ET₀)
+  fetchedAt: string;
+}
+
+export interface FrostDates {
+  lastSpringFrost: string;    // "March 28" format
+  firstFallFrost: string;     // "October 15" format
+  growingSeasonDays: number;
+  confidence: string;         // "Based on X years of data"
+}
+
+export interface HistoricalClimateData {
+  avgAnnualTempC: number;
+  avgAnnualRainMm: number;
+  tempTrend30yr: number;      // °C change over 30 years
+  rainTrend30yr: number;      // mm change over 30 years
+  hottestMonthAvgC: number;
+  coldestMonthAvgC: number;
+  frostDates: FrostDates;
+  fetchedAt: string;
+}
+
+export interface ClimateProjection {
+  scenario: string;           // "SSP2-4.5" or "SSP5-8.5"
+  tempChange2050: number;     // °C
+  tempChange2080: number;     // °C
+  rainChange2050: number;     // % change
+}
+
+export interface NativeSpeciesSummary {
+  totalPlantSpecies: number;
+  totalAnimalSpecies: number;
+  keyNativePlants: string[];  // Top 20 native plant names
+  invasiveSpecies: string[];  // Species to warn about
+  recentObservations: number; // Count in last 30 days
+  fetchedAt: string;
+}
+
+export interface EnvironmentalProfile {
+  // Core identifiers
+  latitude: number;
+  longitude: number;
+  locationName: string;
+  country?: string;
+  admin1?: string;            // State/Province
+  timezone?: string;
+
+  // Climate classification
+  usdaZone?: string;          // e.g., "7b"
+  koppenClass?: string;       // e.g., "Cfa" (Humid Subtropical)
+
+  // Real-time data (refreshed frequently)
+  airQuality?: AirQualityData;
+  soilConditions?: SoilConditionsData;
+  sunMoon?: SunMoonData;
+
+  // Semi-static data (refreshed monthly or less)
+  elevation?: ElevationData;
+  soilGrids?: SoilGridsData;
+  historicalClimate?: HistoricalClimateData;
+  climateProjections?: ClimateProjection[];
+  biodiversity?: NativeSpeciesSummary;
+
+  // Metadata
+  profileCreatedAt: string;
+  lastRefreshedAt: string;
+  dataSources: string[];      // List of APIs that contributed data
+}

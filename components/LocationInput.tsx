@@ -57,8 +57,8 @@ export const LocationInput: React.FC<LocationInputProps> = ({ onSubmit }) => {
         longitude: position.longitude,
         name: "My Current Location",
       });
-    } catch (err: any) {
-      setError(err.message || "Could not fetch current location. Please try manual input.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not fetch current location. Please try manual input.");
     } finally {
       setIsLoadingGeo(false);
     }
