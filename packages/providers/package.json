@@ -1,0 +1,19 @@
+{
+  "name": "@plantpal/providers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@plantpal/schemas": "workspace:*",
+    "@plantpal/domain": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "sideEffects": false
+}

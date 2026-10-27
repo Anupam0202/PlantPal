@@ -20,7 +20,7 @@ body:
     id: device
     attributes:
       label: Device and browser
-      placeholder: "Android 15, Chrome 141"
+      placeholder: 'Android 15, Chrome 141'
   - type: textarea
     id: extra
     attributes:

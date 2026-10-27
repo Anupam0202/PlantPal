@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+**/dist
+**/.wrangler
+**/routeTree.gen.ts
+**/paraglide
+docs/PlantPal-Master-Prompt-v4.md

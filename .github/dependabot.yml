@@ -7,7 +7,7 @@ updates:
     open-pull-requests-limit: 5
     groups:
       dev-tooling:
-        patterns: ["@types/*", "eslint*", "typescript*", "vitest*", "@vitest/*", "prettier"]
+        patterns: ['@types/*', 'eslint*', 'typescript*', 'vitest*', '@vitest/*', 'prettier']
   - package-ecosystem: github-actions
     directory: /
     schedule:

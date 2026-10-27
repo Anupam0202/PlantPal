@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+@import '@plantpal/ui/tokens.css';
+
+@source '../../../../packages/ui/src';
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100dvh;
+  }
+  body {
+    overscroll-behavior-y: none;
+  }
+}

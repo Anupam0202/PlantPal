@@ -2,152 +2,123 @@
 
 # 🌿 PlantPal
 
-### The AI-Powered Living Ecosystem Assistant
+### A living field guide for the space you actually have
 
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Vite](https://img.shields.io/badge/Vite-6.3-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Gemini AI](https://img.shields.io/badge/Gemini_AI-2.0-4285F4?logo=google&logoColor=white)](https://ai.google.dev/)
+[![CI](https://github.com/Anupam0202/PlantPal/actions/workflows/ci.yml/badge.svg)](https://github.com/Anupam0202/PlantPal/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Anupam0202/PlantPal/actions/workflows/codeql.yml/badge.svg)](https://github.com/Anupam0202/PlantPal/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2f6b3a.svg)](LICENSE)
 
-*Transform urban spaces into climate-resilient, biodiverse, and livable environments using real-time environmental data.*
+_Grow the right plants for your balcony, yard or rooftop, keep them alive through heat, drought and frost, and measure what your space gives back to nature — using free, open environmental data and your own Gemini key._
 
 </div>
 
 ---
 
-## ✨ Overview
+## Why PlantPal
 
-PlantPal is an advanced, AI-powered urban sustainability platform. It goes beyond simple plant recommendations by dynamically integrating **8+ free real-time APIs** covering hyper-local weather, soil composition, air quality, solar positioning, and biodiversity. 
+Most plant apps guess. PlantPal shows its working:
 
-Powered by **Google's Gemini 2.0 AI**, PlantPal synthesizes this immense wealth of environmental data against your personal preferences to generate deeply personalized, location-aware answers. Every recommendation is specific to **you, your location, and this precise moment in time**.
+- **Evidence first.** Every fact carries its source, date and evidence grade (measured, modelled, catalogue, AI-suggested…). Nothing is presented as more certain than it is.
+- **Local-first.** Your garden lives on your device and works offline. An account is optional and only needed to sync or share.
+- **Bring your own key.** AI features use _your_ Gemini API key. It is encrypted on your device and sent only to Google — never to PlantPal servers. Everything that does not need AI works without a key.
+- **For the environment.** Native and pollinator-friendly choices, invasive-species warnings, water-wise care and an honest impact ledger.
 
-## 🚀 Features
+## Status
 
-### 🧠 Environmental Intelligence
-- **Real-Time Weather & Air Quality**: Integrates Open-Meteo to track live temperature, humidity, UV index, PM2.5/PM10 pollutants, Ozone, and live pollen counts.
-- **Satellite Soil Analysis**: Utilizes ISRIC SoilGrids to instantly determine your local soil class, pH, texture breakdown (sand/silt/clay), and organic carbon without requiring manual tests.
-- **Micro-Climate & Topography**: Fetches elevation data and runs calculations for precise sunrise, sunset, daylight hours, and moon phrasing (using Open-Elevation and Sunrise-Sunset APIs).
-- **Climate Trend Forecaster**: Leverages 30-year CMIP6 climate models to predict temperature shifts, identify hardiness zones, and forecast frost dates—helping you plant for the future, not just today.
-- **Local Biodiversity Mapping**: Queries the GBIF network to determine exactly how many native plants and animals live within 10km of your backyard.
+PlantPal is being rebuilt as v4 ("Living Field Guide") milestone by milestone. See [`RUN-STATE.md`](RUN-STATE.md) for the live tracker and [`docs/PlantPal-Master-Prompt-v4.md`](docs/PlantPal-Master-Prompt-v4.md) for the full specification.
 
-### 🌿 The Garden Toolkit
-- **Plant Doctor (Health Scanner)**: Upload a photo of a sick plant. The Gemini AI will diagnose the issue by cross-referencing visual symptoms with your live local weather (e.g., high humidity = fungal risk).
-- **Carbon Dashboard**: Quantify your garden's exact CO₂ sequestration impact and see how it combats your neighborhood's live Air Quality Index.
-- **Pollinator Pathway**: Calculates "hunger gaps" in your garden's blooming schedule and recommends specific native plants to attract the exact insect species currently living in your zip code.
-- **Harvest Tracker**: Log your edible yields. The AI acts as a chef to provide garden-to-table recipes and preservation strategies tailored to your growing season.
-- **Companion Matrix**: Discover which plants thrive together and which are antagonistic.
+| Milestone | What it delivers                                                                        | State   |
+| --------- | --------------------------------------------------------------------------------------- | ------- |
+| M0        | Safety net: licence, community files, CodeQL, Dependabot, decision records              | Done    |
+| M1        | Monorepo, design system, accessible app shell, PWA, strict CSP, CI                      | Done    |
+| M2        | Local-first garden data, journal, photos, export/import, migration from v3              | Next    |
+| M3–M5     | Environmental data providers, plant catalogue and matching, care schedules and alerts   | Planned |
+| M6–M9     | Bring-your-own-key AI, plant health, identification, space designer, nature log, impact | Planned |
+| M10–M12   | Optional accounts and sync, shared gardens, community, release hardening                | Planned |
 
-### 🛠️ Advanced Design Tools
-- **Micro-Climate Mapper**: Divide your yard into distinct zones (hot/dry, cool/shady) and get recommendations tailored to the exact topography of each corner.
-- **Community Green Map**: Visualize what your neighbors are planting to coordinate local ecosystem corridors.
-- **Time-Lapse Simulator**: Fast-forward 1, 5, or 10 years to see how your trees and shrubs will mature over time.
-- **Voice Assistant**: A hands-free dictation tool for logging garden tasks while your hands are covered in dirt.
+The previous single-file app (v3) has been retired; its known problems are tracked in [`docs/traceability.md`](docs/traceability.md).
 
----
+## Tech stack
 
-## 🛠️ Tech Stack & Real-Time Data Integrations
+| Area    | Choice                                                                                          |
+| ------- | ----------------------------------------------------------------------------------------------- |
+| Web app | React 19, Vite 8, TanStack Router + Query, Zustand, Tailwind CSS 4, Base UI, Motion             |
+| Offline | Installable PWA (Workbox), IndexedDB via Dexie                                                  |
+| API     | Cloudflare Workers + Hono, D1 (Drizzle), R2, Durable Objects (free tier)                        |
+| AI      | Google Gemini via `@google/genai`, with the user's own key and runtime model discovery          |
+| Data    | Open-Meteo, NASA POWER, GBIF, iNaturalist, Wikipedia/Wikidata, OpenFreeMap — free, no paid tier |
+| Quality | TypeScript (strict), ESLint, Prettier, Vitest, Playwright + axe (WCAG 2.2 AA)                   |
 
-### Core Technology
-| Category | Technology |
-|----------|------------|
-| **Framework** | React 19 + TypeScript 5 |
-| **Styling** | Tailwind CSS (Dark/Light mode native) |
-| **AI Model** | Google Gemini API (`@google/genai`) |
-| **State Management**| React `useState` / `useMemo` / LocalStorage Cache |
-| **Build Tool** | Vite 6 |
+Pinned versions are recorded in [`docs/adr/0002-versions.md`](docs/adr/0002-versions.md).
 
-### Real-Time Data Pipeline
-| Provider | Data Fetched |
-|----------|--------------|
-| **Open-Meteo Weather** | Live temp, humidity, wind, 7-day forecast |
-| **Open-Meteo Air Quality** | US/EU AQI, PM2.5, PM10, Ozone, Pollen (Alder, Birch, Grass, etc.) |
-| **Open-Meteo Soil** | Soil temps (0-28cm), volumetric moisture, evapotranspiration |
-| **Open-Meteo Climate** | 30-year historical trends, 2050/2080 CMIP6 projections, frost dates |
-| **ISRIC SoilGrids** | Global 250m resolution soil classification, pH, organics |
-| **GBIF API** | Local biodiversity metrics, native species lists, invasive alerts |
-| **Sunrise-Sunset API** | Solar noon, twilight, absolute daylight hours, moon phases |
-| **Open-Elevation** | Topographical meters above sea level |
-
----
-
-## 📖 How to Use
-
-### Step 1: Establish Your Location
-PlantPal requires a location to function. Click "Use Current Location" (GPS) or manually search for your city.
-*The app will instantly fire parallel requests to all 8 APIs to build your unique "Environmental Profile."*
-
-### Step 2: Set Preferences
-Browse your Environmental Snapshot. Tell PlantPal your specific constraints:
-- Available sunlight hours
-- Drought tolerance and watering habits
-- Project size and max plant heights
-- Urban planning goals (e.g., "attract birds" or "block wind")
-
-### Step 3: Get AI Recommendations
-PlantPal synthesizes your preferences with the massive environmental profile dataset. The Gemini AI will return highly practical, location-native plant recommendations and green infrastructure ideas (like building a rain garden or a hugelkultur mound).
-
-### Step 4: Manage Your Living Spaces
-Save plants to your **Garden Dashboard**. Use the sidebar to track harvests, diagnose diseases with the **Plant Doctor**, or map out a **Pollinator Pathway**.
-
----
-
-## 💻 Local Development
+## Getting started
 
 ### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Gemini API key ([Get one free here](https://aistudio.google.com/app/apikey))
 
-### Setup
+- Node.js 22 or newer
+- pnpm 10 (`corepack enable` picks up the version from `package.json`)
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/plantpal.git
-   cd plantpal
-   ```
+### Run it
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+git clone https://github.com/Anupam0202/PlantPal.git
+cd PlantPal
+pnpm install
+pnpm dev          # web app on http://localhost:5173
+```
 
-3. **Configure environment**
-   Create a `.env` file in the project root:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
+No `.env` file and no API key are needed to run the app. When AI features arrive, you add your Gemini key inside the app under **Settings → AI**; get one free at [Google AI Studio](https://aistudio.google.com/app/apikey).
 
-4. **Start development server**
-   ```bash
-   npm run dev
-   ```
+### Useful scripts
 
-5. **Open in browser** Navigate to `http://localhost:5173`
+| Command          | What it does                                                                  |
+| ---------------- | ----------------------------------------------------------------------------- |
+| `pnpm dev`       | Start the web app with hot reload                                             |
+| `pnpm build`     | Production build of every package                                             |
+| `pnpm test`      | Unit and component tests (Vitest)                                             |
+| `pnpm e2e`       | End-to-end and accessibility tests (Playwright; run `pnpm build` first)       |
+| `pnpm lint`      | ESLint with zero warnings allowed                                             |
+| `pnpm typecheck` | TypeScript across the workspace                                               |
+| `pnpm run ci`    | Everything CI runs: lint, typecheck, tests, build, secret scan, bundle budget |
 
----
+The component gallery is at `/dev/design-system` in development and preview builds.
 
-## 🔑 AI Fallback System & Quota Management
+## Project layout
 
-Because PlantPal relies heavily on LLM generation, it is built to be resilient:
-1. **Model Fallback**: If `gemini-2.5-flash` is unavailable, it automatically degrades to `gemini-2.0-pro-exp`, then `gemini-2.5-pro` to ensure the user always gets a response.
-2. **User API Key Support**: If the developer's default API key hits a rate limit (Quota Exceeded), a graceful modal appears allowing the user to safely inject their own personal Gemini API key to continue uninterrupted.
-3. **Smart Data Caching**: Heavy environmental API calls are cached in `localStorage`. Fast-moving data (AQI) lives for 15 minutes, while static data (SoilGrids, Elevation) lives for 30 days to save bandwidth.
+```
+apps/
+  web/        React PWA
+  api/        Cloudflare Worker (Hono)
+packages/
+  ui/         design tokens and accessible components
+  domain/     pure garden logic (units, dates, schedules, solar geometry)
+  schemas/    shared Zod schemas
+  providers/  environmental data adapters with provenance
+  ai/         Gemini client, prompts and safety checks
+  catalog/    curated plant catalogue
+  db/         database schema
+  sync/       offline sync engine
+docs/         specification, decision records, demo scripts
+tools/        build checks (secret scan, bundle budget, icons)
+```
 
----
+## Privacy and security
 
-## 📄 License
+- No secrets in the client bundle; CI scans the build output for key patterns.
+- Strict Content Security Policy with Trusted Types.
+- Your location is rounded before it leaves your device for public data providers.
+- Report vulnerabilities privately as described in [`SECURITY.md`](SECURITY.md).
 
-This project is open source and available under the [MIT License](LICENSE).
+## Contributing
 
----
+Contributions are welcome — please read [`CONTRIBUTING.md`](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+[MIT](LICENSE) © Anupam Roy
 
 <div align="center">
 
-### 🌱 Cultivating a greener tomorrow, one plant at a time.
-
-Made with 💚 by Anupam
-
-*AI recommendations are suggestions only. Always consult local horticultural experts and community resources before undertaking major landscaping projects.*
+_PlantPal's suggestions are guidance, not guarantees. Check local regulations before planting, and never eat or use a plant medicinally based on an app's identification._
 
 </div>

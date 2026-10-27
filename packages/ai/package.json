@@ -1,0 +1,20 @@
+{
+  "name": "@plantpal/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@plantpal/schemas": "workspace:*",
+    "@plantpal/domain": "workspace:*",
+    "@google/genai": "^2.31.0",
+    "zod": "^4.6.7"
+  },
+  "sideEffects": false
+}

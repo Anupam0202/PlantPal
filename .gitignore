@@ -46,3 +46,12 @@ coverage/
 # Misc
 *.local
 *.tsbuildinfo
+
+# PlantPal v4
+.turbo/
+.wrangler/
+.dev.vars
+playwright-report/
+test-results/
+apps/web/src/paraglide/
+apps/web/dev-dist/
