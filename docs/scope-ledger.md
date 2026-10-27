@@ -1,0 +1,42 @@
+# Scope ledger
+
+Status vocabulary: `VERIFIED`, `IMPLEMENTED_NOT_VERIFIED`, `CONFIGURATION_REQUIRED`, `BLOCKED(reason)`, `REJECTED(reason)`, `PENDING`. Updated at the end of every milestone.
+
+| Capability | Priority | Status | Evidence |
+|---|---|---|---|
+| Design system, app shell, routes, PWA shell, i18n scaffold | P0 | PENDING | |
+| Local-first store, legacy migration, export/import | P0 | PENDING | |
+| Seed onboarding → deterministic matches → plan → specimens/tasks | P0 | PENDING | |
+| Conditions (weather, forecast, air, sun, elevation) with provenance | P0 | PENDING | |
+| Today care cockpit: check / act / skip / snooze | P0 | PENDING | |
+| Gardens, zones, containers, specimens lifecycle | P0 | PENDING | |
+| Journal: notes, photos, measurements, timeline | P0 | PENDING | |
+| BYOK Gemini: vault, discovery, error taxonomy, plan explanation, quick capture | P0 | PENDING | |
+| Sun Hours Finder (manual + horizon scan) | P1 | PENDING | |
+| Water-Wise engine + rain-harvest planner | P1 | PENDING | |
+| Heat Shield and Frost Guard | P1 | PENDING | |
+| Climate Fit | P1 | PENDING | |
+| Health Cases | P1 | PENDING | |
+| Garden Copilot | P1 | PENDING | |
+| Native & Invasive Lens | P1 | PENDING | |
+| Bloom Bridge | P1 | PENDING | |
+| Nature Log with timed counts | P1 | PENDING | |
+| Space Designer 2D + sun/shade + growth scenarios | P1 | PENDING | |
+| Accounts and sync | P1 | PENDING | |
+| Shared gardens, roles, plant-sitter handoff | P1 | PENDING | |
+| Harvest & Pantry; Impact Ledger; Garden Story | P1 | PENDING | |
+| Reminders: in-app + Web Push | P1 | PENDING | |
+| Seed & Cutting Exchange, community, moderation, hex map | P2 / COND | PENDING | |
+| Neighbourhood nature context and corridor map | P2 | PENDING | |
+| Garden Walk voice (Gemini Live) | P2 / EXP | PENDING | |
+| Photo-to-Plan | EXP | PENDING | |
+| AI photo mock-up | EXP | PENDING | |
+| Pl@ntNet cross-check | P2 | PENDING | |
+| On-device bird sound ID | EXP / COND | PENDING | |
+| iNaturalist upload | COND | PENDING | |
+| CSV sensor import / BLE sensors | P2 / EXP | PENDING | |
+| QR field labels | P2 | PENDING | |
+| True camera-registered AR | REJ | REJECTED(see master prompt §4.2) | |
+| Payments, shipping, marketplace fees | REJ | REJECTED(see master prompt §4.2) | |
+| Automated edibility/toxicity clearance; pesticide dosing; irrigation actuation | REJ | REJECTED(see master prompt §4.2) | |
+| Opaque eco scores, offsets, blockchain | REJ | REJECTED(see master prompt §4.2) | |

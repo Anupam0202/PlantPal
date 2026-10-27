@@ -1,13 +1,12 @@
 import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '.', '');
-
-  return {
+export default defineConfig({
+    // L01: never compile a developer Gemini key into public assets.
+    // Users bring their own key at runtime; these stay undefined in every build.
     define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      'process.env.API_KEY': 'undefined',
+      'process.env.GEMINI_API_KEY': 'undefined'
     },
     resolve: {
       alias: {
@@ -37,5 +36,4 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       include: ['react', 'react-dom', '@google/genai', 'xlsx']
     }
-  };
 });

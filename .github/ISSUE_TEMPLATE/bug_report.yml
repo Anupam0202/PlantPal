@@ -1,0 +1,27 @@
+name: Bug report
+description: Something in PlantPal is broken or wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Go to Today\n2. Tap Check on a task\n3. ..."
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: "Android 15, Chrome 141"
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else? (please don't paste API keys or precise home locations)
