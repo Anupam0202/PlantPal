@@ -6,14 +6,36 @@ export interface Oklch {
   alpha: number;
 }
 
+const NUMBER = /^(?:\d+(?:\.\d*)?|\.\d+)$/;
+
+/** Parses `<number>` or `<number>%` (with an optional unit suffix such as `deg`) without backtracking-prone regexes. */
+function parseComponent(token: string | undefined, pctScale: number, suffix = ''): number {
+  if (token === undefined) throw new Error('Missing oklch() component');
+  let t = token.toLowerCase();
+  if (suffix && t.endsWith(suffix)) t = t.slice(0, -suffix.length);
+  const pct = t.endsWith('%');
+  if (pct) t = t.slice(0, -1);
+  if (!NUMBER.test(t)) throw new Error(`Invalid oklch() component: ${token}`);
+  const v = parseFloat(t);
+  return pct ? (v / 100) * pctScale : v;
+}
+
 export function parseOklch(input: string): Oklch {
-  const m = /oklch\(\s*([\d.]+%?)\s+([\d.]+)\s+([\d.]+)(?:deg)?\s*(?:\/\s*([\d.]+%?))?\s*\)/i.exec(
-    input.trim(),
-  );
-  if (!m) throw new Error(`Not an oklch() colour: ${input}`);
-  const num = (s: string | undefined, pctScale: number) =>
-    s === undefined ? 1 : s.endsWith('%') ? (parseFloat(s) / 100) * pctScale : parseFloat(s);
-  return { l: num(m[1], 1), c: parseFloat(m[2]!), h: parseFloat(m[3]!), alpha: num(m[4], 1) };
+  const s = input.trim();
+  const open = s.toLowerCase().indexOf('oklch(');
+  const close = open === -1 ? -1 : s.indexOf(')', open);
+  if (open === -1 || close === -1) throw new Error(`Not an oklch() colour: ${input}`);
+  const segments = s.slice(open + 6, close).split('/');
+  if (segments.length > 2) throw new Error(`Not an oklch() colour: ${input}`);
+  const main = (segments[0] ?? '').trim().split(/\s+/);
+  if (main.length !== 3) throw new Error(`Not an oklch() colour: ${input}`);
+  const alphaToken = segments[1]?.trim();
+  return {
+    l: parseComponent(main[0], 1),
+    c: parseComponent(main[1], 0.4),
+    h: parseComponent(main[2], 360, 'deg'),
+    alpha: alphaToken === undefined ? 1 : parseComponent(alphaToken, 1),
+  };
 }
 
 /** Linear-light sRGB components (may be outside 0..1 before clamping). */

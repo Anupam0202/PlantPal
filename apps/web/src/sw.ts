@@ -20,7 +20,10 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html'), { deny
 // Self-hosted fonts load per unicode-range on demand and are kept once used.
 registerRoute(
   ({ request, url }) => request.destination === 'font' && url.origin === self.location.origin,
-  new CacheFirst({ cacheName: 'pp-fonts', plugins: [new ExpirationPlugin({ maxEntries: 40, maxAgeSeconds: 365 * 86400 })] }),
+  new CacheFirst({
+    cacheName: 'pp-fonts',
+    plugins: [new ExpirationPlugin({ maxEntries: 40, maxAgeSeconds: 365 * 86400 })],
+  }),
 );
 
 // Map tiles: cache-first with a size cap. No bulk prefetching (provider policy).
