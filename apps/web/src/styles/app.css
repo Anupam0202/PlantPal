@@ -13,3 +13,70 @@
     overscroll-behavior-y: none;
   }
 }
+
+/* ---------------------------------------------------------------- Living Sky (decorative; text sits on a solid scrim) */
+.sky {
+  background: linear-gradient(180deg, #5d9bd5 0%, #9cc7ea 60%, #d6ebf7 100%);
+  transition: background 1.2s ease;
+}
+.sky-night {
+  background: linear-gradient(180deg, #0b1a2e 0%, #1c2f4a 60%, #2a3d55 100%);
+}
+.sky-twilight {
+  background: linear-gradient(180deg, #1d2b4f 0%, #4a4a7a 60%, #8a6a8f 100%);
+}
+.sky-dawn {
+  background: linear-gradient(180deg, #3d5a8a 0%, #c98a8a 60%, #f2c38a 100%);
+}
+.sky-dusk {
+  background: linear-gradient(180deg, #2f4878 0%, #b9687a 60%, #f0a46a 100%);
+}
+.sky-golden {
+  background: linear-gradient(180deg, #6f9ccc 0%, #f2d59a 70%, #f6c27a 100%);
+}
+.sky-static {
+  background: linear-gradient(180deg, #7aa7c7 0%, #b8d3c0 100%);
+}
+.sky-cloud {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0));
+  filter: blur(6px);
+  animation: pp-drift 90s linear infinite alternate;
+}
+.sky-drop {
+  position: absolute;
+  top: -10%;
+  width: 1.5px;
+  height: 14px;
+  border-radius: 1px;
+  background: rgb(255 255 255 / 0.55);
+  animation: pp-rain 0.9s linear infinite;
+}
+.sky-paused .sky-drop,
+.sky-paused .sky-cloud {
+  animation-play-state: paused;
+}
+@keyframes pp-drift {
+  from {
+    transform: translateX(-6%);
+  }
+  to {
+    transform: translateX(6%);
+  }
+}
+@keyframes pp-rain {
+  to {
+    transform: translateY(260px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-cloud,
+  .sky-drop {
+    animation: none;
+  }
+}
+[data-motion='reduce'] .sky-cloud,
+[data-motion='reduce'] .sky-drop {
+  animation: none;
+}

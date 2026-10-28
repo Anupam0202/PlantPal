@@ -33,7 +33,7 @@ function encodeRandom(bytes: Uint8Array): string {
 
 function randomBytes(): Uint8Array {
   const b = new Uint8Array(10);
-  globalThis.crypto.getRandomValues(b);
+  crypto.getRandomValues(b);
   return b;
 }
 

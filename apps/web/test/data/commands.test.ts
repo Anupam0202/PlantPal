@@ -17,7 +17,7 @@ import {
   voidEntry,
   type SpecimenInput,
 } from '../../src/data/commands';
-import { db } from '../../src/data/db';
+import { CLIENT_SCHEMA, db } from '../../src/data/db';
 import { RecordNotFoundError, VersionConflictError } from '../../src/data/errors';
 import { resetDb } from './helpers';
 
@@ -238,6 +238,6 @@ describe('local garden commands', () => {
     const ops = await db.outbox.orderBy('createdAt').toArray();
     expect(ops.map((o) => o.type)).toEqual(['specimen.create', 'careEvent.create']);
     expect(ops[1]?.opId).toBe(ev?.opId);
-    expect(ops.every((o) => o.state === 'pending' && o.clientSchema === 1)).toBe(true);
+    expect(ops.every((o) => o.state === 'pending' && o.clientSchema === CLIENT_SCHEMA)).toBe(true);
   });
 });

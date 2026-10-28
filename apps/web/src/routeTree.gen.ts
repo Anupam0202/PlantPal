@@ -24,6 +24,7 @@ import { Route as PlanIndexRouteImport } from './routes/plan/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsDataRouteImport } from './routes/settings/data'
 import { Route as SettingsMigrateRouteImport } from './routes/settings/migrate'
+import { Route as SettingsSourcesRouteImport } from './routes/settings/sources'
 import { Route as GardenPlantsSpecimenIdRouteImport } from './routes/garden/plants/$specimenId'
 import { Route as GardenPlantsNewRouteImport } from './routes/garden/plants/new'
 
@@ -102,6 +103,11 @@ const SettingsMigrateRoute = SettingsMigrateRouteImport.update({
   path: '/settings/migrate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsSourcesRoute = SettingsSourcesRouteImport.update({
+  id: '/settings/sources',
+  path: '/settings/sources',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GardenPlantsSpecimenIdRoute = GardenPlantsSpecimenIdRouteImport.update({
   id: '/garden/plants/$specimenId',
   path: '/garden/plants/$specimenId',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/garden/spaces': typeof GardenSpacesRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
+  '/settings/sources': typeof SettingsSourcesRoute
   '/community/': typeof CommunityIndexRoute
   '/garden/': typeof GardenIndexRoute
   '/nature/': typeof NatureIndexRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/garden/spaces': typeof GardenSpacesRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
+  '/settings/sources': typeof SettingsSourcesRoute
   '/community': typeof CommunityIndexRoute
   '/garden': typeof GardenIndexRoute
   '/nature': typeof NatureIndexRoute
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   '/garden/spaces': typeof GardenSpacesRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
+  '/settings/sources': typeof SettingsSourcesRoute
   '/community/': typeof CommunityIndexRoute
   '/garden/': typeof GardenIndexRoute
   '/nature/': typeof NatureIndexRoute
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
     | '/garden/spaces'
     | '/settings/data'
     | '/settings/migrate'
+    | '/settings/sources'
     | '/community/'
     | '/garden/'
     | '/nature/'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/garden/spaces'
     | '/settings/data'
     | '/settings/migrate'
+    | '/settings/sources'
     | '/community'
     | '/garden'
     | '/nature'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/garden/spaces'
     | '/settings/data'
     | '/settings/migrate'
+    | '/settings/sources'
     | '/community/'
     | '/garden/'
     | '/nature/'
@@ -242,6 +254,7 @@ export interface RootRouteChildren {
   GardenSpacesRoute: typeof GardenSpacesRoute
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsMigrateRoute: typeof SettingsMigrateRoute
+  SettingsSourcesRoute: typeof SettingsSourcesRoute
   CommunityIndexRoute: typeof CommunityIndexRoute
   GardenIndexRoute: typeof GardenIndexRoute
   NatureIndexRoute: typeof NatureIndexRoute
@@ -358,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsMigrateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/sources': {
+      id: '/settings/sources'
+      path: '/settings/sources'
+      fullPath: '/settings/sources'
+      preLoaderRoute: typeof SettingsSourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/garden/plants/$specimenId': {
       id: '/garden/plants/$specimenId'
       path: '/garden/plants/$specimenId'
@@ -386,6 +406,7 @@ const rootRouteChildren: RootRouteChildren = {
   GardenSpacesRoute: GardenSpacesRoute,
   SettingsDataRoute: SettingsDataRoute,
   SettingsMigrateRoute: SettingsMigrateRoute,
+  SettingsSourcesRoute: SettingsSourcesRoute,
   CommunityIndexRoute: CommunityIndexRoute,
   GardenIndexRoute: GardenIndexRoute,
   NatureIndexRoute: NatureIndexRoute,

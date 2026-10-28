@@ -6,3 +6,5 @@ export * from './csv';
 export * from './geometry';
 export * from './quickCapture';
 export * from './legacy/plan';
+export * from './solar';
+export * from './climate';

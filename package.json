@@ -21,8 +21,9 @@
     "test:watch": "vitest",
     "e2e": "pnpm --filter @plantpal/web e2e",
     "check:dist": "node tools/scan-dist.mjs apps/web/dist",
-    "ci": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build && pnpm check:dist && pnpm check:bundle",
-    "check:bundle": "node tools/check-bundle.mjs apps/web/dist"
+    "ci": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build && pnpm check:dist && pnpm check:bundle && pnpm check:headers",
+    "check:bundle": "node tools/check-bundle.mjs apps/web/dist",
+    "check:headers": "node tools/sync-headers.mjs --check"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

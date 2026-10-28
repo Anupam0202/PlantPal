@@ -32,7 +32,8 @@ PlantPal is being rebuilt as v4 ("Living Field Guide") milestone by milestone. S
 | M0        | Safety net: licence, community files, CodeQL, Dependabot, decision records              | Done    |
 | M1        | Monorepo, design system, accessible app shell, PWA, strict CSP, CI                      | Done    |
 | M2        | Local-first garden data, journal, photos, export/import, migration from v3              | Done    |
-| M3–M5     | Environmental data providers, plant catalogue and matching, care schedules and alerts   | Next    |
+| M3        | Environmental data with provenance, API Worker, Living Sky, location                    | Done    |
+| M4–M5     | Plant catalogue and matching, care schedules and alerts                                 | Next    |
 | M6–M9     | Bring-your-own-key AI, plant health, identification, space designer, nature log, impact | Planned |
 | M10–M12   | Optional accounts and sync, shared gardens, community, release hardening                | Planned |
 
@@ -67,7 +68,7 @@ pnpm install
 pnpm dev          # web app on http://localhost:5173
 ```
 
-No `.env` file and no API key are needed to run the app. When AI features arrive, you add your Gemini key inside the app under **Settings → AI**; get one free at [Google AI Studio](https://aistudio.google.com/app/apikey).
+No `.env` file and no API key are needed to run the app. Weather and place data come from free public services (Open-Meteo, NASA POWER); without internet access use demo data with `VITE_PROVIDERS=mock pnpm dev`. To route requests through the API Worker instead, run `pnpm dev:api` and set `VITE_API_BASE_URL=http://127.0.0.1:8787`. When AI features arrive, you add your Gemini key inside the app under **Settings → AI**; get one free at [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 ### Useful scripts
 

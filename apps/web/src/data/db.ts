@@ -16,7 +16,7 @@ import type {
 } from '@plantpal/schemas';
 
 /** Bumped with every Dexie schema change; sent with outbox ops so the server knows the client shape. */
-export const CLIENT_SCHEMA = 1;
+export const CLIENT_SCHEMA = 2;
 
 export interface MediaBlob {
   id: string;
@@ -27,6 +27,15 @@ export interface MediaBlob {
 export interface MetaRow {
   key: string;
   value: unknown;
+}
+
+/** Cached provider payloads (public facts for rounded coordinates; never user records). */
+export interface FactRow {
+  key: string;
+  value: unknown;
+  storedAt: number;
+  freshUntil: number;
+  expiresAt: number;
 }
 
 export type PlantPalDB = Dexie & {
@@ -45,29 +54,35 @@ export type PlantPalDB = Dexie & {
   drafts: EntityTable<Draft, 'id'>;
   outbox: EntityTable<OutboxOp, 'opId'>;
   meta: EntityTable<MetaRow, 'key'>;
+  facts: EntityTable<FactRow, 'key'>;
 };
+
+/** Schema version 1 (M2). Kept verbatim so upgrades are tested from the real previous shape. */
+export const STORES_V1 = {
+  workspaces: 'id',
+  gardens: 'id, workspaceId',
+  zones: 'id, gardenId, workspaceId',
+  containers: 'id, zoneId, gardenId, workspaceId',
+  specimens: 'id, gardenId, zoneId, containerId, status, workspaceId',
+  careEvents:
+    'id, &opId, workspaceId, specimenId, gardenId, occurredAt, [specimenId+occurredAt], [gardenId+occurredAt], occurrenceKey',
+  observations:
+    'id, &opId, workspaceId, specimenId, gardenId, occurredAt, [specimenId+occurredAt], [gardenId+occurredAt]',
+  harvests: 'id, &opId, workspaceId, specimenId, gardenId, harvestedOn',
+  media: 'id, gardenId, link.id, workspaceId',
+  mediaBlobs: 'id',
+  soilTests: 'id, gardenId, workspaceId',
+  healthCases: 'id, gardenId, specimenId, workspaceId',
+  drafts: 'id, workspaceId',
+  outbox: 'opId, workspaceId, createdAt, state',
+  meta: 'key',
+} as const;
 
 export function createDb(name = 'plantpal'): PlantPalDB {
   const db = new Dexie(name) as PlantPalDB;
-  db.version(1).stores({
-    workspaces: 'id',
-    gardens: 'id, workspaceId',
-    zones: 'id, gardenId, workspaceId',
-    containers: 'id, zoneId, gardenId, workspaceId',
-    specimens: 'id, gardenId, zoneId, containerId, status, workspaceId',
-    careEvents:
-      'id, &opId, workspaceId, specimenId, gardenId, occurredAt, [specimenId+occurredAt], [gardenId+occurredAt], occurrenceKey',
-    observations:
-      'id, &opId, workspaceId, specimenId, gardenId, occurredAt, [specimenId+occurredAt], [gardenId+occurredAt]',
-    harvests: 'id, &opId, workspaceId, specimenId, gardenId, harvestedOn',
-    media: 'id, gardenId, link.id, workspaceId',
-    mediaBlobs: 'id',
-    soilTests: 'id, gardenId, workspaceId',
-    healthCases: 'id, gardenId, specimenId, workspaceId',
-    drafts: 'id, workspaceId',
-    outbox: 'opId, workspaceId, createdAt, state',
-    meta: 'key',
-  });
+  db.version(1).stores(STORES_V1);
+  // v2 (M3): cache of provider facts, evictable under storage pressure.
+  db.version(2).stores({ facts: 'key, expiresAt' });
   return db;
 }
 

@@ -1,11 +1,19 @@
+import { db } from './db';
 import { isQuotaError, StorageFullError } from './errors';
 
 /** Runtime caches that can be dropped to make room for user records. Records and the outbox are never evicted. */
 const EVICTABLE_CACHES = ['pp-tiles', 'pp-images', 'pp-facts'];
 
 export async function evictCaches(): Promise<number> {
-  if (typeof caches === 'undefined') return 0;
   let n = 0;
+  // Cached provider facts can always be fetched again.
+  try {
+    await db.facts.clear();
+    n++;
+  } catch {
+    /* ignore */
+  }
+  if (typeof caches === 'undefined') return n;
   for (const name of EVICTABLE_CACHES) if (await caches.delete(name)) n++;
   return n;
 }

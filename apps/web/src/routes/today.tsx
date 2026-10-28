@@ -18,6 +18,16 @@ import { getMigrationState } from '../data/legacy/run';
 import { hasLegacyData } from '../data/legacy/storage';
 import { useActiveGarden, useRecordCounts, useSpecimens, useTimeline } from '../data/queries';
 import { Timeline } from '../features/garden/Timeline';
+import {
+  AirCard,
+  ForecastStrip,
+  NoLocation,
+  NowDetails,
+  PlaceCard,
+  WaterOutlook,
+} from '../features/env/Conditions';
+import { LivingSky } from '../features/env/LivingSky';
+import { gardenCoords, useAir, useElevation, useForecast, useSolarClimatology } from '../env/hooks';
 import { useT } from '../i18n';
 import { useCapture } from '../state/capture';
 
@@ -57,6 +67,11 @@ function TodayPage() {
   const specimens = useSpecimens(garden?.id);
   const counts = useRecordCounts(garden?.id);
   const openCapture = useCapture((s) => s.openCapture);
+  const coords = gardenCoords(garden);
+  const forecast = useForecast(coords);
+  const air = useAir(coords);
+  const elevation = useElevation(coords);
+  const solar = useSolarClimatology(coords);
 
   if (garden === undefined) {
     return (
@@ -104,32 +119,45 @@ function TodayPage() {
           </Button>
         }
       />
-      <div className="mt-6">
+      <div className="mt-6 flex flex-col gap-6">
         <MigrationBanner />
-      </div>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <Card padding="lg">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="font-display text-h3 text-ink">{t.today.recent}</h2>
-            <Link to="/garden/journal" className={buttonClasses('ghost', 'sm')}>
-              {t.today.seeJournal}
-            </Link>
+        {coords ? (
+          <>
+            <LivingSky garden={garden} forecast={forecast.data}>
+              <NowDetails q={forecast} />
+            </LivingSky>
+            <ForecastStrip q={forecast} />
+          </>
+        ) : (
+          <NoLocation />
+        )}
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <Card padding="lg">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="font-display text-h3 text-ink">{t.today.recent}</h2>
+              <Link to="/garden/journal" className={buttonClasses('ghost', 'sm')}>
+                {t.today.seeJournal}
+              </Link>
+            </div>
+            {items && items.length > 0 ? (
+              <Timeline items={items} specimens={specimens} timeZone={garden.timezone} />
+            ) : (
+              <p className="text-body-s text-muted">{t.today.nothingRecent}</p>
+            )}
+          </Card>
+          <div className="flex flex-col gap-6">
+            <Card padding="md" className="grid grid-cols-2 gap-4">
+              <Metric label={t.labels.status.active} value={counts ? String(counts.active) : '—'} />
+              <Metric label={t.labels.status.planned} value={counts ? String(counts.planned) : '—'} />
+            </Card>
+            {coords && <AirCard q={air} />}
+            {coords && <WaterOutlook q={forecast} />}
           </div>
-          {items && items.length > 0 ? (
-            <Timeline items={items} specimens={specimens} timeZone={garden.timezone} />
-          ) : (
-            <p className="text-body-s text-muted">{t.today.nothingRecent}</p>
-          )}
-        </Card>
-        <div className="flex flex-col gap-4">
-          <Card padding="md" className="grid grid-cols-2 gap-4">
-            <Metric label={t.labels.status.active} value={counts ? String(counts.active) : '—'} />
-            <Metric label={t.labels.status.planned} value={counts ? String(counts.planned) : '—'} />
-          </Card>
-          <Card padding="md" variant="sunken">
-            <p className="text-body-s text-muted">{t.today.nextSteps}</p>
-          </Card>
         </div>
+        {coords && <PlaceCard lat={coords.lat} lon={coords.lon} elevation={elevation} solar={solar} />}
+        <Card padding="md" variant="sunken">
+          <p className="text-body-s text-muted">{t.today.nextSteps}</p>
+        </Card>
       </div>
     </Page>
   );

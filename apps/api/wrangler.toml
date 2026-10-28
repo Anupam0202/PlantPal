@@ -1,0 +1,36 @@
+# PlantPal API Worker. Nothing here is deployed automatically: deploying needs the owner's
+# Cloudflare account, `wrangler login` and explicit approval (master prompt O3).
+name = "plantpal"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+# The Worker also serves the built web app; /api/* reaches the Worker first.
+[assets]
+directory = "../web/dist"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+binding = "ASSETS"
+
+[vars]
+PROVIDERS = "mock"
+ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173"
+CONTACT = "https://github.com/Anupam0202/PlantPal"
+DISABLED_PROVIDERS = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "plantpal"
+database_id = "00000000-0000-0000-0000-000000000000" # replaced by `wrangler d1 create plantpal`
+migrations_dir = "migrations"
+
+[[durable_objects.bindings]]
+name = "LIMITER"
+class_name = "Limiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Limiter"]
+
+[observability]
+enabled = true

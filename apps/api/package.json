@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
+    "@hono/zod-openapi": "^1.6.3",
     "@plantpal/catalog": "workspace:*",
     "@plantpal/db": "workspace:*",
     "@plantpal/domain": "workspace:*",
@@ -21,6 +23,8 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261027.1",
-    "wrangler": "^4.153.0"
+    "drizzle-kit": "^0.31.11",
+    "wrangler": "^4.153.0",
+    "@types/node": "^24.0.0"
   }
 }

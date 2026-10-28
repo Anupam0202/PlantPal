@@ -4,6 +4,7 @@ import { deviceTimeZone } from '@plantpal/domain';
 import { useMemo, useState, type FormEvent } from 'react';
 import type { GardenInput } from '../../data/commands';
 import { useT } from '../../i18n';
+import { LocationField, type LocationValue } from './LocationField';
 
 function timeZones(current: string): string[] {
   let list: string[] = [];
@@ -42,6 +43,11 @@ export function GardenForm({
     initial?.hemisphere ?? guessHemisphere(timezone),
   );
   const [place, setPlace] = useState(initial?.place?.label ?? '');
+  const [location, setLocation] = useState<LocationValue | null>(
+    initial?.place?.lat != null && initial.place.lon != null
+      ? { label: initial.place.label, lat: initial.place.lat, lon: initial.place.lon }
+      : null,
+  );
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -62,10 +68,13 @@ export function GardenForm({
         name: name.trim(),
         timezone,
         hemisphere,
-        place: place.trim()
-          ? { label: place.trim(), lat: initial?.place?.lat ?? null, lon: initial?.place?.lon ?? null }
-          : initial?.place?.lat != null
-            ? { label: null, lat: initial.place.lat, lon: initial.place.lon }
+        place:
+          location || place.trim()
+            ? {
+                label: place.trim() || location?.label || null,
+                lat: location?.lat ?? null,
+                lon: location?.lon ?? null,
+              }
             : null,
         notes,
       });
@@ -110,6 +119,15 @@ export function GardenForm({
         />
         <p className="text-caption text-muted">{t.garden.hemisphereHint}</p>
       </div>
+      <LocationField
+        value={location}
+        onChange={(v) => {
+          setLocation(v);
+          if (v?.label && (!place.trim() || place === location?.label)) setPlace(v.label);
+          if (v?.timezone) setTimezone(v.timezone);
+          if (v) setHemisphere(v.lat < 0 ? 'south' : 'north');
+        }}
+      />
       <TextField
         label={t.garden.place}
         value={place}

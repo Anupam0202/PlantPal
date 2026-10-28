@@ -30,6 +30,8 @@ jobs:
         run: pnpm check:dist
       - name: Bundle budgets
         run: pnpm check:bundle
+      - name: Cloudflare headers match vercel.json
+        run: pnpm check:headers
       - uses: actions/upload-artifact@v4
         with:
           name: web-dist
@@ -56,6 +58,8 @@ jobs:
       - run: pnpm e2e
         env:
           CI: 'true'
+      - name: Worker smoke test (local Workers runtime, mock providers)
+        run: pnpm --filter @plantpal/api smoke
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
