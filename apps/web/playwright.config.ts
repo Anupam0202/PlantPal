@@ -20,7 +20,7 @@ export default defineConfig({
     { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
   ],
   webServer: {
-    command: `pnpm exec vite preview --port ${port} --strictPort`,
+    command: `pnpm exec vite preview --host 127.0.0.1 --port ${port} --strictPort`,
     url: `http://127.0.0.1:${port}/today`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
