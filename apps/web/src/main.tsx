@@ -8,7 +8,11 @@ import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { prefersReducedMotion } from '@plantpal/ui';
+import { config as zodConfig } from 'zod';
 import { routeTree } from './routeTree.gen';
+
+// Zod would otherwise probe `new Function`, which the Trusted Types CSP blocks (and reports).
+zodConfig({ jitless: true });
 
 const queryClient = new QueryClient({
   defaultOptions: {

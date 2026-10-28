@@ -24,7 +24,10 @@ export interface TextFieldProps {
   error?: ReactNode;
   placeholder?: string;
   required?: boolean;
-  type?: 'text' | 'search' | 'email' | 'url' | 'password';
+  type?: 'text' | 'search' | 'email' | 'url' | 'password' | 'date';
+  /** For `type="date"`: earliest and latest allowed `YYYY-MM-DD`. */
+  min?: string;
+  max?: string;
   name?: string;
   autoComplete?: string;
   multiline?: boolean;
@@ -56,6 +59,8 @@ export function TextField({
   inputMode,
   suffix,
   autoFocus,
+  min,
+  max,
 }: TextFieldProps) {
   const common = {
     placeholder,
@@ -90,6 +95,8 @@ export function TextField({
         ) : (
           <Field.Control
             type={type}
+            min={min}
+            max={max}
             className={cn(controlBase, 'h-11', suffix ? 'pr-14' : '')}
             onValueChange={(v) => onValueChange?.(String(v))}
             {...common}

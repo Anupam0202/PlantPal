@@ -1,10 +1,11 @@
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
 import { useNavigate } from '@tanstack/react-router';
 import { Command } from 'cmdk';
-import { Moon, Search, Settings, Sun } from 'lucide-react';
+import { Database, Moon, NotebookPen, Plus, Search, Settings, Sprout, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useT } from '../i18n';
 import { usePrefs } from '../state/prefs';
+import { useCapture } from '../state/capture';
 import { destinations } from './nav';
 
 /** ⌘K / Ctrl+K palette: navigation and quick commands (master prompt §5.3). */
@@ -19,6 +20,7 @@ export function CommandPalette({
   const navigate = useNavigate();
   const setPrefs = usePrefs((s) => s.set);
   const theme = usePrefs((s) => s.theme);
+  const openCapture = useCapture((s) => s.openCapture);
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -81,6 +83,38 @@ export function CommandPalette({
                 heading="Commands"
                 className="text-caption text-muted [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2"
               >
+                <Command.Item
+                  value={`${t.capture.open} log care water`}
+                  onSelect={() => run(() => openCapture())}
+                  className={item}
+                >
+                  <NotebookPen className="size-5 text-muted" aria-hidden="true" />
+                  {t.capture.open}
+                </Command.Item>
+                <Command.Item
+                  value={`${t.garden.addPlant} add plant`}
+                  onSelect={() => run(() => void navigate({ to: '/garden/plants/new' }))}
+                  className={item}
+                >
+                  <Sprout className="size-5 text-muted" aria-hidden="true" />
+                  {t.garden.addPlant}
+                </Command.Item>
+                <Command.Item
+                  value={`${t.garden.newGarden} new garden`}
+                  onSelect={() => run(() => void navigate({ to: '/garden/new' }))}
+                  className={item}
+                >
+                  <Plus className="size-5 text-muted" aria-hidden="true" />
+                  {t.garden.newGarden}
+                </Command.Item>
+                <Command.Item
+                  value={`${t.data.title} export backup import data`}
+                  onSelect={() => run(() => void navigate({ to: '/settings/data' }))}
+                  className={item}
+                >
+                  <Database className="size-5 text-muted" aria-hidden="true" />
+                  {t.data.title}
+                </Command.Item>
                 <Command.Item
                   value="Toggle theme dark light"
                   onSelect={() => run(() => setPrefs({ theme: theme === 'dark' ? 'light' : 'dark' }))}

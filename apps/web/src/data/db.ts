@@ -1,0 +1,99 @@
+import Dexie, { type EntityTable } from 'dexie';
+import type {
+  CareEvent,
+  Container,
+  Draft,
+  Garden,
+  Harvest,
+  HealthCase,
+  Media,
+  Observation,
+  OutboxOp,
+  SoilTest,
+  Specimen,
+  Workspace,
+  Zone,
+} from '@plantpal/schemas';
+
+/** Bumped with every Dexie schema change; sent with outbox ops so the server knows the client shape. */
+export const CLIENT_SCHEMA = 1;
+
+export interface MediaBlob {
+  id: string;
+  full: Blob;
+  thumb: Blob;
+}
+
+export interface MetaRow {
+  key: string;
+  value: unknown;
+}
+
+export type PlantPalDB = Dexie & {
+  workspaces: EntityTable<Workspace, 'id'>;
+  gardens: EntityTable<Garden, 'id'>;
+  zones: EntityTable<Zone, 'id'>;
+  containers: EntityTable<Container, 'id'>;
+  specimens: EntityTable<Specimen, 'id'>;
+  careEvents: EntityTable<CareEvent, 'id'>;
+  observations: EntityTable<Observation, 'id'>;
+  harvests: EntityTable<Harvest, 'id'>;
+  media: EntityTable<Media, 'id'>;
+  mediaBlobs: EntityTable<MediaBlob, 'id'>;
+  soilTests: EntityTable<SoilTest, 'id'>;
+  healthCases: EntityTable<HealthCase, 'id'>;
+  drafts: EntityTable<Draft, 'id'>;
+  outbox: EntityTable<OutboxOp, 'opId'>;
+  meta: EntityTable<MetaRow, 'key'>;
+};
+
+export function createDb(name = 'plantpal'): PlantPalDB {
+  const db = new Dexie(name) as PlantPalDB;
+  db.version(1).stores({
+    workspaces: 'id',
+    gardens: 'id, workspaceId',
+    zones: 'id, gardenId, workspaceId',
+    containers: 'id, zoneId, gardenId, workspaceId',
+    specimens: 'id, gardenId, zoneId, containerId, status, workspaceId',
+    careEvents:
+      'id, &opId, workspaceId, specimenId, gardenId, occurredAt, [specimenId+occurredAt], [gardenId+occurredAt], occurrenceKey',
+    observations:
+      'id, &opId, workspaceId, specimenId, gardenId, occurredAt, [specimenId+occurredAt], [gardenId+occurredAt]',
+    harvests: 'id, &opId, workspaceId, specimenId, gardenId, harvestedOn',
+    media: 'id, gardenId, link.id, workspaceId',
+    mediaBlobs: 'id',
+    soilTests: 'id, gardenId, workspaceId',
+    healthCases: 'id, gardenId, specimenId, workspaceId',
+    drafts: 'id, workspaceId',
+    outbox: 'opId, workspaceId, createdAt, state',
+    meta: 'key',
+  });
+  return db;
+}
+
+export const db = createDb();
+
+/** Tables that hold user records (everything except blobs, outbox and meta). */
+export const RECORD_TABLES = [
+  'workspaces',
+  'gardens',
+  'zones',
+  'containers',
+  'specimens',
+  'careEvents',
+  'observations',
+  'harvests',
+  'media',
+  'soilTests',
+  'healthCases',
+  'drafts',
+] as const;
+export type RecordTable = (typeof RECORD_TABLES)[number];
+
+export async function getMeta<T>(key: string): Promise<T | undefined> {
+  return (await db.meta.get(key))?.value as T | undefined;
+}
+
+export async function setMeta(key: string, value: unknown): Promise<void> {
+  await db.meta.put({ key, value });
+}

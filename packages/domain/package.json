@@ -12,7 +12,11 @@
   },
   "dependencies": {
     "@plantpal/schemas": "workspace:*",
-    "temporal-polyfill": "^1.0.6"
+    "temporal-polyfill": "^1.0.6",
+    "zod": "^4.6.7"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "devDependencies": {
+    "fast-check": "4.10.2"
+  }
 }

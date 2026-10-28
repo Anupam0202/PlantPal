@@ -18,8 +18,11 @@ function Welcome() {
         <p className="text-body text-muted text-pretty">{t.tagline}</p>
       </div>
       <div className="flex flex-wrap gap-3">
-        <Link to="/today" className={buttonClasses('primary', 'lg')}>
+        <Link to="/garden/new" className={buttonClasses('primary', 'lg')}>
           {t.welcome.start}
+        </Link>
+        <Link to="/settings/data" className={buttonClasses('secondary', 'lg')}>
+          {t.welcome.import}
         </Link>
       </div>
     </div>

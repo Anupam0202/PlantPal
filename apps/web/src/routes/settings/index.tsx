@@ -1,6 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { Card, PageHeader, Section, SegmentedControl, SelectField, SwitchField } from '@plantpal/ui';
-import { Monitor, Moon, Sun } from 'lucide-react';
+import { ChevronRight, Database, Monitor, Moon, Sun } from 'lucide-react';
 import { Page } from '../../app/Page';
 import { localeNames, useT } from '../../i18n';
 import { usePrefs, type LocalePref, type ThemePref, type UnitsPref } from '../../state/prefs';
@@ -88,6 +88,16 @@ function SettingsPage() {
               />
             </div>
           </Card>
+        </Section>
+        <Section title={t.settings.data}>
+          <Link
+            to="/settings/data"
+            className="flex items-center gap-3 rounded-lg border border-line bg-surface p-4 shadow-1 transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-focus"
+          >
+            <Database className="size-5 text-accent-ink" aria-hidden="true" />
+            <span className="flex-1 font-medium text-ink">{t.settings.dataLink}</span>
+            <ChevronRight className="size-5 text-muted" aria-hidden="true" />
+          </Link>
         </Section>
       </div>
     </Page>

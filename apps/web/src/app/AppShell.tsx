@@ -1,14 +1,49 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { cn, IconButton, Kbd } from '@plantpal/ui';
-import { Search, Settings } from 'lucide-react';
+import { Plus, Search, Settings } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import { useT } from '../i18n';
+import { useCapture } from '../state/capture';
 import { destinations } from './nav';
 import { ThemeController } from './ThemeController';
 import { UpdatePrompt } from './UpdatePrompt';
 
 const CommandPalette = lazy(() => import('./CommandPalette').then((m) => ({ default: m.CommandPalette })));
+const QuickCapture = lazy(() =>
+  import('../features/garden/QuickCapture').then((m) => ({ default: m.QuickCapture })),
+);
+
+/** Floating "Log care" button; the sheet itself loads on first use. */
+function CaptureLauncher() {
+  const t = useT();
+  const open = useCapture((s) => s.open);
+  const openCapture = useCapture((s) => s.openCapture);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    if (open) setLoaded(true);
+  }, [open]);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => openCapture()}
+        aria-label={t.capture.open}
+        className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 inline-flex size-14 items-center justify-center gap-2 rounded-full bg-accent text-on-accent shadow-3 transition-transform duration-150 hover:scale-[1.03] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus md:right-8 md:bottom-8 md:h-12 md:w-auto md:px-5"
+      >
+        <Plus className="size-6 md:size-5" aria-hidden="true" />
+        <span className="hidden font-medium md:inline" aria-hidden="true">
+          {t.capture.open}
+        </span>
+      </button>
+      {loaded && (
+        <Suspense fallback={null}>
+          <QuickCapture />
+        </Suspense>
+      )}
+    </>
+  );
+}
 
 /** Home link that is never marked as the current page (only nav items carry aria-current). */
 function HomeLink({ children, className }: { children: ReactNode; className?: string }) {
@@ -210,6 +245,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
       )}
 
+      {!onboarding && <CaptureLauncher />}
       {paletteOpen && (
         <Suspense fallback={null}>
           <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />

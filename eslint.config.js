@@ -64,6 +64,11 @@ export default tseslint.config(
     rules: { 'no-restricted-properties': 'off' },
   },
   {
+    // Browser tests seed v3 data and preferences in localStorage; Playwright fixtures call `use()`.
+    files: ['apps/web/e2e/**'],
+    rules: { 'no-restricted-properties': 'off', 'react-hooks/rules-of-hooks': 'off' },
+  },
+  {
     files: ['packages/domain/**', 'packages/schemas/**', 'packages/sync/**'],
     rules: {
       'no-restricted-imports': [

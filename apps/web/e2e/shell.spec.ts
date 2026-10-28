@@ -102,7 +102,14 @@ test.describe('security headers', () => {
         console.error(`CSP violation: ${e.violatedDirective} ${e.blockedURI}`);
       });
     });
-    for (const path of ['/today', '/settings', '/dev/design-system']) {
+    for (const path of [
+      '/today',
+      '/garden',
+      '/garden/new',
+      '/settings',
+      '/settings/data',
+      '/dev/design-system',
+    ]) {
       await page.goto(path);
       await page.waitForLoadState('networkidle');
     }

@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from './cn';
 
@@ -73,11 +74,15 @@ export function Section({
   ...rest
 }: SectionProps) {
   const H = headingLevel === 2 ? 'h2' : 'h3';
+  const headingId = useId();
   return (
-    <section className={cn('flex flex-col gap-3', className)} {...rest}>
+    <section className={cn('flex flex-col gap-3', className)} aria-labelledby={headingId} {...rest}>
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <H className={cn(headingLevel === 2 ? 'text-h3' : 'text-body font-semibold font-sans', 'text-ink')}>
+          <H
+            id={headingId}
+            className={cn(headingLevel === 2 ? 'text-h3' : 'text-body font-semibold font-sans', 'text-ink')}
+          >
             {title}
           </H>
           {description && <p className="text-body-s text-muted">{description}</p>}

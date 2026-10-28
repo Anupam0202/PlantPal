@@ -15,9 +15,17 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as CommunityIndexRouteImport } from './routes/community/index'
 import { Route as DevDesignSystemRouteImport } from './routes/dev/design-system'
 import { Route as GardenIndexRouteImport } from './routes/garden/index'
+import { Route as GardenEditRouteImport } from './routes/garden/edit'
+import { Route as GardenJournalRouteImport } from './routes/garden/journal'
+import { Route as GardenNewRouteImport } from './routes/garden/new'
+import { Route as GardenSpacesRouteImport } from './routes/garden/spaces'
 import { Route as NatureIndexRouteImport } from './routes/nature/index'
 import { Route as PlanIndexRouteImport } from './routes/plan/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as SettingsDataRouteImport } from './routes/settings/data'
+import { Route as SettingsMigrateRouteImport } from './routes/settings/migrate'
+import { Route as GardenPlantsSpecimenIdRouteImport } from './routes/garden/plants/$specimenId'
+import { Route as GardenPlantsNewRouteImport } from './routes/garden/plants/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -49,6 +57,26 @@ const GardenIndexRoute = GardenIndexRouteImport.update({
   path: '/garden/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GardenEditRoute = GardenEditRouteImport.update({
+  id: '/garden/edit',
+  path: '/garden/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GardenJournalRoute = GardenJournalRouteImport.update({
+  id: '/garden/journal',
+  path: '/garden/journal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GardenNewRoute = GardenNewRouteImport.update({
+  id: '/garden/new',
+  path: '/garden/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GardenSpacesRoute = GardenSpacesRouteImport.update({
+  id: '/garden/spaces',
+  path: '/garden/spaces',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NatureIndexRoute = NatureIndexRouteImport.update({
   id: '/nature/',
   path: '/nature/',
@@ -64,28 +92,64 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsDataRoute = SettingsDataRouteImport.update({
+  id: '/settings/data',
+  path: '/settings/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsMigrateRoute = SettingsMigrateRouteImport.update({
+  id: '/settings/migrate',
+  path: '/settings/migrate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GardenPlantsSpecimenIdRoute = GardenPlantsSpecimenIdRouteImport.update({
+  id: '/garden/plants/$specimenId',
+  path: '/garden/plants/$specimenId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GardenPlantsNewRoute = GardenPlantsNewRouteImport.update({
+  id: '/garden/plants/new',
+  path: '/garden/plants/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/today': typeof TodayRoute
   '/welcome': typeof WelcomeRoute
   '/dev/design-system': typeof DevDesignSystemRoute
+  '/garden/edit': typeof GardenEditRoute
+  '/garden/journal': typeof GardenJournalRoute
+  '/garden/new': typeof GardenNewRoute
+  '/garden/spaces': typeof GardenSpacesRoute
+  '/settings/data': typeof SettingsDataRoute
+  '/settings/migrate': typeof SettingsMigrateRoute
   '/community/': typeof CommunityIndexRoute
   '/garden/': typeof GardenIndexRoute
   '/nature/': typeof NatureIndexRoute
   '/plan/': typeof PlanIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
+  '/garden/plants/new': typeof GardenPlantsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/today': typeof TodayRoute
   '/welcome': typeof WelcomeRoute
   '/dev/design-system': typeof DevDesignSystemRoute
+  '/garden/edit': typeof GardenEditRoute
+  '/garden/journal': typeof GardenJournalRoute
+  '/garden/new': typeof GardenNewRoute
+  '/garden/spaces': typeof GardenSpacesRoute
+  '/settings/data': typeof SettingsDataRoute
+  '/settings/migrate': typeof SettingsMigrateRoute
   '/community': typeof CommunityIndexRoute
   '/garden': typeof GardenIndexRoute
   '/nature': typeof NatureIndexRoute
   '/plan': typeof PlanIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
+  '/garden/plants/new': typeof GardenPlantsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -93,11 +157,19 @@ export interface FileRoutesById {
   '/today': typeof TodayRoute
   '/welcome': typeof WelcomeRoute
   '/dev/design-system': typeof DevDesignSystemRoute
+  '/garden/edit': typeof GardenEditRoute
+  '/garden/journal': typeof GardenJournalRoute
+  '/garden/new': typeof GardenNewRoute
+  '/garden/spaces': typeof GardenSpacesRoute
+  '/settings/data': typeof SettingsDataRoute
+  '/settings/migrate': typeof SettingsMigrateRoute
   '/community/': typeof CommunityIndexRoute
   '/garden/': typeof GardenIndexRoute
   '/nature/': typeof NatureIndexRoute
   '/plan/': typeof PlanIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
+  '/garden/plants/new': typeof GardenPlantsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -106,33 +178,57 @@ export interface FileRouteTypes {
     | '/today'
     | '/welcome'
     | '/dev/design-system'
+    | '/garden/edit'
+    | '/garden/journal'
+    | '/garden/new'
+    | '/garden/spaces'
+    | '/settings/data'
+    | '/settings/migrate'
     | '/community/'
     | '/garden/'
     | '/nature/'
     | '/plan/'
     | '/settings/'
+    | '/garden/plants/$specimenId'
+    | '/garden/plants/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/today'
     | '/welcome'
     | '/dev/design-system'
+    | '/garden/edit'
+    | '/garden/journal'
+    | '/garden/new'
+    | '/garden/spaces'
+    | '/settings/data'
+    | '/settings/migrate'
     | '/community'
     | '/garden'
     | '/nature'
     | '/plan'
     | '/settings'
+    | '/garden/plants/$specimenId'
+    | '/garden/plants/new'
   id:
     | '__root__'
     | '/'
     | '/today'
     | '/welcome'
     | '/dev/design-system'
+    | '/garden/edit'
+    | '/garden/journal'
+    | '/garden/new'
+    | '/garden/spaces'
+    | '/settings/data'
+    | '/settings/migrate'
     | '/community/'
     | '/garden/'
     | '/nature/'
     | '/plan/'
     | '/settings/'
+    | '/garden/plants/$specimenId'
+    | '/garden/plants/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -140,11 +236,19 @@ export interface RootRouteChildren {
   TodayRoute: typeof TodayRoute
   WelcomeRoute: typeof WelcomeRoute
   DevDesignSystemRoute: typeof DevDesignSystemRoute
+  GardenEditRoute: typeof GardenEditRoute
+  GardenJournalRoute: typeof GardenJournalRoute
+  GardenNewRoute: typeof GardenNewRoute
+  GardenSpacesRoute: typeof GardenSpacesRoute
+  SettingsDataRoute: typeof SettingsDataRoute
+  SettingsMigrateRoute: typeof SettingsMigrateRoute
   CommunityIndexRoute: typeof CommunityIndexRoute
   GardenIndexRoute: typeof GardenIndexRoute
   NatureIndexRoute: typeof NatureIndexRoute
   PlanIndexRoute: typeof PlanIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
+  GardenPlantsSpecimenIdRoute: typeof GardenPlantsSpecimenIdRoute
+  GardenPlantsNewRoute: typeof GardenPlantsNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -191,6 +295,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GardenIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/garden/edit': {
+      id: '/garden/edit'
+      path: '/garden/edit'
+      fullPath: '/garden/edit'
+      preLoaderRoute: typeof GardenEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/garden/journal': {
+      id: '/garden/journal'
+      path: '/garden/journal'
+      fullPath: '/garden/journal'
+      preLoaderRoute: typeof GardenJournalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/garden/new': {
+      id: '/garden/new'
+      path: '/garden/new'
+      fullPath: '/garden/new'
+      preLoaderRoute: typeof GardenNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/garden/spaces': {
+      id: '/garden/spaces'
+      path: '/garden/spaces'
+      fullPath: '/garden/spaces'
+      preLoaderRoute: typeof GardenSpacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nature/': {
       id: '/nature/'
       path: '/nature'
@@ -212,6 +344,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/data': {
+      id: '/settings/data'
+      path: '/settings/data'
+      fullPath: '/settings/data'
+      preLoaderRoute: typeof SettingsDataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/migrate': {
+      id: '/settings/migrate'
+      path: '/settings/migrate'
+      fullPath: '/settings/migrate'
+      preLoaderRoute: typeof SettingsMigrateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/garden/plants/$specimenId': {
+      id: '/garden/plants/$specimenId'
+      path: '/garden/plants/$specimenId'
+      fullPath: '/garden/plants/$specimenId'
+      preLoaderRoute: typeof GardenPlantsSpecimenIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/garden/plants/new': {
+      id: '/garden/plants/new'
+      path: '/garden/plants/new'
+      fullPath: '/garden/plants/new'
+      preLoaderRoute: typeof GardenPlantsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -220,11 +380,19 @@ const rootRouteChildren: RootRouteChildren = {
   TodayRoute: TodayRoute,
   WelcomeRoute: WelcomeRoute,
   DevDesignSystemRoute: DevDesignSystemRoute,
+  GardenEditRoute: GardenEditRoute,
+  GardenJournalRoute: GardenJournalRoute,
+  GardenNewRoute: GardenNewRoute,
+  GardenSpacesRoute: GardenSpacesRoute,
+  SettingsDataRoute: SettingsDataRoute,
+  SettingsMigrateRoute: SettingsMigrateRoute,
   CommunityIndexRoute: CommunityIndexRoute,
   GardenIndexRoute: GardenIndexRoute,
   NatureIndexRoute: NatureIndexRoute,
   PlanIndexRoute: PlanIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  GardenPlantsSpecimenIdRoute: GardenPlantsSpecimenIdRoute,
+  GardenPlantsNewRoute: GardenPlantsNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
