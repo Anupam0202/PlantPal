@@ -36,6 +36,8 @@ import { Route as GardenHealthCaseIdRouteImport } from './routes/garden/health/$
 import { Route as GardenHealthNewRouteImport } from './routes/garden/health/new'
 import { Route as GardenPlantsSpecimenIdRouteImport } from './routes/garden/plants/$specimenId'
 import { Route as GardenPlantsNewRouteImport } from './routes/garden/plants/new'
+import { Route as PlanDesignIndexRouteImport } from './routes/plan/design/index'
+import { Route as PlanDesignLayoutIdRouteImport } from './routes/plan/design/$layoutId'
 import { Route as SpeciesDraftsDraftIdRouteImport } from './routes/species/drafts.$draftId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -173,6 +175,16 @@ const GardenPlantsNewRoute = GardenPlantsNewRouteImport.update({
   path: '/garden/plants/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanDesignIndexRoute = PlanDesignIndexRouteImport.update({
+  id: '/plan/design/',
+  path: '/plan/design/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanDesignLayoutIdRoute = PlanDesignLayoutIdRouteImport.update({
+  id: '/plan/design/$layoutId',
+  path: '/plan/design/$layoutId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SpeciesDraftsDraftIdRoute = SpeciesDraftsDraftIdRouteImport.update({
   id: '/species/drafts/$draftId',
   path: '/species/drafts/$draftId',
@@ -206,8 +218,10 @@ export interface FileRoutesByFullPath {
   '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
   '/garden/plants/new': typeof GardenPlantsNewRoute
+  '/plan/design/$layoutId': typeof PlanDesignLayoutIdRoute
   '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
   '/garden/health/': typeof GardenHealthIndexRoute
+  '/plan/design/': typeof PlanDesignIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -236,8 +250,10 @@ export interface FileRoutesByTo {
   '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
   '/garden/plants/new': typeof GardenPlantsNewRoute
+  '/plan/design/$layoutId': typeof PlanDesignLayoutIdRoute
   '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
   '/garden/health': typeof GardenHealthIndexRoute
+  '/plan/design': typeof PlanDesignIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -267,8 +283,10 @@ export interface FileRoutesById {
   '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
   '/garden/plants/new': typeof GardenPlantsNewRoute
+  '/plan/design/$layoutId': typeof PlanDesignLayoutIdRoute
   '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
   '/garden/health/': typeof GardenHealthIndexRoute
+  '/plan/design/': typeof PlanDesignIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -299,8 +317,10 @@ export interface FileRouteTypes {
     | '/garden/health/new'
     | '/garden/plants/$specimenId'
     | '/garden/plants/new'
+    | '/plan/design/$layoutId'
     | '/species/drafts/$draftId'
     | '/garden/health/'
+    | '/plan/design/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -329,8 +349,10 @@ export interface FileRouteTypes {
     | '/garden/health/new'
     | '/garden/plants/$specimenId'
     | '/garden/plants/new'
+    | '/plan/design/$layoutId'
     | '/species/drafts/$draftId'
     | '/garden/health'
+    | '/plan/design'
   id:
     | '__root__'
     | '/'
@@ -359,8 +381,10 @@ export interface FileRouteTypes {
     | '/garden/health/new'
     | '/garden/plants/$specimenId'
     | '/garden/plants/new'
+    | '/plan/design/$layoutId'
     | '/species/drafts/$draftId'
     | '/garden/health/'
+    | '/plan/design/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -390,8 +414,10 @@ export interface RootRouteChildren {
   GardenHealthNewRoute: typeof GardenHealthNewRoute
   GardenPlantsSpecimenIdRoute: typeof GardenPlantsSpecimenIdRoute
   GardenPlantsNewRoute: typeof GardenPlantsNewRoute
+  PlanDesignLayoutIdRoute: typeof PlanDesignLayoutIdRoute
   SpeciesDraftsDraftIdRoute: typeof SpeciesDraftsDraftIdRoute
   GardenHealthIndexRoute: typeof GardenHealthIndexRoute
+  PlanDesignIndexRoute: typeof PlanDesignIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -585,6 +611,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GardenPlantsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plan/design/': {
+      id: '/plan/design/'
+      path: '/plan/design'
+      fullPath: '/plan/design/'
+      preLoaderRoute: typeof PlanDesignIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plan/design/$layoutId': {
+      id: '/plan/design/$layoutId'
+      path: '/plan/design/$layoutId'
+      fullPath: '/plan/design/$layoutId'
+      preLoaderRoute: typeof PlanDesignLayoutIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/species/drafts/$draftId': {
       id: '/species/drafts/$draftId'
       path: '/species/drafts/$draftId'
@@ -622,8 +662,10 @@ const rootRouteChildren: RootRouteChildren = {
   GardenHealthNewRoute: GardenHealthNewRoute,
   GardenPlantsSpecimenIdRoute: GardenPlantsSpecimenIdRoute,
   GardenPlantsNewRoute: GardenPlantsNewRoute,
+  PlanDesignLayoutIdRoute: PlanDesignLayoutIdRoute,
   SpeciesDraftsDraftIdRoute: SpeciesDraftsDraftIdRoute,
   GardenHealthIndexRoute: GardenHealthIndexRoute,
+  PlanDesignIndexRoute: PlanDesignIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

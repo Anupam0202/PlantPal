@@ -9,7 +9,8 @@ export type AiFeatureId =
   | 'plain-explain'
   | 'health-triage'
   | 'photo-id'
-  | 'species-draft';
+  | 'species-draft'
+  | 'space-detect';
 
 /** Spec feature numbers, for docs and the send preview. */
 export const FEATURE_NUMBER: Record<AiFeatureId, string> = {
@@ -20,6 +21,7 @@ export const FEATURE_NUMBER: Record<AiFeatureId, string> = {
   'health-triage': 'F4',
   'photo-id': 'F5',
   'species-draft': 'F3',
+  'space-detect': 'F9',
 };
 
 export interface ImagePart {

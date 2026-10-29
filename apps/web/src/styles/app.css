@@ -80,3 +80,26 @@
 [data-motion='reduce'] .sky-drop {
   animation: none;
 }
+
+/* Space Designer print/PDF export: only the drawing is printed. */
+.print-area {
+  display: none;
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    display: block;
+    position: fixed;
+    inset: 0;
+  }
+  .print-area img {
+    width: 100%;
+    height: auto;
+  }
+}

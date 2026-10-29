@@ -197,6 +197,16 @@ export async function mockGemini(page: Page) {
         ],
         abstainReason: null,
       };
+    } else if (system.includes('mark the fixed things in this photo')) {
+      out = {
+        items: [
+          { label: 'pot', box_2d: [600, 100, 800, 200], note: 'Terracotta pot' },
+          { label: 'railing', box_2d: [400, 0, 900, 1000], note: 'Metal railing' },
+          { label: 'seating', box_2d: [500, 600, 900, 900], note: 'Bench' },
+        ],
+        imageUsable: true,
+        abstainReason: null,
+      };
     } else if (system.includes('extract plant traits from the research text')) {
       const urls = [...text.matchAll(/— (https:\/\/\S+)/g)].map((m) => m[1] ?? '');
       out = {

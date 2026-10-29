@@ -15,7 +15,7 @@ import {
   SelectField,
   Spinner,
 } from '@plantpal/ui';
-import { CalendarDays, Sun } from 'lucide-react';
+import { CalendarDays, PencilRuler, Sun } from 'lucide-react';
 import { useCareT } from '../../features/care/messages';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -164,6 +164,10 @@ function PlanPage() {
             <Link to="/plan/calendar" className={buttonClasses('secondary')}>
               <CalendarDays className="size-4" aria-hidden="true" />
               {cm.calendar.title}
+            </Link>
+            <Link to="/plan/design" className={buttonClasses('secondary')}>
+              <PencilRuler className="size-4" aria-hidden="true" />
+              {t.garden.spaceDesigner}
             </Link>
           </>
         }

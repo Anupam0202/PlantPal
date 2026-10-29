@@ -19,6 +19,7 @@ import {
   healthTriageV1,
   photoIdV1,
   speciesDraftV1,
+  spaceDetectV1,
   listModels,
   pickModels,
   plainExplainV1,
@@ -42,6 +43,7 @@ const MODULES: Record<AiFeatureId, PromptModule<any, any>> = {
   'health-triage': healthTriageV1,
   'photo-id': photoIdV1,
   'species-draft': speciesDraftV1,
+  'space-detect': spaceDetectV1,
 };
 
 if (process.env.CI) {

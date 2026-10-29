@@ -37,7 +37,8 @@ PlantPal is being rebuilt as v4 ("Living Field Guide") milestone by milestone. S
 | M5        | Care schedules, Today cockpit, Water-Wise checks, frost and heat alerts, Climate Fit | Done    |
 | M6        | AI with your own Gemini key: vault, model discovery, explanations, quick capture     | Done    |
 | M7        | Plant health cases, photo identification, species pages and cited species drafts     | Done    |
-| M8–M9     | Space designer, nature log, harvest and pantry, impact                               | Next    |
+| M8        | Space designer: plans to scale, checks, sun and shade, growth, versions, exports     | Done    |
+| M9        | Nature log, harvest and pantry, impact                                               | Next    |
 | M10–M12   | Optional accounts and sync, shared gardens, community, release hardening             | Planned |
 
 The previous single-file app (v3) has been retired; its known problems are tracked in [`docs/traceability.md`](docs/traceability.md).

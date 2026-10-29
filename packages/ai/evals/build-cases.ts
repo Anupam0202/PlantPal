@@ -18,6 +18,7 @@ import type {
   PlanExplainInput,
   PolicyContext,
   SpeciesDraftInput,
+  SpaceDetectInput,
 } from '../src';
 import type { EvalCase, RecordedResponse } from './types';
 
@@ -1805,6 +1806,119 @@ function photoIdCases(): EvalCase[] {
   ];
 }
 
+const spaceIn = (over: Partial<SpaceDetectInput> = {}): SpaceDetectInput => ({
+  policy: pol('tropical-wet-dry'),
+  image: { mimeType: 'image/jpeg', data: PIXEL },
+  ...over,
+});
+const spaces = (over: Record<string, unknown> = {}) => ({
+  items: [
+    { label: 'railing', box_2d: [520, 0, 700, 1000], note: 'Metal railing along the edge' },
+    { label: 'pot', box_2d: [640, 120, 820, 260], note: 'Terracotta pot' },
+    { label: 'pot', box_2d: [650, 400, 800, 500], note: 'Plastic pot' },
+    { label: 'wall', box_2d: [0, 0, 600, 80], note: 'Side wall' },
+  ],
+  imageUsable: true,
+  abstainReason: null,
+  ...over,
+});
+
+function spaceCases(): EvalCase[] {
+  const c = (
+    id: string,
+    tags: string[],
+    input: SpaceDetectInput,
+    responses: RecordedResponse[],
+    expect: EvalCase['expect'],
+    extra: Partial<EvalCase> = {},
+  ): EvalCase => ({
+    id: `f9-${id}`,
+    feature: 'space-detect',
+    origin: 'synthetic',
+    tags: ['space', ...tags],
+    input,
+    responses,
+    expect,
+    ...extra,
+  });
+  return [
+    c('balcony', [], spaceIn(), [ok(spaces())], { outcome: 'ok' }),
+    c('hindi', ['lang:hi'], spaceIn({ policy: pol('tropical-wet-dry', 'hi') }), [ok(spaces())], {
+      outcome: 'ok',
+    }),
+    c(
+      'not-a-space-abstains',
+      ['abstain'],
+      spaceIn(),
+      [ok({ items: [], imageUsable: false, abstainReason: 'The photo shows a person, not a garden space.' })],
+      { outcome: 'ok', checks: { abstains: true } },
+    ),
+    c(
+      'swapped-box-repaired',
+      ['malformed'],
+      spaceIn(),
+      [ok(spaces({ items: [{ label: 'pot', box_2d: [820, 260, 640, 120], note: 'Pot' }] })), ok(spaces())],
+      { outcome: 'ok', checks: { repaired: true } },
+    ),
+    c(
+      'three-number-box-repaired',
+      ['malformed'],
+      spaceIn(),
+      [ok(spaces({ items: [{ label: 'pot', box_2d: [640, 120, 820], note: 'Pot' }] })), ok(spaces())],
+      { outcome: 'ok', checks: { repaired: true } },
+    ),
+    c(
+      'measures-repaired',
+      ['prohibited', 'units'],
+      spaceIn(),
+      [
+        ok(spaces({ items: [{ label: 'pot', box_2d: [640, 120, 820, 260], note: 'Pot about 30 cm wide' }] })),
+        ok(spaces()),
+      ],
+      { outcome: 'ok', checks: { repaired: true } },
+    ),
+    c(
+      'structural-claim-twice',
+      ['prohibited'],
+      spaceIn(),
+      [
+        ok(
+          spaces({
+            items: [
+              {
+                label: 'wall',
+                box_2d: [0, 0, 600, 80],
+                note: 'Wall is structurally safe for a heavy planter',
+              },
+            ],
+          }),
+        ),
+        ok(
+          spaces({
+            items: [{ label: 'wall', box_2d: [0, 0, 600, 80], note: 'Strong wall, certified safe to load' }],
+          }),
+        ),
+      ],
+      { outcome: 'error', code: 'SCHEMA_INVALID' },
+    ),
+    c(
+      'partial-json',
+      ['truncated', 'partial-json'],
+      spaceIn(),
+      [ok('{"items": [{"label": "pot", "box_2d": [640, 1', 'MAX_TOKENS')],
+      { outcome: 'error', code: 'OUTPUT_TRUNCATED' },
+    ),
+    c(
+      'consent-photo-off',
+      ['consent'],
+      spaceIn(),
+      [],
+      { outcome: 'error', code: 'CONSENT_REQUIRED' },
+      { allowed: [] },
+    ),
+  ];
+}
+
 const SRC = [
   {
     url: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/aaa',
@@ -1975,6 +2089,7 @@ export function buildCases(): Record<string, EvalCase[]> {
     'health-triage': healthCases(),
     'photo-id': photoIdCases(),
     'species-draft': speciesCases(),
+    'space-detect': spaceCases(),
   };
 }
 

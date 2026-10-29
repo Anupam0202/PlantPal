@@ -12,6 +12,7 @@ import {
   Sun,
   BookOpen,
   HeartPulse,
+  PencilRuler,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useT } from '../i18n';
@@ -125,6 +126,14 @@ export function CommandPalette({
                 >
                   <BookOpen className="size-5 text-muted" aria-hidden="true" />
                   {t.garden.speciesIndex}
+                </Command.Item>
+                <Command.Item
+                  value={`${t.garden.spaceDesigner} layout design plan drawing`}
+                  onSelect={() => run(() => void navigate({ to: '/plan/design' }))}
+                  className={item}
+                >
+                  <PencilRuler className="size-5 text-muted" aria-hidden="true" />
+                  {t.garden.spaceDesigner}
                 </Command.Item>
                 <Command.Item
                   value={`${t.garden.newGarden} new garden`}

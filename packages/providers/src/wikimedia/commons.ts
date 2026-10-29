@@ -58,14 +58,15 @@ export function isOpenLicence(licence: string): boolean {
   return /^(CC0|CC BY(-SA)?( \d(\.\d)?)?|Public domain|PD\b)/i.test(l);
 }
 
+const ENTITIES: Record<string, string> = { amp: '&', quot: '"', '#39': "'", '#039': "'" };
+
 /** Plain text from Commons' HTML author field. */
 export function plainText(html: string): string {
   return (
     html
       .replace(/<[^>]{0,500}>/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#0?39;/g, "'")
+      // One pass, so "&amp;quot;" stays "&quot;" instead of being decoded twice.
+      .replace(/&(amp|quot|#0?39);/g, (_, e: string) => ENTITIES[e] ?? '')
       // Rendered as text, never HTML; drop any angle bracket left over.
       .replace(/[<>]/g, '')
       .replace(/\s+/g, ' ')

@@ -5,3 +5,4 @@ export * from './plainExplain';
 export * from './healthTriage';
 export * from './photoId';
 export * from './speciesDraft';
+export * from './spaceDetect';

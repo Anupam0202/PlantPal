@@ -51,6 +51,11 @@ const en = {
   } satisfies Record<ModelRole, string>,
   automatic: 'Automatic',
   notListed: 'None for this key',
+  labs: 'Labs',
+  labsHint: 'Experimental features. They may change or go away, and their results need extra checking.',
+  labsPhotoPlan: 'Photo-to-Plan',
+  labsPhotoPlanHint:
+    'In the Space designer, Gemini marks pots, railings and walls in a photo of your space. You set the scale and check every size.',
   usage: 'Usage on this device',
   usageToday: (r: number, tk: string) => `Today: ${r} requests · ${tk} tokens`,
   usageWeek: (r: number) => `Last 7 days: ${r} requests`,
@@ -137,6 +142,11 @@ const hi: AiSettingsMessages = {
   },
   automatic: 'स्वचालित',
   notListed: 'इस कुंजी के लिए कोई नहीं',
+  labs: 'प्रयोगशाला',
+  labsHint: 'प्रयोग वाली सुविधाएँ। ये बदल सकती हैं या हट सकती हैं, और इनके नतीजे अच्छी तरह जाँचने होंगे।',
+  labsPhotoPlan: 'फ़ोटो से नक्शा',
+  labsPhotoPlanHint:
+    'जगह के डिज़ाइनर में, Gemini आपकी जगह की फ़ोटो में गमले, रेलिंग और दीवारें चिह्नित करता है। पैमाना आप तय करें और हर माप जाँचें।',
   usage: 'इस डिवाइस पर उपयोग',
   usageToday: (r, tk) => `आज: ${r} अनुरोध · ${tk} टोकन`,
   usageWeek: (r) => `पिछले 7 दिन: ${r} अनुरोध`,
@@ -221,6 +231,12 @@ const es: AiSettingsMessages = {
   },
   automatic: 'Automático',
   notListed: 'Ninguno para esta clave',
+  labs: 'Laboratorio',
+  labsHint:
+    'Funciones experimentales. Pueden cambiar o desaparecer, y sus resultados requieren revisión adicional.',
+  labsPhotoPlan: 'De foto a plano',
+  labsPhotoPlanHint:
+    'En el diseñador de espacios, Gemini marca macetas, barandillas y muros en una foto de tu espacio. Tú fijas la escala y revisas cada medida.',
   usage: 'Uso en este dispositivo',
   usageToday: (r, tk) => `Hoy: ${r} solicitudes · ${tk} tokens`,
   usageWeek: (r) => `Últimos 7 días: ${r} solicitudes`,

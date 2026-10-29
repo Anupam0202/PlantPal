@@ -29,7 +29,8 @@ export function sharedPolicy(ctx: PolicyContext): string {
 
 /** Wraps untrusted text (journal notes, names typed by people, OCR) so it is labelled as data. */
 export function userData(label: string, text: string): string {
-  // Strip anything that could close the wrapper early; safety still comes from validation.
-  const clean = text.replace(/<\/?user_data[^>]*>/gi, '');
+  // Defuse anything that could open or close the wrapper early (linear: no backtracking, and no
+  // recombination as with stripping). Safety still comes from validation.
+  const clean = text.replace(/<(?=\/?user_data)/gi, '‹');
   return `<user_data source="${label}">\n${clean}\n</user_data>`;
 }

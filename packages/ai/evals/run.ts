@@ -17,6 +17,7 @@ import {
   healthTriageV1,
   photoIdV1,
   speciesDraftV1,
+  spaceDetectV1,
   plainExplainV1,
   planExplainV1,
   prohibitedClaims,
@@ -42,6 +43,7 @@ const MODULES: Record<AiFeatureId, PromptModule<any, any>> = {
   'health-triage': healthTriageV1,
   'photo-id': photoIdV1,
   'species-draft': speciesDraftV1,
+  'space-detect': spaceDetectV1,
 };
 
 const REQUIRED_TAGS = [
@@ -105,6 +107,7 @@ interface Loose {
   unknowns?: string[];
   plantVisible?: boolean;
   candidates?: unknown[];
+  items?: unknown[];
   abstainReason?: string | null;
 }
 
@@ -196,7 +199,9 @@ export async function runCase(c: EvalCase): Promise<CaseResult> {
           ? data.plantVisible === false
           : c.feature === 'health-triage' || c.feature === 'photo-id'
             ? (data.candidates ?? []).length === 0 && Boolean(data.abstainReason)
-            : Array.isArray(data.unknowns) && data.unknowns.length > 0;
+            : c.feature === 'space-detect'
+              ? (data.items ?? []).length === 0 && Boolean(data.abstainReason)
+              : Array.isArray(data.unknowns) && data.unknowns.length > 0;
       if (!abstained) return fail('expected an abstention');
     }
     return { ...res, pass: true };

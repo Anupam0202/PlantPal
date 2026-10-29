@@ -101,6 +101,7 @@ export const es: Messages = {
     tabHealth: 'Salud',
     newHealthCase: 'Nuevo caso de salud',
     speciesIndex: 'Plantas de la A a la Z',
+    spaceDesigner: 'Diseñador de espacios',
     addPlant: 'Añadir planta',
     searchPlants: 'Buscar plantas',
     noMatches: 'Ninguna planta coincide con estos filtros.',
@@ -616,6 +617,8 @@ export const es: Messages = {
       careSchedules: 'Calendarios de cuidado',
       taskLogs: 'Historial de tareas',
       speciesDrafts: 'Borradores de especies',
+      layouts: 'Diseños',
+      layoutVersions: 'Versiones de diseños',
     },
   },
   migrate: {

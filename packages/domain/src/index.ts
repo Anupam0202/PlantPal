@@ -16,3 +16,4 @@ export * from './alerts';
 export * from './season';
 export * from './careplan';
 export * from './health';
+export * from './layout';

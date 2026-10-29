@@ -332,6 +332,17 @@ function AiSettingsPage() {
           </Card>
         </Section>
 
+        <Section title={t.labs} description={t.labsHint}>
+          <Card>
+            <SwitchField
+              label={t.labsPhotoPlan}
+              description={t.labsPhotoPlanHint}
+              checked={s.labs.photoPlan}
+              onCheckedChange={(photoPlan) => void s.update({ labs: { ...s.labs, photoPlan } })}
+            />
+          </Card>
+        </Section>
+
         <Section title={t.consent}>
           <Card className="flex flex-col gap-3 text-body-s">
             {consentFeatures.length === 0 ? (

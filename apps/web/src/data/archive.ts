@@ -23,6 +23,8 @@ import {
   Zone,
   type ArchiveFile,
   SpeciesDraftRecord,
+  Layout,
+  LayoutVersion,
 } from '@plantpal/schemas';
 import { localDateOf, toCsv, type CsvColumn } from '@plantpal/domain';
 import { CLIENT_SCHEMA, db, getMeta, setMeta } from './db';
@@ -48,6 +50,8 @@ const TABLES = {
   careSchedules: CareSchedule,
   taskLogs: TaskLog,
   speciesDrafts: SpeciesDraftRecord,
+  layouts: Layout,
+  layoutVersions: LayoutVersion,
 } as const;
 export type ArchiveTable = keyof typeof TABLES;
 const TABLE_NAMES = Object.keys(TABLES) as ArchiveTable[];

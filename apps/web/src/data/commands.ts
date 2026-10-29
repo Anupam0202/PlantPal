@@ -6,6 +6,8 @@ import {
   Garden as GardenSchema,
   Harvest as HarvestSchema,
   HealthCase as HealthCaseSchema,
+  Layout as LayoutSchema,
+  LayoutBody as LayoutBodySchema,
   SpeciesDraftRecord as SpeciesDraftSchema,
   Media as MediaSchema,
   Observation as ObservationSchema,
@@ -22,6 +24,9 @@ import {
   type Garden,
   type Harvest,
   type HealthCase,
+  type Layout,
+  type LayoutBody,
+  type LayoutVersion,
   type HealthCaseEntry,
   type HealthOutcome,
   type SpeciesDraftRecord,
@@ -1352,3 +1357,83 @@ export async function deleteSpeciesDraft(id: string, baseVersion: number, now = 
     await db.speciesDrafts.put({ ...cur, deletedAt: now, updatedAt: now, version: cur.version + 1 });
   });
 }
+
+// ---------------------------------------------------------------- layouts (§6.7)
+
+/** Creates a layout for a space; the first version is saved straight away. */
+export async function createLayout(
+  gardenId: string,
+  input: { zoneId: string | null; body: LayoutBody },
+  now = Date.now(),
+): Promise<Layout> {
+  return writeTx([db.layouts, db.layoutVersions, db.gardens, db.zones], async () => {
+    const garden = await db.gardens.get(gardenId);
+    if (!garden || garden.deletedAt !== null) throw new RecordNotFoundError('garden', gardenId);
+    if (input.zoneId) {
+      const z = await db.zones.get(input.zoneId);
+      if (!z || z.gardenId !== gardenId || z.deletedAt !== null)
+        throw new RecordNotFoundError('zone', input.zoneId);
+    }
+    const body = LayoutBodySchema.parse(input.body);
+    const l = LayoutSchema.parse({
+      ...body,
+      id: newId(now),
+      workspaceId: garden.workspaceId,
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+      deletedAt: null,
+      gardenId,
+      zoneId: input.zoneId,
+    });
+    await db.layouts.add(l);
+    await db.layoutVersions.add({
+      id: newId(now + 1),
+      workspaceId: l.workspaceId,
+      layoutId: l.id,
+      version: 1,
+      savedAt: now,
+      note: '',
+      body,
+    });
+    await enqueue(l.workspaceId, 'layout.create', l.id, l, null, now);
+    return l;
+  });
+}
+
+/** Saves the editor's state as a new version (the compare view lists every saved version). */
+export async function saveLayout(
+  id: string,
+  baseVersion: number,
+  body: LayoutBody,
+  note = '',
+  now = Date.now(),
+): Promise<Layout> {
+  return writeTx([db.layouts, db.layoutVersions], async () => {
+    const cur = assertUpdatable(await db.layouts.get(id), 'layout', id, baseVersion);
+    const parsed = LayoutBodySchema.parse(body);
+    const next = LayoutSchema.parse({ ...cur, ...parsed, version: cur.version + 1, updatedAt: now });
+    await db.layouts.put(next);
+    await db.layoutVersions.add({
+      id: newId(now),
+      workspaceId: cur.workspaceId,
+      layoutId: id,
+      version: next.version,
+      savedAt: now,
+      note: note.slice(0, 200),
+      body: parsed,
+    });
+    await enqueue(cur.workspaceId, 'layout.update', id, next, baseVersion, now);
+    return next;
+  });
+}
+
+export async function deleteLayout(id: string, baseVersion: number, now = Date.now()): Promise<void> {
+  await writeTx([db.layouts], async () => {
+    const cur = assertUpdatable(await db.layouts.get(id), 'layout', id, baseVersion);
+    await db.layouts.put({ ...cur, deletedAt: now, updatedAt: now, version: cur.version + 1 });
+    await enqueue(cur.workspaceId, 'layout.delete', id, null, baseVersion, now);
+  });
+}
+
+export type { LayoutVersion };

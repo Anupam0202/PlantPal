@@ -17,7 +17,8 @@ export type AiFeature =
   | 'plain-explain'
   | 'health-triage'
   | 'photo-id'
-  | 'species-draft';
+  | 'species-draft'
+  | 'space-detect';
 
 /** AI settings stay on this device, in the vault database: never synced or exported. */
 export interface AiSettings {
@@ -32,6 +33,8 @@ export interface AiSettings {
   consent: Partial<Record<AiFeature, AiDataCategory[]>>;
   /** Daily soft cap on requests; null = none. */
   dailyCap: number | null;
+  /** Experimental features, off until the person turns them on (Settings › AI › Labs). */
+  labs: { photoPlan: boolean };
 }
 
 export interface PendingAction {
@@ -49,6 +52,7 @@ const DEFAULTS: AiSettings = {
   overrides: {},
   consent: {},
   dailyCap: null,
+  labs: { photoPlan: false },
 };
 
 let store: VaultStore | null = null;
@@ -91,6 +95,7 @@ const settingsOf = (s: AiSettings): AiSettings => ({
   overrides: s.overrides,
   consent: s.consent,
   dailyCap: s.dailyCap,
+  labs: s.labs,
 });
 
 export const useAiState = create<AiState>((set, get) => ({
@@ -104,7 +109,13 @@ export const useAiState = create<AiState>((set, get) => ({
       try {
         const saved = await aiStore().get<Partial<AiSettings>>('settings');
         const status = await aiVault().status();
-        set({ ...DEFAULTS, ...saved, vault: status, loaded: true });
+        set({
+          ...DEFAULTS,
+          ...saved,
+          labs: { ...DEFAULTS.labs, ...saved?.labs },
+          vault: status,
+          loaded: true,
+        });
       } catch {
         set({ loaded: true });
       }

@@ -100,6 +100,7 @@ export const hi: Messages = {
     tabHealth: 'स्वास्थ्य',
     newHealthCase: 'नया स्वास्थ्य मामला',
     speciesIndex: 'पौधे अ–ज्ञ',
+    spaceDesigner: 'जगह का डिज़ाइनर',
     addPlant: 'पौधा जोड़ें',
     searchPlants: 'पौधे खोजें',
     noMatches: 'इन फ़िल्टरों से कोई पौधा मेल नहीं खाता।',
@@ -610,6 +611,8 @@ export const hi: Messages = {
       careSchedules: 'देखभाल कार्यक्रम',
       taskLogs: 'कार्य इतिहास',
       speciesDrafts: 'प्रजाति ड्राफ़्ट',
+      layouts: 'लेआउट',
+      layoutVersions: 'लेआउट संस्करण',
     },
   },
   migrate: {

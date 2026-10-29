@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type {
   HealthCase,
+  Layout,
+  LayoutVersion,
   SpeciesDraftRecord,
   CareEvent,
   CareSchedule,
@@ -332,4 +334,33 @@ export function useSpeciesDraft(id: string): SpeciesDraftRecord | null | undefin
     const d = await db.speciesDrafts.get(id);
     return d && d.deletedAt === null ? d : null;
   }, [id]);
+}
+
+export function useLayouts(gardenId: string | undefined): Layout[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? (await db.layouts.where('gardenId').equals(gardenId).toArray())
+            .filter((l) => l.deletedAt === null)
+            .sort((a, b) => b.updatedAt - a.updatedAt)
+        : [],
+    [gardenId],
+  );
+}
+
+export function useLayout(id: string): Layout | null | undefined {
+  return useLiveQuery(async () => {
+    const l = await db.layouts.get(id);
+    return l && l.deletedAt === null ? l : null;
+  }, [id]);
+}
+
+export function useLayoutVersions(layoutId: string): LayoutVersion[] | undefined {
+  return useLiveQuery(
+    async () =>
+      (await db.layoutVersions.where('layoutId').equals(layoutId).toArray()).sort(
+        (a, b) => b.version - a.version,
+      ),
+    [layoutId],
+  );
 }

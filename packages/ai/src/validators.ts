@@ -67,9 +67,20 @@ const RULES: Rule[] = [
   // Structural, soil or water safety certification.
   {
     kind: 'safety-certification',
-    re: /\b(?:balcony|roof|terrace|structure|soil|water)\s+(?:is|are)\s+(?:structurally\s+)?(?:safe|strong enough|uncontaminated|safe to drink)\b/gi,
+    re: /\b(?:balcony|roof|terrace|structure|wall|railing|parapet|slab|floor|deck|ledge|soil|water)\s+(?:is|are)\s+(?:structurally\s+)?(?:safe|sound|strong enough|uncontaminated|safe to drink)\b/gi,
     negatable: true,
   },
+  {
+    kind: 'safety-certification',
+    re: /\b(?:structurally\s+(?:safe|sound)|certified\s+safe|safe\s+to\s+(?:load|drink)|can\s+(?:safely\s+)?(?:bear|hold|support|take)\s+(?:the|this|that|a|any)?\s*(?:weight|load))\b/gi,
+    negatable: true,
+  },
+  {
+    kind: 'safety-certification',
+    re: /\b(?:estructuralmente\s+segur[oa]s?|puede\s+soportar\s+(?:el|ese|este)\s+peso)\b/gi,
+    negatable: true,
+  },
+  { kind: 'safety-certification', re: /संरचनात्मक रूप से सुरक्षित/g, negatable: true },
   // A Gemini key must never be echoed.
   { kind: 'api-key', re: /AIza[0-9A-Za-z_-]{35}/g, negatable: false },
 ];

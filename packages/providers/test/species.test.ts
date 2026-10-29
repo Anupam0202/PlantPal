@@ -94,6 +94,8 @@ describe('Wikimedia Commons', () => {
     expect(isOpenLicence('CC BY-NC-SA 3.0')).toBe(false);
     expect(isOpenLicence('All rights reserved')).toBe(false);
     expect(plainText('<script>x</script><b>A &amp; B</b> <')).toBe('x A & B');
+    // Entities decode once: an escaped entity stays as written.
+    expect(plainText('Tom &amp;quot;Fern&amp;quot; &#39;Lee&#039;')).toBe("Tom &quot;Fern&quot; 'Lee'");
   });
 });
 

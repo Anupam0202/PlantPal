@@ -8,6 +8,8 @@ import type {
   Harvest,
   HealthCase,
   SpeciesDraftRecord,
+  Layout,
+  LayoutVersion,
   Media,
   Observation,
   OutboxOp,
@@ -21,7 +23,7 @@ import type {
 } from '@plantpal/schemas';
 
 /** Bumped with every Dexie schema change; sent with outbox ops so the server knows the client shape. */
-export const CLIENT_SCHEMA = 5;
+export const CLIENT_SCHEMA = 6;
 
 export interface MediaBlob {
   id: string;
@@ -65,6 +67,8 @@ export type PlantPalDB = Dexie & {
   careSchedules: EntityTable<CareSchedule, 'id'>;
   taskLogs: EntityTable<TaskLog, 'id'>;
   speciesDrafts: EntityTable<SpeciesDraftRecord, 'id'>;
+  layouts: EntityTable<Layout, 'id'>;
+  layoutVersions: EntityTable<LayoutVersion, 'id'>;
 };
 
 /** Schema version 1 (M2). Kept verbatim so upgrades are tested from the real previous shape. */
@@ -107,6 +111,11 @@ export function createDb(name = 'plantpal'): PlantPalDB {
   // v5 (M7): species drafted on this device (cited AI drafts awaiting review). Health cases gain
   // optional fields through schema defaults, so they need no data migration.
   db.version(5).stores({ speciesDrafts: 'id, workspaceId, scientificName' });
+  // v6 (M8): Space Designer layouts and their saved versions.
+  db.version(6).stores({
+    layouts: 'id, gardenId, zoneId, workspaceId',
+    layoutVersions: 'id, layoutId, workspaceId, [layoutId+version]',
+  });
   return db;
 }
 
@@ -131,6 +140,8 @@ export const RECORD_TABLES = [
   'careSchedules',
   'taskLogs',
   'speciesDrafts',
+  'layouts',
+  'layoutVersions',
 ] as const;
 export type RecordTable = (typeof RECORD_TABLES)[number];
 
