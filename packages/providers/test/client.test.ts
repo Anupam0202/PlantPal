@@ -96,4 +96,40 @@ describe('EnvClient', () => {
     expect((await client.searchPlaces('Pune', 'en')).results[0]?.name).toBe('Pune');
     expect(f).not.toHaveBeenCalled();
   });
+
+  it('builds a climate profile from the last ten complete years of reanalysis', async () => {
+    const f = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async () =>
+        ok(fixtures.dailyFixture({ from: 2015, to: 2025, mean: 10, amplitude: 9 })),
+      );
+    const { client } = setup(f);
+    const p = await client.climateProfile(51.5072, -0.1276);
+    const url = new URL(String(f.mock.calls[0]?.[0]));
+    expect(url.searchParams.get('start_date')).toBe('2015-01-01');
+    expect(url.searchParams.get('end_date')).toBe('2025-12-31');
+    expect(url.searchParams.get('latitude')).toBe('51.5');
+    expect(p.period).toBe('2016–2025');
+    // Coldest night: 10 − 9 − 5 = −4 °C every year → −4 °C mean extreme minimum, zone 9a.
+    expect(p.extremeMinC).toBe(-4);
+    expect(p.hardinessZone).toBe('9a');
+    expect(p.frost?.frostSeasonsPct).toBe(100);
+    expect(p.seasonDays).toBeGreaterThan(150);
+    expect(p.seasonDays).toBeLessThan(330);
+    expect(p.hotSummers).toBe(false);
+    expect(p.months).toHaveLength(12);
+    expect(p.provenance).toMatchObject({ provider: 'open-meteo-historical', demo: false, model: 'ERA5' });
+  });
+
+  it('demo climate profile is labelled as demo', async () => {
+    const client = new EnvClient({
+      mode: 'mock',
+      cache: new MemoryCache(),
+      now: () => Date.parse('2026-10-28T09:00:00Z'),
+    });
+    const p = await client.climateProfile(18.52, 73.86);
+    expect(p.provenance.demo).toBe(true);
+    expect(p.seasonDays).toBe(365);
+    expect(p.hardinessZone).not.toBeNull();
+  });
 });

@@ -9,6 +9,7 @@ import {
   RecordSource,
   ShortText,
 } from './primitives';
+import { INDOOR_LIGHT } from './catalog';
 
 /** Fields shared by every versioned, user-editable entity. */
 const versioned = {
@@ -55,12 +56,62 @@ export const Place = z.object({
 });
 export type Place = z.infer<typeof Place>;
 
+/** Where the garden is, for region-specific rules: ISO country (GRIIS lists) and botanical country (WCVP). */
+export const GardenRegion = z.object({
+  countryCode: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .nullable(),
+  admin1: ShortText.nullable(),
+  /** WGSRPD level-3 botanical country code, once resolved. */
+  l3: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .nullable(),
+});
+export type GardenRegion = z.infer<typeof GardenRegion>;
+
+export const GOALS = [
+  'food',
+  'pollinators',
+  'native',
+  'cool-shade',
+  'beauty',
+  'low-water',
+  'learn-kids',
+] as const;
+export type Goal = (typeof GOALS)[number];
+export const WATER_ACCESS = ['tap', 'carry', 'rain'] as const;
+export const FROST_ANSWERS = ['none', 'light', 'hard'] as const;
+
+/** Answers from Seed onboarding (§7 W1) that the eligibility engine uses. Every field may be unanswered. */
+export const GardenProfile = z.object({
+  household: z.object({ cats: z.boolean(), dogs: z.boolean(), children: z.boolean() }).nullable(),
+  /** Opt-in: show plants toxic to the household with a warning instead of hiding them. */
+  showToxicWithWarning: z.boolean(),
+  goals: z.array(z.enum(GOALS)).max(3),
+  minutesPerWeek: z.number().int().min(0).max(10_000).nullable(),
+  waterAccess: z.enum(WATER_ACCESS).nullable(),
+  budget: z.enum(['low', 'medium', 'high']).nullable(),
+  /** Manual climate answers, used when no location or climate data is available. */
+  manualClimate: z
+    .object({
+      frost: z.enum(FROST_ANSWERS).nullable(),
+      hotSummers: z.boolean().nullable(),
+      monsoon: z.boolean().nullable(),
+    })
+    .nullable(),
+});
+export type GardenProfile = z.infer<typeof GardenProfile>;
+
 export const Garden = z.object({
   ...versioned,
   name: ShortText.min(1),
   timezone: z.string().min(1).max(64),
   hemisphere: z.enum(HEMISPHERES).nullable(),
   place: Place.nullable(),
+  region: GardenRegion.nullable().default(null),
+  profile: GardenProfile.nullable().default(null),
   notes: LongText,
   source: RecordSource,
 });
@@ -84,6 +135,32 @@ export type LightLevel = (typeof LIGHT_LEVELS)[number];
 export const WIND_LEVELS = ['sheltered', 'moderate', 'exposed'] as const;
 export const DRAINAGE_LEVELS = ['pools', 'normal', 'fast'] as const;
 
+/**
+ * How the zone's direct sun was found (§6.2): `class` the user picked a light class, `facing` computed
+ * from facing / cover / what is across, `quick` from clear-day times the user saw, `horizon` from a
+ * traced or edited skyline, `measured` from the user's own meter readings.
+ */
+export const SUN_METHODS = ['class', 'facing', 'quick', 'horizon', 'measured'] as const;
+export const OBSTRUCTIONS = ['none', 'low', 'medium', 'high'] as const;
+
+export const ZoneSun = z.object({
+  method: z.enum(SUN_METHODS),
+  facingDeg: z.number().min(0).max(359.99).nullable(),
+  /** Overhang cut-off angle when the zone is covered from above. */
+  overhangDeg: z.number().min(5).max(85).nullable(),
+  across: z.enum(OBSTRUCTIONS).nullable(),
+  /** Obstruction elevation per 5° of azimuth (72 values), for `horizon`. */
+  horizon: z.array(z.number().min(0).max(90)).length(72).nullable(),
+  quick: z
+    .object({ summerHours: z.number().min(0).max(24), winterHours: z.number().min(0).max(24) })
+    .nullable(),
+  /** Direct-sun hours on the 21st of each month, January first. 0 is a real value (L21). */
+  monthlyHours: z.array(z.number().min(0).max(24)).length(12),
+  year: z.number().int(),
+  computedAt: EpochMs,
+});
+export type ZoneSun = z.infer<typeof ZoneSun>;
+
 export const Zone = z.object({
   ...versioned,
   gardenId: Id,
@@ -95,6 +172,13 @@ export const Zone = z.object({
   /** Direction the zone faces, degrees clockwise from north. */
   orientationDeg: z.number().int().min(0).max(359).nullable(),
   light: z.enum(LIGHT_LEVELS).nullable(),
+  sun: ZoneSun.nullable().default(null),
+  /** Window light class for indoor zones (no lux or PPFD from photos, S4). */
+  indoorLight: z.enum(INDOOR_LIGHT).nullable().default(null),
+  /** Free height above the plants, for E3. */
+  clearanceCm: OptionalAmount.default(null),
+  /** Largest container that fits, litres. */
+  maxContainerL: OptionalAmount.default(null),
   wind: z.enum(WIND_LEVELS).nullable(),
   drainage: z.enum(DRAINAGE_LEVELS).nullable(),
   notes: LongText,
@@ -178,6 +262,8 @@ export const Specimen = z.object({
   cultivar: ShortText.nullable(),
   /** GBIF backbone key once the name is matched (M4). */
   taxonKey: z.string().max(40).nullable(),
+  /** PlantPal catalogue taxon this plant was planned from, if any. */
+  catalogTaxonId: z.string().max(80).nullable().default(null),
   identityLevel: z.enum(IDENTITY_LEVELS),
   origin: z.enum(ORIGINS),
   parentSpecimenId: Id.nullable(),
@@ -307,6 +393,48 @@ export const Harvest = z.object({
   source: RecordSource,
 });
 export type Harvest = z.infer<typeof Harvest>;
+
+// ---------------------------------------------------------------- plans
+
+export const PLAN_ITEM_STATUSES = ['ELIGIBLE', 'NEEDS_INPUT', 'EXCLUDED'] as const;
+
+export const Plan = z.object({
+  ...versioned,
+  gardenId: Id,
+  name: ShortText.min(1),
+  status: z.enum(['draft', 'saved']),
+  catalogVersion: z.string().max(40),
+  engineVersion: z.string().max(40),
+  /** Fingerprint of the inputs, so the plan can tell when the space or climate has changed since. */
+  inputsHash: z.string().max(64),
+  source: RecordSource,
+});
+export type Plan = z.infer<typeof Plan>;
+
+export const PlanFinding = z.object({
+  rule: z.string().max(4),
+  outcome: z.string().max(20),
+  code: z.string().max(60),
+  params: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+  sourceId: z.string().max(60).optional(),
+});
+
+/** A candidate as the engine judged it when the plan was made (§17.3 snapshot). */
+export const PlanItem = z.object({
+  ...versioned,
+  gardenId: Id,
+  planId: Id,
+  zoneId: Id.nullable(),
+  taxonId: z.string().max(80),
+  status: z.enum(PLAN_ITEM_STATUSES),
+  chosen: z.boolean(),
+  score: z.number().min(0).max(100).nullable(),
+  findings: z.array(PlanFinding).max(40),
+  flags: z.array(z.string().max(40)).max(10),
+  specimenId: Id.nullable(),
+  source: RecordSource,
+});
+export type PlanItem = z.infer<typeof PlanItem>;
 
 // ---------------------------------------------------------------- media
 

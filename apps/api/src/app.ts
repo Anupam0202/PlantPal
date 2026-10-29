@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
 import {
   AirQuality,
+  ClimateProfile,
   Elevation,
   Forecast,
   PlaceSearch,
@@ -67,6 +68,12 @@ const solarRoute = envRoute(
   'Monthly solar radiation climatology (NASA POWER)',
   Coords,
   SolarClimatology,
+);
+const climateRoute = envRoute(
+  '/api/v1/env/climate',
+  'Local climate profile: hardiness, frost dates, season length, heat days, normals (ERA5, last 10 years)',
+  Coords,
+  ClimateProfile,
 );
 const placesRoute = envRoute(
   '/api/v1/env/places',
@@ -192,6 +199,14 @@ export function createApp(deps: AppDeps) {
     const { lat, lon } = c.req.valid('query');
     try {
       return send(c, await deps.env.solarClimatology(lat, lon, c.req.raw.signal), 86_400);
+    } catch (e) {
+      return providerProblem(c, e) as never;
+    }
+  });
+  app.openapi(climateRoute, async (c) => {
+    const { lat, lon } = c.req.valid('query');
+    try {
+      return send(c, await deps.env.climateProfile(lat, lon, c.req.raw.signal), 7 * 86_400);
     } catch (e) {
       return providerProblem(c, e) as never;
     }

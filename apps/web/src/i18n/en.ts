@@ -598,6 +598,8 @@ export const en = {
       soilTests: 'Soil tests',
       healthCases: 'Health checks',
       drafts: 'Private drafts',
+      plans: 'Plans',
+      planItems: 'Plan choices',
     },
   },
   migrate: {

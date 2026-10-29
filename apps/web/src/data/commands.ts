@@ -6,6 +6,8 @@ import {
   Harvest as HarvestSchema,
   Media as MediaSchema,
   Observation as ObservationSchema,
+  Plan as PlanSchema,
+  PlanItem as PlanItemSchema,
   Specimen as SpecimenSchema,
   Workspace as WorkspaceSchema,
   Zone as ZoneSchema,
@@ -16,6 +18,8 @@ import {
   type Harvest,
   type Media,
   type Observation,
+  type Plan,
+  type PlanItem,
   type Specimen,
   type SpecimenStatus,
   type WaterSource,
@@ -115,7 +119,8 @@ export async function setActiveGarden(gardenId: string): Promise<void> {
 
 // ---------------------------------------------------------------- gardens
 
-export type GardenInput = Pick<Garden, 'name' | 'timezone' | 'hemisphere' | 'place' | 'notes'>;
+export type GardenInput = Pick<Garden, 'name' | 'timezone' | 'hemisphere' | 'place' | 'notes'> &
+  Partial<Pick<Garden, 'region' | 'profile'>>;
 
 export async function createGarden(input: GardenInput, now = Date.now()): Promise<Garden> {
   const ws = await ensureWorkspace(now);
@@ -171,7 +176,8 @@ export async function deleteGarden(id: string, baseVersion: number, now = Date.n
 export type ZoneInput = Pick<
   Zone,
   'name' | 'kind' | 'covered' | 'areaM2' | 'orientationDeg' | 'light' | 'wind' | 'drainage' | 'notes'
->;
+> &
+  Partial<Pick<Zone, 'sun' | 'indoorLight' | 'clearanceCm' | 'maxContainerL'>>;
 
 export async function createZone(gardenId: string, input: ZoneInput, now = Date.now()): Promise<Zone> {
   return writeTx([db.zones, db.gardens], async () => {
@@ -318,7 +324,8 @@ export type SpecimenInput = Pick<
   | 'plantedOn'
   | 'status'
   | 'notes'
->;
+> &
+  Partial<Pick<Specimen, 'catalogTaxonId'>>;
 
 /** Checks that zone, container and parent belong to the same garden (authorisation on every write). */
 async function checkPlacement(gardenId: string, p: Partial<SpecimenInput>): Promise<void> {
@@ -634,6 +641,195 @@ export async function deleteMedia(id: string, now = Date.now()): Promise<void> {
     if (!m) return;
     await db.media.put({ ...m, deletedAt: now });
     await db.mediaBlobs.delete(id);
+  });
+}
+
+// ---------------------------------------------------------------- plans
+
+export type PlanItemInput = Pick<
+  PlanItem,
+  'taxonId' | 'status' | 'chosen' | 'score' | 'findings' | 'flags'
+> & {
+  /** Index into the zones being created, or an existing zone id. */
+  zone: number | string | null;
+  /** Names for the planned specimen when chosen. */
+  displayName: string;
+  scientificName: string;
+};
+
+export interface PlanMeta {
+  name: string;
+  catalogVersion: string;
+  engineVersion: string;
+  inputsHash: string;
+}
+
+async function writePlan(
+  garden: Garden,
+  zoneIds: string[],
+  meta: PlanMeta,
+  items: PlanItemInput[],
+  now: number,
+): Promise<{ plan: Plan; specimens: Specimen[] }> {
+  const plan = PlanSchema.parse({
+    id: newId(now),
+    workspaceId: garden.workspaceId,
+    gardenId: garden.id,
+    createdAt: now,
+    updatedAt: now,
+    version: 1,
+    deletedAt: null,
+    status: 'saved',
+    source: null,
+    ...meta,
+  });
+  await db.plans.add(plan);
+  await enqueue(garden.workspaceId, 'plan.create', plan.id, plan, null, now);
+  const specimens: Specimen[] = [];
+  for (const item of items) {
+    const zoneId =
+      typeof item.zone === 'number'
+        ? (zoneIds[item.zone] ?? null)
+        : typeof item.zone === 'string'
+          ? item.zone
+          : null;
+    if (zoneId) {
+      const z = await db.zones.get(zoneId);
+      if (!z || z.deletedAt !== null || z.gardenId !== garden.id)
+        throw new RecordNotFoundError('zone', zoneId);
+    }
+    let specimenId: string | null = null;
+    if (item.chosen) {
+      // Only eligible plants become planned specimens; a score never rescues an excluded one.
+      if (item.status !== 'ELIGIBLE') throw new RecordNotFoundError('eligible plan item', item.taxonId);
+      const specimen = SpecimenSchema.parse({
+        id: newId(now),
+        workspaceId: garden.workspaceId,
+        gardenId: garden.id,
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deletedAt: null,
+        displayName: item.displayName,
+        scientificName: item.scientificName,
+        cultivar: null,
+        taxonKey: null,
+        catalogTaxonId: item.taxonId,
+        identityLevel: 'species',
+        origin: 'unknown',
+        zoneId,
+        containerId: null,
+        parentSpecimenId: null,
+        plantedOn: null,
+        status: 'planned',
+        statusReason: null,
+        holding: false,
+        coverMediaId: null,
+        notes: '',
+        source: null,
+      });
+      await db.specimens.add(specimen);
+      await enqueue(garden.workspaceId, 'specimen.create', specimen.id, specimen, null, now);
+      specimens.push(specimen);
+      specimenId = specimen.id;
+    }
+    const row = PlanItemSchema.parse({
+      id: newId(now),
+      workspaceId: garden.workspaceId,
+      gardenId: garden.id,
+      planId: plan.id,
+      zoneId,
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+      deletedAt: null,
+      taxonId: item.taxonId,
+      status: item.status,
+      chosen: item.chosen,
+      score: item.score,
+      findings: item.findings,
+      flags: item.flags,
+      specimenId,
+      source: null,
+    });
+    await db.planItems.add(row);
+    await enqueue(garden.workspaceId, 'planItem.create', row.id, row, null, now);
+  }
+  return { plan, specimens };
+}
+
+const PLAN_TABLES = () => [db.gardens, db.zones, db.plans, db.planItems, db.specimens];
+
+/**
+ * Saves the Seed onboarding result in one transaction (§7 W1 step 9): the garden, its zones, the plan
+ * snapshot and a planned specimen for every chosen plant. Nothing is written if any part fails.
+ */
+export async function saveSeedPlan(
+  input: { garden: GardenInput; zones: ZoneInput[]; plan: PlanMeta; items: PlanItemInput[] },
+  now = Date.now(),
+): Promise<{ garden: Garden; zones: Zone[]; plan: Plan; specimens: Specimen[] }> {
+  const ws = await ensureWorkspace(now);
+  return writeTx(PLAN_TABLES(), async () => {
+    const garden = GardenSchema.parse({
+      id: newId(now),
+      workspaceId: ws.id,
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+      deletedAt: null,
+      source: null,
+      ...input.garden,
+    });
+    await db.gardens.add(garden);
+    await enqueue(ws.id, 'garden.create', garden.id, garden, null, now);
+    const zones: Zone[] = [];
+    for (const z of input.zones) {
+      const zone = ZoneSchema.parse({
+        id: newId(now),
+        workspaceId: ws.id,
+        gardenId: garden.id,
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deletedAt: null,
+        source: null,
+        ...z,
+      });
+      await db.zones.add(zone);
+      await enqueue(ws.id, 'zone.create', zone.id, zone, null, now);
+      zones.push(zone);
+    }
+    const { plan, specimens } = await writePlan(
+      garden,
+      zones.map((z) => z.id),
+      input.plan,
+      input.items,
+      now,
+    );
+    await setMeta(META_GARDEN, garden.id);
+    return { garden, zones, plan, specimens };
+  });
+}
+
+/** Saves a plan for an existing garden (the Plan page). Items reference existing zone ids. */
+export async function savePlan(
+  gardenId: string,
+  meta: PlanMeta,
+  items: PlanItemInput[],
+  now = Date.now(),
+): Promise<{ plan: Plan; specimens: Specimen[] }> {
+  return writeTx(PLAN_TABLES(), async () => {
+    const garden = await db.gardens.get(gardenId);
+    if (!garden || garden.deletedAt !== null) throw new RecordNotFoundError('garden', gardenId);
+    return writePlan(garden, [], meta, items, now);
+  });
+}
+
+export async function deletePlan(id: string, baseVersion: number, now = Date.now()): Promise<void> {
+  await writeTx([db.plans], async () => {
+    const cur = assertUpdatable(await db.plans.get(id), 'plan', id, baseVersion);
+    await db.plans.put({ ...cur, deletedAt: now, updatedAt: now, version: cur.version + 1 });
+    await enqueue(cur.workspaceId, 'plan.delete', id, null, baseVersion, now);
   });
 }
 

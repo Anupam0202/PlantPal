@@ -600,6 +600,8 @@ export const es: Messages = {
       soilTests: 'Análisis de suelo',
       healthCases: 'Revisiones de salud',
       drafts: 'Borradores privados',
+      plans: 'Planes',
+      planItems: 'Opciones del plan',
     },
   },
   migrate: {

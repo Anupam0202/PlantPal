@@ -61,6 +61,17 @@ export function useSolarClimatology(c: Coords | null) {
   });
 }
 
+/** Local climate (hardiness, frost, season length); fetched once per coarse cell and cached for a year. */
+export function useClimateProfile(c: Coords | null) {
+  return useQuery({
+    queryKey: key('climate', c, 0.1),
+    queryFn: ({ signal }) => getEnvSource().climateProfile(c!.lat, c!.lon, signal),
+    enabled: c !== null,
+    staleTime: Number.POSITIVE_INFINITY,
+    ...common,
+  });
+}
+
 export function usePlaceSearch(query: string, lang: string) {
   const [debounced, setDebounced] = useState(query);
   useEffect(() => {

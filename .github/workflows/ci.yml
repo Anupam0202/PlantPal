@@ -24,6 +24,8 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
+      - name: Catalogue facts have units, evidence and sources
+        run: pnpm check:catalog
       - run: pnpm test
       - run: pnpm build
       - name: Scan build output for secrets (L01)

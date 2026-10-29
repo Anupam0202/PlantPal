@@ -594,6 +594,8 @@ export const hi: Messages = {
       soilTests: 'मिट्टी जाँच',
       healthCases: 'स्वास्थ्य जाँच',
       drafts: 'निजी ड्राफ़्ट',
+      plans: 'योजनाएँ',
+      planItems: 'योजना के विकल्प',
     },
   },
   migrate: {

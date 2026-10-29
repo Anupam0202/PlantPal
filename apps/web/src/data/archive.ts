@@ -14,6 +14,8 @@ import {
   LegacyAchievements,
   Media,
   Observation,
+  Plan,
+  PlanItem,
   SoilTest,
   Specimen,
   Zone,
@@ -38,6 +40,8 @@ const TABLES = {
   soilTests: SoilTest,
   healthCases: HealthCase,
   drafts: Draft,
+  plans: Plan,
+  planItems: PlanItem,
 } as const;
 export type ArchiveTable = keyof typeof TABLES;
 const TABLE_NAMES = Object.keys(TABLES) as ArchiveTable[];

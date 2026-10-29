@@ -338,3 +338,88 @@ export function climateDeltas(
     note: 'CMIP6 HighResMIP models; each model compared with its own baseline; no emission scenario is selectable.',
   };
 }
+
+export interface ClimateSummary {
+  period: string;
+  years: number;
+  coverage: number;
+  extremeMinC: number | null;
+  hardinessZone: string | null;
+  frost: FrostDates | null;
+  /** Typical frost-free days a year: 365 when frost is rare, null when there are too few years. */
+  seasonDays: number | null;
+  /** Mean days a year with a maximum of 35 °C or more. */
+  hotDaysPerYear: number | null;
+  hotSummers: boolean | null;
+  koppen: string | null;
+  normals: Normals;
+}
+
+export const HOT_DAY_C = 35;
+/** Summers count as "hot" when at least this many days a year reach 35 °C. */
+export const HOT_SUMMER_DAYS = 15;
+
+function dayOfYear(mmdd: string): number {
+  return Math.round(
+    (Date.UTC(2001, Number(mmdd.slice(0, 2)) - 1, Number(mmdd.slice(3, 5))) - Date.UTC(2001, 0, 1)) /
+      86_400_000,
+  );
+}
+
+/**
+ * Everything the planner needs from a daily series for `[startYear, endYear]` (S7): normals, hardiness
+ * from the mean annual extreme minimum, probabilistic frost dates, season length, heat days and Köppen.
+ */
+export function climateSummary(
+  s: DailySeries,
+  startYear: number,
+  endYear: number,
+  hemisphere: 'north' | 'south',
+): ClimateSummary {
+  const normals = monthlyNormals(s, startYear, endYear);
+  const hard = hardiness(s, startYear, endYear);
+  const inRange: DailySeries = { dates: [], tmin: [], tmax: [], precip: [] };
+  // Northern frost seasons run July–June, so they need the second half of the year before the period
+  // (when the series has it) to give as many complete seasons as calendar years.
+  const frostFrom = hemisphere === 'north' ? `${startYear - 1}-07-01` : `${startYear}-01-01`;
+  const frostSeries: DailySeries = { dates: [], tmin: [], tmax: [], precip: [] };
+  s.dates.forEach((d, i) => {
+    const y = yearOf(d);
+    if (y > endYear) return;
+    if (d >= frostFrom) {
+      frostSeries.dates.push(d);
+      frostSeries.tmin.push(s.tmin[i] ?? null);
+      frostSeries.tmax.push(s.tmax[i] ?? null);
+      frostSeries.precip.push(s.precip[i] ?? null);
+    }
+    if (y < startYear) return;
+    inRange.dates.push(d);
+    inRange.tmin.push(s.tmin[i] ?? null);
+    inRange.tmax.push(s.tmax[i] ?? null);
+    inRange.precip.push(s.precip[i] ?? null);
+  });
+  const frost = frostDates(frostSeries, hemisphere);
+  let seasonDays: number | null = null;
+  if (frost) {
+    if (!frost.lastSpring || !frost.firstAutumn) seasonDays = 365;
+    else seasonDays = (dayOfYear(frost.firstAutumn.p50) - dayOfYear(frost.lastSpring.p50) + 365) % 365;
+  }
+  const tmaxKnown = inRange.tmax.filter((v): v is number => v != null);
+  const hotDaysPerYear =
+    normals.years > 0 && tmaxKnown.length > 0
+      ? round((tmaxKnown.filter((v) => v >= HOT_DAY_C).length / tmaxKnown.length) * 365, 0)
+      : null;
+  return {
+    period: normals.period,
+    years: normals.years,
+    coverage: normals.coverage,
+    extremeMinC: hard?.meanExtremeMinC ?? null,
+    hardinessZone: hard?.zone ?? null,
+    frost,
+    seasonDays,
+    hotDaysPerYear,
+    hotSummers: hotDaysPerYear === null ? null : hotDaysPerYear >= HOT_SUMMER_DAYS,
+    koppen: normals.years >= 10 && normals.coverage >= 0.8 ? koppen(normals.months, hemisphere) : null,
+    normals,
+  };
+}

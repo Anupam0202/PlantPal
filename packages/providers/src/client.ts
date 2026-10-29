@@ -1,5 +1,7 @@
+import { climateSummary } from '@plantpal/domain';
 import type {
   AirQuality,
+  ClimateProfile,
   Elevation,
   Forecast,
   PlaceSearch,
@@ -15,7 +17,15 @@ import { ProviderError } from './core/errors';
 import { fetchJson } from './core/http';
 import { TokenBucket } from './core/limiter';
 import { PROVIDERS } from './core/registry';
-import { airFixture, elevationFixture, forecastFixture, geocodingFixture, solarFixture } from './fixtures';
+import {
+  airFixture,
+  dailyFixture,
+  elevationFixture,
+  forecastFixture,
+  geocodingFixture,
+  solarFixture,
+} from './fixtures';
+import { archiveUrl, parseArchive } from './openMeteo/history';
 import { airUrl, parseAir } from './openMeteo/air';
 import { elevationUrl, parseElevation } from './openMeteo/elevation';
 import { forecastUrl, parseForecast } from './openMeteo/forecast';
@@ -279,6 +289,67 @@ export class EnvClient {
         results: geocodingFixture.results.filter((r) => r.name.toLowerCase().startsWith(q.slice(0, 3))),
       }),
       (json, retrievedAt, demo) => parsePlaces(json, { retrievedAt, demo }),
+      signal,
+    );
+  }
+
+  /**
+   * Local climate from the last ten complete years of ERA5 reanalysis: hardiness, frost dates, season
+   * length, heat days, normals and Köppen class. Fetched once per coarse cell and cached for a year.
+   */
+  climateProfile(lat: number, lon: number, signal?: AbortSignal): Promise<ClimateProfile> {
+    const c = roundCoords(lat, lon, PROVIDERS['open-meteo-historical'].gridDeg ?? 0.1);
+    const endYear = new Date(this.now()).getUTCFullYear() - 1;
+    const startYear = endYear - 9;
+    const info = PROVIDERS['open-meteo-historical'];
+    return this.get(
+      'open-meteo-historical',
+      'climate-profile',
+      { ...c, startYear, endYear },
+      // One extra year so northern July–June frost seasons are complete for the whole period.
+      archiveUrl(c.lat, c.lon, startYear - 1, endYear),
+      // Demo data: a warm, frost-free seasonal curve, clearly labelled as demo in provenance.
+      () => dailyFixture({ from: startYear - 1, to: endYear, mean: 25, amplitude: 4, diurnal: 7 }),
+      (json, retrievedAt, demo) => {
+        const series = parseArchive(json);
+        const s = climateSummary(series, startYear, endYear, c.lat >= 0 ? 'north' : 'south');
+        return {
+          provenance: {
+            provider: 'open-meteo-historical',
+            retrievedAt,
+            lat: c.lat,
+            lon: c.lon,
+            grid: '≈ 0.25° (ERA5) / 0.1° (ERA5-Land)',
+            model: 'ERA5',
+            licence: info.licence,
+            attribution: info.attribution,
+            sourceUrl: info.sourceUrl,
+            stale: false,
+            demo,
+          },
+          period: s.period,
+          years: s.years,
+          coverage: Math.round(s.coverage * 1000) / 1000,
+          extremeMinC: s.extremeMinC,
+          hardinessZone: s.hardinessZone,
+          frost: s.frost
+            ? {
+                frostSeasonsPct: s.frost.frostSeasonsPct,
+                lastSpring: s.frost.lastSpring,
+                firstAutumn: s.frost.firstAutumn,
+              }
+            : null,
+          seasonDays: s.seasonDays,
+          hotDaysPerYear: s.hotDaysPerYear,
+          hotSummers: s.hotSummers,
+          koppen: s.koppen,
+          months: s.normals.months,
+          annualMeanC: s.normals.annualMeanC,
+          annualPrecipMm: s.normals.annualPrecipMm,
+          method:
+            'Daily ERA5 reanalysis; hardiness from the mean annual extreme minimum; frost dates are the 50th/90th percentile of last spring and first autumn frost (≤ 0 °C). Reanalysis smooths local extremes.',
+        };
+      },
       signal,
     );
   }

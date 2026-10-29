@@ -2,7 +2,7 @@
   "name": "plantpal",
   "private": true,
   "version": "3.0.0-alpha.0",
-  "description": "PlantPal \u2014 turn constrained urban spaces into healthy, productive, climate-resilient and biodiverse living spaces.",
+  "description": "PlantPal — turn constrained urban spaces into healthy, productive, climate-resilient and biodiverse living spaces.",
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@10.28.0",
@@ -21,14 +21,17 @@
     "test:watch": "vitest",
     "e2e": "pnpm --filter @plantpal/web e2e",
     "check:dist": "node tools/scan-dist.mjs apps/web/dist",
-    "ci": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build && pnpm check:dist && pnpm check:bundle && pnpm check:headers",
+    "ci": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm check:catalog && pnpm test && pnpm build && pnpm check:dist && pnpm check:bundle && pnpm check:headers",
     "check:bundle": "node tools/check-bundle.mjs apps/web/dist",
-    "check:headers": "node tools/sync-headers.mjs --check"
+    "check:headers": "node tools/sync-headers.mjs --check",
+    "check:catalog": "tsx tools/validate-catalog.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@plantpal/catalog": "workspace:*",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^24.0.0",
     "axe-core": "^4.14.0",
     "eslint": "^9.39.5",
     "eslint-plugin-jsx-a11y": "^6.10.2",
@@ -38,10 +41,10 @@
     "globals": "^17.13.0",
     "happy-dom": "^21.0.4",
     "prettier": "^3.8.1",
+    "tsx": "4.23.15",
     "turbo": "^2.11.10",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.1",
-    "vitest": "^5.0.5",
-    "@types/node": "^24.0.0"
+    "vitest": "^5.0.5"
   }
 }

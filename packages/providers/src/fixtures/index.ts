@@ -290,6 +290,10 @@ export function dailyFixture(o: {
   models?: readonly string[];
   warmingPerDecade?: number;
   units?: string;
+  /** Annual mean, seasonal amplitude and half the day–night range, °C (defaults: a mild temperate curve). */
+  mean?: number;
+  amplitude?: number;
+  diurnal?: number;
 }) {
   const time: string[] = [];
   const base: Record<string, number[]> = { tmax: [], tmin: [], precip: [] };
@@ -298,9 +302,12 @@ export function dailyFixture(o: {
     for (let d = 0; d < days; d++) {
       time.push(new Date(Date.UTC(y, 0, 1 + d)).toISOString().slice(0, 10));
       const t =
-        15 - 9 * Math.cos(((d - 15) / days) * 2 * Math.PI) + ((y - o.from) / 10) * (o.warmingPerDecade ?? 0);
-      base.tmax?.push(Math.round((t + 5) * 10) / 10);
-      base.tmin?.push(Math.round((t - 5) * 10) / 10);
+        (o.mean ?? 15) -
+        (o.amplitude ?? 9) * Math.cos(((d - 15) / days) * 2 * Math.PI) +
+        ((y - o.from) / 10) * (o.warmingPerDecade ?? 0);
+      const diurnal = o.diurnal ?? 5;
+      base.tmax?.push(Math.round((t + diurnal) * 10) / 10);
+      base.tmin?.push(Math.round((t - diurnal) * 10) / 10);
       base.precip?.push(d % 4 === 0 ? 6 : 0);
     }
   }

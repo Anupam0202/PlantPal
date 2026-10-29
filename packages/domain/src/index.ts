@@ -8,3 +8,5 @@ export * from './quickCapture';
 export * from './legacy/plan';
 export * from './solar';
 export * from './climate';
+export * from './sunhours';
+export * from './eligibility';

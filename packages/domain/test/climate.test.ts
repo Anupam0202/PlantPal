@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   climateDeltas,
+  climateSummary,
   frostDates,
   hardiness,
   koppen,
@@ -204,5 +205,39 @@ describe('L08: climate deltas', () => {
     const thin = model('Thin', 1, 0);
     thin.series.tmin = thin.series.tmin.map((v, i) => (i % 3 === 0 ? null : v));
     expect(climateDeltas([thin, model('Ok', 1, 0)]).models).toEqual(['Ok']);
+  });
+});
+
+describe('climateSummary', () => {
+  it('southern hemisphere: frost season wraps the new year and hot summers are counted', () => {
+    // Coldest in mid-July (day 196), warmest in January.
+    const s = series({ from: 2015, to: 2025, meanC: 17, ampC: 16, coldDoy: 196 });
+    const c = climateSummary(s, 2016, 2025, 'south');
+    expect(c.period).toBe('2016–2025');
+    expect(c.frost?.frostSeasonsPct).toBe(100);
+    // Frost-free season runs from late spring (Sep–Oct) to autumn (May–June) the next year.
+    expect(c.seasonDays).toBeGreaterThan(200);
+    expect(c.seasonDays).toBeLessThan(330);
+    expect(c.hotSummers).toBe(true);
+    expect(c.koppen).not.toBeNull();
+  });
+
+  it('frost-free places get a 365-day season; too few years give null, not a guess', () => {
+    const warm = climateSummary(
+      series({ from: 2015, to: 2025, meanC: 26, ampC: 4, coldDoy: 15 }),
+      2016,
+      2025,
+      'north',
+    );
+    expect(warm.seasonDays).toBe(365);
+    const short = climateSummary(
+      series({ from: 2022, to: 2025, meanC: 10, ampC: 9, coldDoy: 15 }),
+      2022,
+      2025,
+      'north',
+    );
+    expect(short.extremeMinC).toBeNull();
+    expect(short.seasonDays).toBeNull();
+    expect(short.koppen).toBeNull();
   });
 });

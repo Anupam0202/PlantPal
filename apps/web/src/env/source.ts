@@ -1,5 +1,6 @@
 import {
   AirQuality,
+  ClimateProfile,
   Elevation,
   Forecast,
   PlaceSearch,
@@ -28,6 +29,7 @@ export interface EnvSource {
   air(lat: number, lon: number, signal?: AbortSignal): Promise<AirQuality>;
   elevation(lat: number, lon: number, signal?: AbortSignal): Promise<Elevation>;
   solarClimatology(lat: number, lon: number, signal?: AbortSignal): Promise<SolarClimatology>;
+  climateProfile(lat: number, lon: number, signal?: AbortSignal): Promise<ClimateProfile>;
   searchPlaces(q: string, lang: string, signal?: AbortSignal): Promise<PlaceSearch>;
   status(): Promise<ProviderStatus[]>;
 }
@@ -72,6 +74,7 @@ class ClientSource implements EnvSource {
   air = (lat: number, lon: number, s?: AbortSignal) => this.client.air(lat, lon, s);
   elevation = (lat: number, lon: number, s?: AbortSignal) => this.client.elevation(lat, lon, s);
   solarClimatology = (lat: number, lon: number, s?: AbortSignal) => this.client.solarClimatology(lat, lon, s);
+  climateProfile = (lat: number, lon: number, s?: AbortSignal) => this.client.climateProfile(lat, lon, s);
   searchPlaces = (q: string, lang: string, s?: AbortSignal) => this.client.searchPlaces(q, lang, s);
   status = async () => this.client.status();
 }
@@ -110,6 +113,8 @@ class GatewaySource implements EnvSource {
     this.get('env/elevation', this.coords(lat, lon), Elevation, 'open-meteo-elevation', s);
   solarClimatology = (lat: number, lon: number, s?: AbortSignal) =>
     this.get('env/solar', this.coords(lat, lon), SolarClimatology, 'nasa-power', s);
+  climateProfile = (lat: number, lon: number, s?: AbortSignal) =>
+    this.get('env/climate', this.coords(lat, lon), ClimateProfile, 'open-meteo-historical', s);
   searchPlaces = (q: string, lang: string, s?: AbortSignal) =>
     this.get('env/places', { q, lang }, PlaceSearch, 'open-meteo-geocoding', s);
   status = async () => {

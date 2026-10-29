@@ -214,3 +214,34 @@ export const Problem = z.object({
   retryAfterSeconds: z.number().optional(),
 });
 export type Problem = z.infer<typeof Problem>;
+
+const nn = z.number().nullable();
+
+/**
+ * Local climate from recent reanalysis (S7): states its period, dataset and resolution. Reanalysis
+ * smooths local extremes, so hardiness here is a regional estimate, not a garden measurement.
+ */
+export const ClimateProfile = z.object({
+  provenance: Provenance,
+  period: z.string(),
+  years: z.number().int(),
+  coverage: z.number(),
+  extremeMinC: nn,
+  hardinessZone: z.string().nullable(),
+  frost: z
+    .object({
+      frostSeasonsPct: z.number(),
+      lastSpring: z.object({ p50: z.string(), p90: z.string() }).nullable(),
+      firstAutumn: z.object({ p10: z.string(), p50: z.string() }).nullable(),
+    })
+    .nullable(),
+  seasonDays: nn,
+  hotDaysPerYear: nn,
+  hotSummers: z.boolean().nullable(),
+  koppen: z.string().nullable(),
+  months: z.array(z.object({ tmeanC: nn, tminC: nn, tmaxC: nn, precipMm: nn })),
+  annualMeanC: nn,
+  annualPrecipMm: nn,
+  method: z.string(),
+});
+export type ClimateProfile = z.infer<typeof ClimateProfile>;

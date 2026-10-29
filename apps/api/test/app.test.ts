@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { EnvClient, MemoryCache } from '@plantpal/providers';
-import { Forecast, PlaceSearch, Problem } from '@plantpal/schemas';
+import { ClimateProfile, Forecast, PlaceSearch, Problem } from '@plantpal/schemas';
 import { createApp } from '../src/app';
 import { MemoryRateLimiter } from '../src/lib/rate-limit';
 import { D1StatusStore, MemoryStatusStore } from '../src/lib/status-store';
@@ -52,6 +52,16 @@ describe('environment routes', () => {
     for (const path of ['air', 'elevation', 'solar']) {
       expect((await app.request(`/api/v1/env/${path}?lat=-33.87&lon=151.21`)).status).toBe(200);
     }
+  });
+
+  it('serves a climate profile that states its period and method', async () => {
+    const { app } = make();
+    const res = await app.request('/api/v1/env/climate?lat=18.52&lon=73.86');
+    expect(res.status).toBe(200);
+    const body = ClimateProfile.parse(await res.json());
+    expect(body.years).toBe(10);
+    expect(body.method).toMatch(/mean annual extreme minimum/);
+    expect(body.provenance.demo).toBe(true);
   });
 
   it('rejects invalid input with RFC 9457 problem details', async () => {

@@ -9,6 +9,8 @@ import type {
   Media,
   Observation,
   OutboxOp,
+  Plan,
+  PlanItem,
   SoilTest,
   Specimen,
   Workspace,
@@ -16,7 +18,7 @@ import type {
 } from '@plantpal/schemas';
 
 /** Bumped with every Dexie schema change; sent with outbox ops so the server knows the client shape. */
-export const CLIENT_SCHEMA = 2;
+export const CLIENT_SCHEMA = 3;
 
 export interface MediaBlob {
   id: string;
@@ -55,6 +57,8 @@ export type PlantPalDB = Dexie & {
   outbox: EntityTable<OutboxOp, 'opId'>;
   meta: EntityTable<MetaRow, 'key'>;
   facts: EntityTable<FactRow, 'key'>;
+  plans: EntityTable<Plan, 'id'>;
+  planItems: EntityTable<PlanItem, 'id'>;
 };
 
 /** Schema version 1 (M2). Kept verbatim so upgrades are tested from the real previous shape. */
@@ -83,6 +87,12 @@ export function createDb(name = 'plantpal'): PlantPalDB {
   db.version(1).stores(STORES_V1);
   // v2 (M3): cache of provider facts, evictable under storage pressure.
   db.version(2).stores({ facts: 'key, expiresAt' });
+  // v3 (M4): plans and their item snapshots. Older garden, zone and specimen rows gain new fields
+  // through schema defaults when they are next written, so no data migration is needed.
+  db.version(3).stores({
+    plans: 'id, gardenId, workspaceId',
+    planItems: 'id, planId, gardenId, workspaceId, taxonId',
+  });
   return db;
 }
 
@@ -102,6 +112,8 @@ export const RECORD_TABLES = [
   'soilTests',
   'healthCases',
   'drafts',
+  'plans',
+  'planItems',
 ] as const;
 export type RecordTable = (typeof RECORD_TABLES)[number];
 
