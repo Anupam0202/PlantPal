@@ -49,6 +49,7 @@ function NewPlant() {
           containers={containers}
           specimens={specimens}
           initialZoneId={zoneId}
+          countryCode={garden.region?.countryCode ?? null}
           submitLabel={t.plant.add}
           onCancel={() => void navigate({ to: '/garden' })}
           onSubmit={async (value) => {

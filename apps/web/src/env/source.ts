@@ -151,3 +151,16 @@ export function getEnvSource(): EnvSource {
     );
   return source;
 }
+
+let species: EnvClient | null = null;
+
+/**
+ * Species lookups (GBIF names, Commons photos, Wikidata names) go straight to those open APIs in every
+ * mode: they carry no location, and the CSP allows exactly these hosts.
+ */
+export function getSpeciesClient(): EnvClient {
+  return (species ??= new EnvClient({
+    mode: envMode() === 'demo' ? 'mock' : 'live',
+    cache: new IdbFactCache(),
+  }));
+}

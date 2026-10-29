@@ -12,6 +12,11 @@ import {
   pickModels,
   plainExplainV1,
   planExplainV1,
+  healthTriageV1,
+  photoIdV1,
+  speciesDraftV1,
+  speciesResearchV1,
+  type SpeciesResearchInput,
   systemInstruction,
   UsageMeter,
   type AiFeatureId,
@@ -29,6 +34,9 @@ const MODULES: Record<AiFeatureId, PromptModule<any, any>> = {
   'capture-parse': captureParseV1,
   'alt-text': altTextV1,
   'plain-explain': plainExplainV1,
+  'health-triage': healthTriageV1,
+  'photo-id': photoIdV1,
+  'species-draft': speciesDraftV1,
 };
 
 const localDay = (d = new Date()) =>
@@ -36,11 +44,20 @@ const localDay = (d = new Date()) =>
 
 const meter = () => new UsageMeter(aiStore());
 
+/**
+ * F3 runs in two steps: grounded research (only the plant name leaves the device), then structured
+ * extraction of that research. The preview shows what the person sends: the name.
+ */
 export function sectionsOf(feature: AiFeature, input: unknown): ContextSection[] {
+  if (feature === 'species-draft') {
+    const i = input as SpeciesResearchInput;
+    return [{ category: 'plants', title: 'Plant name', required: true, text: speciesResearchV1.prompt(i) }];
+  }
   return MODULES[feature].sections(input);
 }
 
 export function instructionsOf(feature: AiFeature, input: unknown): string {
+  if (feature === 'species-draft') return speciesResearchV1.task;
   return systemInstruction(MODULES[feature], input);
 }
 
@@ -100,6 +117,22 @@ export async function run<T>(
     },
     onUsage: (u) => void usageMeter.record(u, localDay()),
   });
+  if (feature === 'species-draft') {
+    const i = input as SpeciesResearchInput;
+    if (!allowed.includes('plants')) throw new AiError('CONSENT_REQUIRED', 'Needs: plants');
+    const research = await client.generateGrounded(speciesResearchV1, i, { signal });
+    const draft = await client.generateStructured(
+      speciesDraftV1,
+      { policy: i.policy, scientificName: i.scientificName, prose: research.text, sources: research.sources },
+      { signal },
+    );
+    const meta = {
+      ...draft.meta,
+      inputTokens: draft.meta.inputTokens + research.meta.inputTokens,
+      outputTokens: draft.meta.outputTokens + research.meta.outputTokens,
+    };
+    return { data: { ...draft.data, sources: research.sources } as T, meta };
+  }
   return client.generateStructured(MODULES[feature] as PromptModule<unknown, T>, input, {
     signal,
     allowed: new Set(allowed),

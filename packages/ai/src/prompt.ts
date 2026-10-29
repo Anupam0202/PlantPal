@@ -2,7 +2,14 @@ import type { AiDataCategory, ModelRole } from '@plantpal/schemas';
 import type { z } from 'zod';
 import { sharedPolicy, userData, type PolicyContext } from './policy';
 
-export type AiFeatureId = 'plan-explain' | 'capture-parse' | 'alt-text' | 'plain-explain';
+export type AiFeatureId =
+  | 'plan-explain'
+  | 'capture-parse'
+  | 'alt-text'
+  | 'plain-explain'
+  | 'health-triage'
+  | 'photo-id'
+  | 'species-draft';
 
 /** Spec feature numbers, for docs and the send preview. */
 export const FEATURE_NUMBER: Record<AiFeatureId, string> = {
@@ -10,6 +17,9 @@ export const FEATURE_NUMBER: Record<AiFeatureId, string> = {
   'capture-parse': 'F2',
   'alt-text': 'F12',
   'plain-explain': 'F12',
+  'health-triage': 'F4',
+  'photo-id': 'F5',
+  'species-draft': 'F3',
 };
 
 export interface ImagePart {

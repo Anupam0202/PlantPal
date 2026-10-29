@@ -23,6 +23,11 @@ const RULES: Rule[] = [
   { kind: 'edibility', re: /\b(?:you can|you may|feel free to)\s+(?:safely\s+)?eat\b/gi, negatable: true },
   {
     kind: 'edibility',
+    re: /\bsafe (?:to eat|to consume|for (?:cats|dogs|pets|children|kids|babies))\b/gi,
+    negatable: true,
+  },
+  {
+    kind: 'edibility',
     re: /\b(?:es|son)\s+(?:comestibles?|seguros? para comer|no t[óo]xic[oa]s?)\b/gi,
     negatable: true,
   },

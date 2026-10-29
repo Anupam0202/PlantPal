@@ -10,7 +10,14 @@ import type { AiDataCategory, ModelRole } from '@plantpal/schemas';
 import { create } from 'zustand';
 
 /** Feature ids (kept in sync with `@plantpal/ai`'s AiFeatureId; duplicated here to keep this module tiny). */
-export type AiFeature = 'plan-explain' | 'capture-parse' | 'alt-text' | 'plain-explain';
+export type AiFeature =
+  | 'plan-explain'
+  | 'capture-parse'
+  | 'alt-text'
+  | 'plain-explain'
+  | 'health-triage'
+  | 'photo-id'
+  | 'species-draft';
 
 /** AI settings stay on this device, in the vault database: never synced or exported. */
 export interface AiSettings {

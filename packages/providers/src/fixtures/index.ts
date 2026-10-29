@@ -357,3 +357,112 @@ export const gbifNearbyFixture = {
     },
   ],
 };
+
+/** Backbone matches for a few names; anything else returns `NONE` like the real API. */
+const GBIF_NAMES: Record<string, { key: number; family: string; canonical: string; author: string }> = {
+  'ocimum basilicum': { key: 2927096, family: 'Lamiaceae', canonical: 'Ocimum basilicum', author: 'L.' },
+  'ocimum tenuiflorum': { key: 2927094, family: 'Lamiaceae', canonical: 'Ocimum tenuiflorum', author: 'L.' },
+  'solanum lycopersicum': {
+    key: 2930137,
+    family: 'Solanaceae',
+    canonical: 'Solanum lycopersicum',
+    author: 'L.',
+  },
+  'mentha spicata': { key: 2927233, family: 'Lamiaceae', canonical: 'Mentha spicata', author: 'L.' },
+  'epipremnum aureum': {
+    key: 2868323,
+    family: 'Araceae',
+    canonical: 'Epipremnum aureum',
+    author: '(Linden & André) G.S.Bunting',
+  },
+  'tagetes erecta': { key: 3088958, family: 'Asteraceae', canonical: 'Tagetes erecta', author: 'L.' },
+  'salvia hispanica': { key: 2927324, family: 'Lamiaceae', canonical: 'Salvia hispanica', author: 'L.' },
+};
+
+export function speciesMatchFixture(name: string) {
+  const hit = GBIF_NAMES[name.trim().toLowerCase().split(/\s+/).slice(0, 2).join(' ')];
+  if (!hit) return { confidence: 100, matchType: 'NONE', synonym: false };
+  return {
+    usageKey: hit.key,
+    scientificName: `${hit.canonical} ${hit.author}`,
+    canonicalName: hit.canonical,
+    rank: 'SPECIES',
+    status: 'ACCEPTED',
+    confidence: 98,
+    matchType: 'EXACT',
+    kingdom: 'Plantae',
+    family: hit.family,
+    synonym: false,
+  };
+}
+
+export function commonsFixture(name: string) {
+  const file = name.trim().replace(/\s+/g, '_');
+  return {
+    batchcomplete: '',
+    query: {
+      pages: {
+        '101': {
+          pageid: 101,
+          ns: 6,
+          title: `File:${file}_leaves.jpg`,
+          index: 1,
+          imageinfo: [
+            {
+              thumburl: `https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/${file}_leaves.jpg/640px-${file}_leaves.jpg`,
+              descriptionurl: `https://commons.wikimedia.org/wiki/File:${file}_leaves.jpg`,
+              mime: 'image/jpeg',
+              extmetadata: {
+                LicenseShortName: { value: 'CC BY-SA 4.0' },
+                LicenseUrl: { value: 'https://creativecommons.org/licenses/by-sa/4.0' },
+                Artist: { value: '<a href="//commons.wikimedia.org/wiki/User:Example">Example Botanist</a>' },
+              },
+            },
+          ],
+        },
+        '102': {
+          pageid: 102,
+          ns: 6,
+          title: `File:${file}_flower.jpg`,
+          index: 2,
+          imageinfo: [
+            {
+              thumburl: `https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/${file}_flower.jpg/640px-${file}_flower.jpg`,
+              descriptionurl: `https://commons.wikimedia.org/wiki/File:${file}_flower.jpg`,
+              mime: 'image/jpeg',
+              extmetadata: {
+                LicenseShortName: { value: 'CC BY-NC 2.0' },
+                Artist: { value: 'Not reusable here' },
+              },
+            },
+          ],
+        },
+      },
+    },
+  };
+}
+
+export function wikidataSearchFixture(gbifKey: number) {
+  const known = Object.values(GBIF_NAMES).some((n) => n.key === gbifKey);
+  return { batchcomplete: '', query: { search: known ? [{ ns: 0, title: `Q${gbifKey % 100000}` }] : [] } };
+}
+
+export function wikidataLabelsFixture(qid: string) {
+  return {
+    entities: {
+      [qid]: {
+        labels: {
+          en: { language: 'en', value: 'basil' },
+          hi: { language: 'hi', value: 'तुलसी' },
+          es: { language: 'es', value: 'albahaca' },
+        },
+        aliases: {
+          en: [
+            { language: 'en', value: 'sweet basil' },
+            { language: 'en', value: 'Ocimum basilicum' },
+          ],
+        },
+      },
+    },
+  };
+}

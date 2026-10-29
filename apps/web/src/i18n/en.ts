@@ -100,6 +100,9 @@ export const en = {
     tabPlants: 'Plants',
     tabSpaces: 'Spaces',
     tabJournal: 'Journal',
+    tabHealth: 'Health',
+    newHealthCase: 'New health case',
+    speciesIndex: 'Plants A–Z',
     addPlant: 'Add plant',
     searchPlants: 'Search plants',
     noMatches: 'No plants match these filters.',
@@ -610,6 +613,7 @@ export const en = {
       planItems: 'Plan choices',
       careSchedules: 'Care schedules',
       taskLogs: 'Task history',
+      speciesDrafts: 'Species drafts',
     },
   },
   migrate: {

@@ -133,3 +133,82 @@ export type ModelInfo = z.infer<typeof ModelInfo>;
 /** Per-category consent for what may be sent to the user's AI provider (§18.10). */
 export const AI_DATA_CATEGORIES = ['plants', 'space', 'climate', 'journal', 'photos', 'location'] as const;
 export type AiDataCategory = (typeof AI_DATA_CATEGORIES)[number];
+
+/** F4 Health triage (Appendix A.2). Likelihood classes only; abstains when the photo is unusable. */
+export const HEALTH_CATEGORIES = ['abiotic', 'pest', 'disease', 'unknown'] as const;
+export const HealthTriage = z.object({
+  imageUsable: z.boolean(),
+  plantPresent: z.boolean(),
+  identityGuess: z.object({ name: z.string().max(120), likelihood: Likelihood }).nullable(),
+  candidates: z
+    .array(
+      z.object({
+        category: z.enum(HEALTH_CATEGORIES),
+        name: z.string().min(1).max(120),
+        likelihood: Likelihood,
+        evidenceFor: z.array(z.string().max(200)).max(4),
+        evidenceAgainst: z.array(z.string().max(200)).max(4),
+        checksToConfirm: z.array(z.string().max(200)).max(4),
+      }),
+    )
+    .max(6),
+  /** Non-chemical only (validator). */
+  immediateSafeSteps: z.array(z.string().max(200)).max(5),
+  escalate: z.object({ needed: z.boolean(), reason: z.string().max(200) }),
+  followUpDays: z.array(z.number().int().min(1).max(30)).max(3),
+  abstainReason: z.string().max(200).nullable(),
+});
+export type HealthTriage = z.infer<typeof HealthTriage>;
+
+/** F5 photo identification candidates. Names are resolved through GBIF before display; never edibility. */
+export const IdCandidates = z.object({
+  imageUsable: z.boolean(),
+  candidates: z
+    .array(
+      z.object({
+        scientificName: z.string().min(3).max(120),
+        commonName: z.string().max(120).nullable(),
+        likelihood: Likelihood,
+        /** Visible features that support it. */
+        features: z.array(z.string().max(160)).max(4),
+        lookAlikes: z.array(z.string().max(120)).max(3),
+      }),
+    )
+    .max(5),
+  abstainReason: z.string().max(200).nullable(),
+});
+export type IdCandidates = z.infer<typeof IdCandidates>;
+
+/** F3 species intake draft (Appendix A.2). Every trait needs a citation from the grounding sources. */
+export const SPECIES_DRAFT_TRAITS = [
+  'minTempC',
+  'maxHeightM',
+  'maxSpreadM',
+  'directSunHoursMin',
+  'directSunHoursMax',
+  'waterNeed',
+  'containerMinL',
+  'bloomMonths',
+  'lifecycle',
+  'pollinatorValue',
+  'hostFor',
+  'toxicity',
+] as const;
+export type SpeciesDraftTrait = (typeof SPECIES_DRAFT_TRAITS)[number];
+
+export const SpeciesDraft = z.object({
+  traits: z
+    .array(
+      z.object({
+        trait: z.enum(SPECIES_DRAFT_TRAITS),
+        value: z.union([z.number(), z.string().max(200), z.array(z.number().int().min(1).max(12)).max(12)]),
+        unit: z.string().max(20).nullable(),
+        /** Region, stage or cultivar scope. */
+        appliesTo: z.string().max(120).nullable(),
+        citations: z.array(Citation).min(1).max(4),
+      }),
+    )
+    .max(20),
+  cannotDetermine: z.array(z.string().max(120)).max(12),
+});
+export type SpeciesDraft = z.infer<typeof SpeciesDraft>;

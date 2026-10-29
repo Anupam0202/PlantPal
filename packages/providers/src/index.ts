@@ -15,3 +15,6 @@ export * from './openMeteo/history';
 export * from './gbif/occurrences';
 export * from './client';
 export * as fixtures from './fixtures';
+export * from './gbif/species';
+export * from './wikimedia/commons';
+export * from './wikimedia/wikidata';

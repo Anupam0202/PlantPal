@@ -1,7 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { EnvClient, MemoryCache } from '@plantpal/providers';
-import { ClimateProfile, ClimateProjection, Forecast, PlaceSearch, Problem } from '@plantpal/schemas';
+import {
+  ClimateProfile,
+  ClimateProjection,
+  Forecast,
+  PlaceSearch,
+  Problem,
+  PROVIDER_IDS,
+} from '@plantpal/schemas';
 import { createApp } from '../src/app';
 import { MemoryRateLimiter } from '../src/lib/rate-limit';
 import { D1StatusStore, MemoryStatusStore } from '../src/lib/status-store';
@@ -131,7 +138,7 @@ describe('environment routes', () => {
     const { app } = make({ status: broken });
     const res = await app.request('/api/v1/status');
     expect(res.status).toBe(200);
-    expect(((await res.json()) as { providers: unknown[] }).providers).toHaveLength(8);
+    expect(((await res.json()) as { providers: unknown[] }).providers).toHaveLength(PROVIDER_IDS.length);
   });
 
   it('publishes an OpenAPI 3.1 document', async () => {

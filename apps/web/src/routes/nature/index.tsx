@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { buttonClasses, Card, EmptyState, PageHeader, SleepingBeeIllustration } from '@plantpal/ui';
-import { ChevronRight, Thermometer } from 'lucide-react';
+import { BookOpen, ChevronRight, Thermometer } from 'lucide-react';
 import { useCareT } from '../../features/care/messages';
+import { useSpeciesT } from '../../features/species/messages';
 import { Page } from '../../app/Page';
 import { useT } from '../../i18n';
 
@@ -12,6 +13,7 @@ export const Route = createFileRoute('/nature/')({
 function NatureIndex() {
   const t = useT();
   const m = useCareT();
+  const sm = useSpeciesT();
   return (
     <Page>
       <PageHeader title={t.nature.title} />
@@ -24,6 +26,17 @@ function NatureIndex() {
           <span className="flex-1">
             <span className="block font-semibold text-ink">{m.climate.title}</span>
             <span className="block text-body-s text-muted">{m.climate.description}</span>
+          </span>
+          <ChevronRight className="size-5 text-subtle" aria-hidden="true" />
+        </Link>
+        <Link
+          to="/species"
+          className="flex min-h-16 items-center gap-3 rounded-lg border-t border-line p-4 hover:bg-sunken focus-visible:outline-2 focus-visible:outline-focus"
+        >
+          <BookOpen className="size-6 text-accent-ink" aria-hidden="true" />
+          <span className="flex-1">
+            <span className="block font-semibold text-ink">{sm.title}</span>
+            <span className="block text-body-s text-muted">{sm.description}</span>
           </span>
           <ChevronRight className="size-5 text-subtle" aria-hidden="true" />
         </Link>

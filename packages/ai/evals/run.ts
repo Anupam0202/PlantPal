@@ -14,6 +14,9 @@ import {
   altTextV1,
   captureParseV1,
   GeminiClient,
+  healthTriageV1,
+  photoIdV1,
+  speciesDraftV1,
   plainExplainV1,
   planExplainV1,
   prohibitedClaims,
@@ -36,6 +39,9 @@ const MODULES: Record<AiFeatureId, PromptModule<any, any>> = {
   'capture-parse': captureParseV1,
   'alt-text': altTextV1,
   'plain-explain': plainExplainV1,
+  'health-triage': healthTriageV1,
+  'photo-id': photoIdV1,
+  'species-draft': speciesDraftV1,
 };
 
 const REQUIRED_TAGS = [
@@ -98,6 +104,8 @@ interface Loose {
   }>;
   unknowns?: string[];
   plantVisible?: boolean;
+  candidates?: unknown[];
+  abstainReason?: string | null;
 }
 
 export interface CaseResult {
@@ -186,7 +194,9 @@ export async function runCase(c: EvalCase): Promise<CaseResult> {
       const abstained =
         c.feature === 'alt-text'
           ? data.plantVisible === false
-          : Array.isArray(data.unknowns) && data.unknowns.length > 0;
+          : c.feature === 'health-triage' || c.feature === 'photo-id'
+            ? (data.candidates ?? []).length === 0 && Boolean(data.abstainReason)
+            : Array.isArray(data.unknowns) && data.unknowns.length > 0;
       if (!abstained) return fail('expected an abstention');
     }
     return { ...res, pass: true };

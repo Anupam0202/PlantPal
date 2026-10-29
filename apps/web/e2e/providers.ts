@@ -63,6 +63,35 @@ export async function mockProviders(
     return route.fulfill({ status: 200, headers: cors, body: JSON.stringify(fixtures.airFixture()) });
   });
   await page.route('https://power.larc.nasa.gov/**', reply(fixtures.solarFixture()));
+  // Species lookups: GBIF backbone match, Wikimedia Commons photos and Wikidata names.
+  await page.route('https://api.gbif.org/v1/species/match**', (route) => {
+    const name = new URL(route.request().url()).searchParams.get('name') ?? '';
+    return reply(fixtures.speciesMatchFixture(name))(route);
+  });
+  await page.route('https://commons.wikimedia.org/w/api.php**', (route) => {
+    const q = (new URL(route.request().url()).searchParams.get('gsrsearch') ?? '')
+      .replace(/"|filetype:bitmap/g, '')
+      .trim();
+    return reply(fixtures.commonsFixture(q))(route);
+  });
+  await page.route('https://www.wikidata.org/w/api.php**', (route) => {
+    const u = new URL(route.request().url());
+    if (u.searchParams.get('action') === 'wbgetentities')
+      return reply(fixtures.wikidataLabelsFixture(u.searchParams.get('ids') ?? ''))(route);
+    const key = Number((u.searchParams.get('srsearch') ?? '').split('=')[1]);
+    return reply(fixtures.wikidataSearchFixture(key))(route);
+  });
+  // Commons thumbnails: a tiny image so pages render without the network.
+  await page.route('https://upload.wikimedia.org/**', (route) =>
+    route.fulfill({
+      status: 200,
+      headers: { 'content-type': 'image/png' },
+      body: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+        'base64',
+      ),
+    }),
+  );
   await page.route('https://climate-api.open-meteo.com/**', (route) => {
     const url = new URL(route.request().url());
     const from = Number(url.searchParams.get('start_date')?.slice(0, 4));

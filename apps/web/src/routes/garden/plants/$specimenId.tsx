@@ -26,6 +26,7 @@ import {
   useMedia,
 } from '../../../data/queries';
 import { CarePanel } from '../../../features/care/CarePanel';
+import { PlantHealth } from '../../../features/health/PlantHealth';
 import { reportError } from '../../../features/garden/errors';
 import { useLocalDayLabel } from '../../../features/garden/format';
 import { MediaThumb } from '../../../features/garden/Media';
@@ -174,6 +175,7 @@ function PlantPage() {
             )}
           </Card>
           <CarePanel specimen={specimen} garden={garden} />
+          <PlantHealth specimen={specimen} />
         </div>
         <Section title={t.plant.timeline} headingLevel={2}>
           {items && items.length === 0 ? (

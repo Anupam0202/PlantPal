@@ -5,6 +5,8 @@ import {
   Container as ContainerSchema,
   Garden as GardenSchema,
   Harvest as HarvestSchema,
+  HealthCase as HealthCaseSchema,
+  SpeciesDraftRecord as SpeciesDraftSchema,
   Media as MediaSchema,
   Observation as ObservationSchema,
   Plan as PlanSchema,
@@ -19,6 +21,10 @@ import {
   type Container,
   type Garden,
   type Harvest,
+  type HealthCase,
+  type HealthCaseEntry,
+  type HealthOutcome,
+  type SpeciesDraftRecord,
   type Media,
   type Observation,
   type Plan,
@@ -31,6 +37,7 @@ import {
   type Zone,
 } from '@plantpal/schemas';
 import {
+  followUpDates,
   containerVolumeL,
   deterministicId,
   instantForLocalDate,
@@ -1130,4 +1137,218 @@ export async function voidTask(id: string, now = Date.now()): Promise<void> {
 export async function deleteAllLocalData(): Promise<void> {
   await db.delete();
   await db.open();
+}
+
+// ---------------------------------------------------------------- health cases (§6.8)
+
+export interface CaseEntryInput {
+  kind: HealthCaseEntry['kind'];
+  by: HealthCaseEntry['by'];
+  text?: string;
+  mediaIds?: string[];
+  payload?: unknown;
+}
+
+function entryOf(e: CaseEntryInput, now: number): HealthCaseEntry {
+  return {
+    id: newId(now),
+    kind: e.kind,
+    at: now,
+    // AI triage is a draft until people act on it; rules and people are their own records.
+    evidence: e.by === 'ai' ? 'AI_DRAFT' : e.by === 'rules' ? 'MODELLED' : 'UNKNOWN',
+    by: e.by,
+    mediaIds: e.mediaIds ?? [],
+    text: e.text ?? '',
+    payload: e.payload ?? null,
+  };
+}
+
+export interface OpenCaseInput {
+  gardenId: string;
+  specimenId: string | null;
+  title: string;
+  entries: CaseEntryInput[];
+  /** Days after today for follow-up checks (one-off tasks on Today). */
+  followUpDays: number[];
+}
+
+/**
+ * Opens a case with its first entries (photos, questionnaire, rule triage) and schedules follow-up
+ * checks, in one transaction. Photos are linked to the case.
+ */
+export async function openHealthCase(input: OpenCaseInput, now = Date.now()): Promise<HealthCase> {
+  return writeTx([db.healthCases, db.gardens, db.specimens, db.careSchedules, db.media], async () => {
+    const garden = await db.gardens.get(input.gardenId);
+    if (!garden || garden.deletedAt !== null) throw new RecordNotFoundError('garden', input.gardenId);
+    await checkSpecimenInGarden(garden.id, input.specimenId);
+    const id = newId(now);
+    const today = todayIn(garden.timezone, now);
+    const scheduleIds: string[] = [];
+    for (const day of followUpDates(today, input.followUpDays).slice(0, 3)) {
+      const s = await addSchedule(
+        garden,
+        {
+          specimenId: input.specimenId,
+          zoneId: null,
+          kind: 'custom',
+          title: `Health check: ${input.title}`.slice(0, 200),
+          rule: { freq: 'daily', interval: 1, startOn: day, until: day },
+        },
+        today,
+        now,
+      );
+      scheduleIds.push(s.id);
+    }
+    const hc = HealthCaseSchema.parse({
+      id,
+      workspaceId: garden.workspaceId,
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+      deletedAt: null,
+      gardenId: garden.id,
+      specimenId: input.specimenId,
+      title: input.title.trim().slice(0, 200) || 'Plant problem',
+      status: 'open',
+      openedAt: now,
+      closedAt: null,
+      outcome: null,
+      entries: input.entries.map((e, i) => entryOf(e, now + i)),
+      followUpScheduleIds: scheduleIds,
+      source: null,
+    });
+    await db.healthCases.add(hc);
+    for (const e of hc.entries)
+      for (const m of e.mediaIds) {
+        const media = await db.media.get(m);
+        if (media) await db.media.put({ ...media, link: { entity: 'healthCase', id } });
+      }
+    await enqueue(garden.workspaceId, 'healthCase.create', id, hc, null, now);
+    return hc;
+  });
+}
+
+/** Appends an entry (AI triage, a follow-up check, a note or photos). Entries are never edited. */
+export async function addCaseEntry(
+  caseId: string,
+  baseVersion: number,
+  entry: CaseEntryInput,
+  now = Date.now(),
+): Promise<HealthCase> {
+  return writeTx([db.healthCases, db.media], async () => {
+    const cur = assertUpdatable(await db.healthCases.get(caseId), 'healthCase', caseId, baseVersion);
+    const e = entryOf(entry, now);
+    const next = HealthCaseSchema.parse({
+      ...cur,
+      entries: [...cur.entries, e],
+      status: cur.status === 'open' && entry.kind === 'followup' ? 'monitoring' : cur.status,
+      updatedAt: now,
+      version: cur.version + 1,
+    });
+    await db.healthCases.put(next);
+    for (const m of e.mediaIds) {
+      const media = await db.media.get(m);
+      if (media) await db.media.put({ ...media, link: { entity: 'healthCase', id: caseId } });
+    }
+    await enqueue(cur.workspaceId, 'healthCase.update', caseId, next, baseVersion, now);
+    return next;
+  });
+}
+
+/** Records the outcome (private; for the person's own learning) and closes the case. */
+export async function closeHealthCase(
+  caseId: string,
+  baseVersion: number,
+  outcome: HealthOutcome,
+  note = '',
+  now = Date.now(),
+): Promise<HealthCase> {
+  return writeTx([db.healthCases, db.careSchedules], async () => {
+    const cur = assertUpdatable(await db.healthCases.get(caseId), 'healthCase', caseId, baseVersion);
+    const next = HealthCaseSchema.parse({
+      ...cur,
+      entries: [
+        ...cur.entries,
+        entryOf({ kind: 'outcome', by: 'user', text: note, payload: { outcome } }, now),
+      ],
+      status: 'closed',
+      outcome,
+      closedAt: now,
+      updatedAt: now,
+      version: cur.version + 1,
+    });
+    await db.healthCases.put(next);
+    // Follow-up checks that have not happened yet are no longer needed.
+    for (const sid of cur.followUpScheduleIds) {
+      const s = await db.careSchedules.get(sid);
+      if (s && s.deletedAt === null)
+        await db.careSchedules.put({ ...s, deletedAt: now, updatedAt: now, version: s.version + 1 });
+    }
+    await enqueue(cur.workspaceId, 'healthCase.update', caseId, next, baseVersion, now);
+    return next;
+  });
+}
+
+// ---------------------------------------------------------------- species drafts (F3)
+
+export type SpeciesDraftInput = Pick<
+  SpeciesDraftRecord,
+  'scientificName' | 'gbifKey' | 'family' | 'commonName' | 'cannotDetermine' | 'model' | 'promptVersion'
+> & { traits: Array<Omit<SpeciesDraftRecord['traits'][number], 'review'>> };
+
+/** Stores a cited AI draft on this device. Every trait starts as AI_DRAFT. */
+export async function saveSpeciesDraft(
+  input: SpeciesDraftInput,
+  now = Date.now(),
+): Promise<SpeciesDraftRecord> {
+  const ws = await ensureWorkspace(now);
+  return writeTx([db.speciesDrafts], async () => {
+    const d = SpeciesDraftSchema.parse({
+      id: newId(now),
+      workspaceId: ws.id,
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+      deletedAt: null,
+      ...input,
+      traits: input.traits.map((t) => ({ ...t, review: 'AI_DRAFT' })),
+    });
+    await db.speciesDrafts.add(d);
+    return d;
+  });
+}
+
+/**
+ * Curator review of one trait. Toxicity and edibility can never be accepted from an AI draft (S10):
+ * they stay unverified until a cited, curated source is added to the catalogue.
+ */
+export async function reviewDraftTrait(
+  id: string,
+  baseVersion: number,
+  index: number,
+  review: 'accepted' | 'rejected',
+  now = Date.now(),
+): Promise<SpeciesDraftRecord> {
+  return writeTx([db.speciesDrafts], async () => {
+    const cur = assertUpdatable(await db.speciesDrafts.get(id), 'speciesDraft', id, baseVersion);
+    const trait = cur.traits[index];
+    if (!trait) throw new RecordNotFoundError('speciesDraftTrait', `${id}#${index}`);
+    if (review === 'accepted' && /toxic|edib/i.test(trait.trait))
+      throw new Error('Toxicity and edibility cannot be accepted from an AI draft.');
+    const next = SpeciesDraftSchema.parse({
+      ...cur,
+      traits: cur.traits.map((t, i) => (i === index ? { ...t, review } : t)),
+      updatedAt: now,
+      version: cur.version + 1,
+    });
+    await db.speciesDrafts.put(next);
+    return next;
+  });
+}
+
+export async function deleteSpeciesDraft(id: string, baseVersion: number, now = Date.now()): Promise<void> {
+  await writeTx([db.speciesDrafts], async () => {
+    const cur = assertUpdatable(await db.speciesDrafts.get(id), 'speciesDraft', id, baseVersion);
+    await db.speciesDrafts.put({ ...cur, deletedAt: now, updatedAt: now, version: cur.version + 1 });
+  });
 }

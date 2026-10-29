@@ -592,13 +592,22 @@ export const SoilTest = z.object({
 });
 export type SoilTest = z.infer<typeof SoilTest>;
 
+/**
+ * One step on a case timeline (§6.8). Entries are only ever appended; `payload` is validated per kind
+ * by the app (questionnaire, triage, outcome).
+ */
 export const HealthCaseEntry = z.object({
   id: Id,
-  kind: z.enum(['questionnaire', 'triage', 'note', 'photo', 'followup']),
+  kind: z.enum(['questionnaire', 'triage', 'note', 'photo', 'followup', 'outcome']),
   at: EpochMs,
   evidence: Evidence,
+  /** `rules` for the deterministic tree, `ai` for Gemini triage, `user` for people. */
+  by: z.enum(['user', 'rules', 'ai']).default('user'),
+  mediaIds: z.array(Id).max(8).default([]),
+  text: LongText.default(''),
   payload: z.unknown(),
 });
+export type HealthCaseEntry = z.infer<typeof HealthCaseEntry>;
 
 export const HealthCase = z.object({
   ...versioned,
@@ -608,8 +617,11 @@ export const HealthCase = z.object({
   status: z.enum(['open', 'monitoring', 'closed']),
   openedAt: EpochMs,
   closedAt: EpochMs.nullable(),
-  outcome: z.enum(['recovered', 'managed', 'lost', 'unknown']).nullable(),
+  /** Kept private and used only for the person's own evaluation (§6.8). */
+  outcome: z.enum(['resolved', 'improving', 'worse', 'unknown']).nullable(),
   entries: z.array(HealthCaseEntry),
+  /** One-off care schedules created for the +3 and +7 day checks. */
+  followUpScheduleIds: z.array(Id).max(3).default([]),
   source: RecordSource,
 });
 export type HealthCase = z.infer<typeof HealthCase>;
@@ -637,3 +649,86 @@ export const LegacyAchievements = z.object({
   badges: z.array(z.object({ badgeId: z.string(), tier: z.string(), earnedOn: z.string().nullable() })),
 });
 export type LegacyAchievements = z.infer<typeof LegacyAchievements>;
+
+// ---------------------------------------------------------------- health cases (§6.8)
+
+export const HEALTH_ONSETS = ['sudden', 'gradual', 'unsure'] as const;
+export const HEALTH_SIGNS = [
+  'yellow-lower',
+  'yellow-new',
+  'brown-edges',
+  'brown-spots',
+  'pale-bleached',
+  'wilting',
+  'drooping-wet-soil',
+  'leaf-drop',
+  'holes',
+  'sticky-or-webbing',
+  'white-powder',
+  'stunted',
+  'mushy-stem',
+] as const;
+export type HealthSign = (typeof HEALTH_SIGNS)[number];
+export const HEALTH_WHERE = ['old-leaves', 'new-growth', 'whole-plant', 'one-side'] as const;
+export const HEALTH_SPREAD = ['one-plant', 'several-plants', 'spreading-fast', 'unsure'] as const;
+export const HEALTH_CHANGES = [
+  'repotted',
+  'watered-more',
+  'watered-less',
+  'heatwave',
+  'cold-night',
+  'fed',
+  'moved',
+  'pests-seen',
+] as const;
+export type HealthChange = (typeof HEALTH_CHANGES)[number];
+
+export const HealthQuestionnaire = z.object({
+  onset: z.enum(HEALTH_ONSETS),
+  signs: z.array(z.enum(HEALTH_SIGNS)).max(HEALTH_SIGNS.length),
+  where: z.enum(HEALTH_WHERE).nullable(),
+  spread: z.enum(HEALTH_SPREAD),
+  changes: z.array(z.enum(HEALTH_CHANGES)).max(HEALTH_CHANGES.length),
+  /** Finger test at 2 cm, now. */
+  soil: z.enum(SOIL_CHECKS).nullable(),
+  notes: z.string().max(500),
+});
+export type HealthQuestionnaire = z.infer<typeof HealthQuestionnaire>;
+
+export const HEALTH_STATUSES = ['open', 'monitoring', 'closed'] as const;
+export const HEALTH_OUTCOMES = ['resolved', 'improving', 'worse', 'unknown'] as const;
+export type HealthOutcome = (typeof HEALTH_OUTCOMES)[number];
+export const CASE_ENTRY_KINDS = ['questionnaire', 'triage', 'note', 'photo', 'followup', 'outcome'] as const;
+export type CaseEntryKind = (typeof CASE_ENTRY_KINDS)[number];
+
+// ---------------------------------------------------------------- species drafts (§18.5 F3)
+
+export const DRAFT_REVIEW = ['AI_DRAFT', 'accepted', 'rejected'] as const;
+
+/**
+ * A species that is not in the catalogue yet, drafted with cited sources and kept on this device for
+ * review. Toxicity and edibility traits are never accepted from AI (S10) and never drive decisions.
+ */
+export const SpeciesDraftRecord = z.object({
+  ...versioned,
+  scientificName: ShortText.min(3),
+  gbifKey: z.number().int().positive().nullable(),
+  family: ShortText.nullable(),
+  commonName: ShortText.nullable(),
+  traits: z
+    .array(
+      z.object({
+        trait: z.string().max(40),
+        value: z.union([z.number(), z.string().max(200), z.array(z.number().int()).max(12)]),
+        unit: z.string().max(20).nullable(),
+        appliesTo: z.string().max(120).nullable(),
+        citations: z.array(z.object({ url: z.string().url(), title: z.string().max(200) })).max(4),
+        review: z.enum(DRAFT_REVIEW),
+      }),
+    )
+    .max(20),
+  cannotDetermine: z.array(z.string().max(120)).max(12),
+  model: z.string().max(80).nullable(),
+  promptVersion: z.number().int().nullable(),
+});
+export type SpeciesDraftRecord = z.infer<typeof SpeciesDraftRecord>;

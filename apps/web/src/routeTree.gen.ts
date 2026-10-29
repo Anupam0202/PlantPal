@@ -29,8 +29,14 @@ import { Route as SettingsAiRouteImport } from './routes/settings/ai'
 import { Route as SettingsDataRouteImport } from './routes/settings/data'
 import { Route as SettingsMigrateRouteImport } from './routes/settings/migrate'
 import { Route as SettingsSourcesRouteImport } from './routes/settings/sources'
+import { Route as SpeciesIndexRouteImport } from './routes/species/index'
+import { Route as SpeciesTaxonKeyRouteImport } from './routes/species/$taxonKey'
+import { Route as GardenHealthIndexRouteImport } from './routes/garden/health/index'
+import { Route as GardenHealthCaseIdRouteImport } from './routes/garden/health/$caseId'
+import { Route as GardenHealthNewRouteImport } from './routes/garden/health/new'
 import { Route as GardenPlantsSpecimenIdRouteImport } from './routes/garden/plants/$specimenId'
 import { Route as GardenPlantsNewRouteImport } from './routes/garden/plants/new'
+import { Route as SpeciesDraftsDraftIdRouteImport } from './routes/species/drafts.$draftId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -132,6 +138,31 @@ const SettingsSourcesRoute = SettingsSourcesRouteImport.update({
   path: '/settings/sources',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpeciesIndexRoute = SpeciesIndexRouteImport.update({
+  id: '/species/',
+  path: '/species/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpeciesTaxonKeyRoute = SpeciesTaxonKeyRouteImport.update({
+  id: '/species/$taxonKey',
+  path: '/species/$taxonKey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GardenHealthIndexRoute = GardenHealthIndexRouteImport.update({
+  id: '/garden/health/',
+  path: '/garden/health/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GardenHealthCaseIdRoute = GardenHealthCaseIdRouteImport.update({
+  id: '/garden/health/$caseId',
+  path: '/garden/health/$caseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GardenHealthNewRoute = GardenHealthNewRouteImport.update({
+  id: '/garden/health/new',
+  path: '/garden/health/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GardenPlantsSpecimenIdRoute = GardenPlantsSpecimenIdRouteImport.update({
   id: '/garden/plants/$specimenId',
   path: '/garden/plants/$specimenId',
@@ -140,6 +171,11 @@ const GardenPlantsSpecimenIdRoute = GardenPlantsSpecimenIdRouteImport.update({
 const GardenPlantsNewRoute = GardenPlantsNewRouteImport.update({
   id: '/garden/plants/new',
   path: '/garden/plants/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpeciesDraftsDraftIdRoute = SpeciesDraftsDraftIdRouteImport.update({
+  id: '/species/drafts/$draftId',
+  path: '/species/drafts/$draftId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -159,13 +195,19 @@ export interface FileRoutesByFullPath {
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
   '/settings/sources': typeof SettingsSourcesRoute
+  '/species/$taxonKey': typeof SpeciesTaxonKeyRoute
   '/community/': typeof CommunityIndexRoute
   '/garden/': typeof GardenIndexRoute
   '/nature/': typeof NatureIndexRoute
   '/plan/': typeof PlanIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/species/': typeof SpeciesIndexRoute
+  '/garden/health/$caseId': typeof GardenHealthCaseIdRoute
+  '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
   '/garden/plants/new': typeof GardenPlantsNewRoute
+  '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
+  '/garden/health/': typeof GardenHealthIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -183,13 +225,19 @@ export interface FileRoutesByTo {
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
   '/settings/sources': typeof SettingsSourcesRoute
+  '/species/$taxonKey': typeof SpeciesTaxonKeyRoute
   '/community': typeof CommunityIndexRoute
   '/garden': typeof GardenIndexRoute
   '/nature': typeof NatureIndexRoute
   '/plan': typeof PlanIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/species': typeof SpeciesIndexRoute
+  '/garden/health/$caseId': typeof GardenHealthCaseIdRoute
+  '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
   '/garden/plants/new': typeof GardenPlantsNewRoute
+  '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
+  '/garden/health': typeof GardenHealthIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -208,13 +256,19 @@ export interface FileRoutesById {
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
   '/settings/sources': typeof SettingsSourcesRoute
+  '/species/$taxonKey': typeof SpeciesTaxonKeyRoute
   '/community/': typeof CommunityIndexRoute
   '/garden/': typeof GardenIndexRoute
   '/nature/': typeof NatureIndexRoute
   '/plan/': typeof PlanIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/species/': typeof SpeciesIndexRoute
+  '/garden/health/$caseId': typeof GardenHealthCaseIdRoute
+  '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
   '/garden/plants/new': typeof GardenPlantsNewRoute
+  '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
+  '/garden/health/': typeof GardenHealthIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -234,13 +288,19 @@ export interface FileRouteTypes {
     | '/settings/data'
     | '/settings/migrate'
     | '/settings/sources'
+    | '/species/$taxonKey'
     | '/community/'
     | '/garden/'
     | '/nature/'
     | '/plan/'
     | '/settings/'
+    | '/species/'
+    | '/garden/health/$caseId'
+    | '/garden/health/new'
     | '/garden/plants/$specimenId'
     | '/garden/plants/new'
+    | '/species/drafts/$draftId'
+    | '/garden/health/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -258,13 +318,19 @@ export interface FileRouteTypes {
     | '/settings/data'
     | '/settings/migrate'
     | '/settings/sources'
+    | '/species/$taxonKey'
     | '/community'
     | '/garden'
     | '/nature'
     | '/plan'
     | '/settings'
+    | '/species'
+    | '/garden/health/$caseId'
+    | '/garden/health/new'
     | '/garden/plants/$specimenId'
     | '/garden/plants/new'
+    | '/species/drafts/$draftId'
+    | '/garden/health'
   id:
     | '__root__'
     | '/'
@@ -282,13 +348,19 @@ export interface FileRouteTypes {
     | '/settings/data'
     | '/settings/migrate'
     | '/settings/sources'
+    | '/species/$taxonKey'
     | '/community/'
     | '/garden/'
     | '/nature/'
     | '/plan/'
     | '/settings/'
+    | '/species/'
+    | '/garden/health/$caseId'
+    | '/garden/health/new'
     | '/garden/plants/$specimenId'
     | '/garden/plants/new'
+    | '/species/drafts/$draftId'
+    | '/garden/health/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -307,13 +379,19 @@ export interface RootRouteChildren {
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsMigrateRoute: typeof SettingsMigrateRoute
   SettingsSourcesRoute: typeof SettingsSourcesRoute
+  SpeciesTaxonKeyRoute: typeof SpeciesTaxonKeyRoute
   CommunityIndexRoute: typeof CommunityIndexRoute
   GardenIndexRoute: typeof GardenIndexRoute
   NatureIndexRoute: typeof NatureIndexRoute
   PlanIndexRoute: typeof PlanIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
+  SpeciesIndexRoute: typeof SpeciesIndexRoute
+  GardenHealthCaseIdRoute: typeof GardenHealthCaseIdRoute
+  GardenHealthNewRoute: typeof GardenHealthNewRoute
   GardenPlantsSpecimenIdRoute: typeof GardenPlantsSpecimenIdRoute
   GardenPlantsNewRoute: typeof GardenPlantsNewRoute
+  SpeciesDraftsDraftIdRoute: typeof SpeciesDraftsDraftIdRoute
+  GardenHealthIndexRoute: typeof GardenHealthIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -458,6 +536,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsSourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/species/': {
+      id: '/species/'
+      path: '/species'
+      fullPath: '/species/'
+      preLoaderRoute: typeof SpeciesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/species/$taxonKey': {
+      id: '/species/$taxonKey'
+      path: '/species/$taxonKey'
+      fullPath: '/species/$taxonKey'
+      preLoaderRoute: typeof SpeciesTaxonKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/garden/health/': {
+      id: '/garden/health/'
+      path: '/garden/health'
+      fullPath: '/garden/health/'
+      preLoaderRoute: typeof GardenHealthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/garden/health/$caseId': {
+      id: '/garden/health/$caseId'
+      path: '/garden/health/$caseId'
+      fullPath: '/garden/health/$caseId'
+      preLoaderRoute: typeof GardenHealthCaseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/garden/health/new': {
+      id: '/garden/health/new'
+      path: '/garden/health/new'
+      fullPath: '/garden/health/new'
+      preLoaderRoute: typeof GardenHealthNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/garden/plants/$specimenId': {
       id: '/garden/plants/$specimenId'
       path: '/garden/plants/$specimenId'
@@ -470,6 +583,13 @@ declare module '@tanstack/react-router' {
       path: '/garden/plants/new'
       fullPath: '/garden/plants/new'
       preLoaderRoute: typeof GardenPlantsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/species/drafts/$draftId': {
+      id: '/species/drafts/$draftId'
+      path: '/species/drafts/$draftId'
+      fullPath: '/species/drafts/$draftId'
+      preLoaderRoute: typeof SpeciesDraftsDraftIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -491,13 +611,19 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsDataRoute: SettingsDataRoute,
   SettingsMigrateRoute: SettingsMigrateRoute,
   SettingsSourcesRoute: SettingsSourcesRoute,
+  SpeciesTaxonKeyRoute: SpeciesTaxonKeyRoute,
   CommunityIndexRoute: CommunityIndexRoute,
   GardenIndexRoute: GardenIndexRoute,
   NatureIndexRoute: NatureIndexRoute,
   PlanIndexRoute: PlanIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  SpeciesIndexRoute: SpeciesIndexRoute,
+  GardenHealthCaseIdRoute: GardenHealthCaseIdRoute,
+  GardenHealthNewRoute: GardenHealthNewRoute,
   GardenPlantsSpecimenIdRoute: GardenPlantsSpecimenIdRoute,
   GardenPlantsNewRoute: GardenPlantsNewRoute,
+  SpeciesDraftsDraftIdRoute: SpeciesDraftsDraftIdRoute,
+  GardenHealthIndexRoute: GardenHealthIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

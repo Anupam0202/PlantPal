@@ -98,6 +98,9 @@ export const es: Messages = {
     tabPlants: 'Plantas',
     tabSpaces: 'Espacios',
     tabJournal: 'Diario',
+    tabHealth: 'Salud',
+    newHealthCase: 'Nuevo caso de salud',
+    speciesIndex: 'Plantas de la A a la Z',
     addPlant: 'Añadir planta',
     searchPlants: 'Buscar plantas',
     noMatches: 'Ninguna planta coincide con estos filtros.',
@@ -612,6 +615,7 @@ export const es: Messages = {
       planItems: 'Opciones del plan',
       careSchedules: 'Calendarios de cuidado',
       taskLogs: 'Historial de tareas',
+      speciesDrafts: 'Borradores de especies',
     },
   },
   migrate: {

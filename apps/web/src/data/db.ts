@@ -7,6 +7,7 @@ import type {
   Garden,
   Harvest,
   HealthCase,
+  SpeciesDraftRecord,
   Media,
   Observation,
   OutboxOp,
@@ -20,7 +21,7 @@ import type {
 } from '@plantpal/schemas';
 
 /** Bumped with every Dexie schema change; sent with outbox ops so the server knows the client shape. */
-export const CLIENT_SCHEMA = 4;
+export const CLIENT_SCHEMA = 5;
 
 export interface MediaBlob {
   id: string;
@@ -63,6 +64,7 @@ export type PlantPalDB = Dexie & {
   planItems: EntityTable<PlanItem, 'id'>;
   careSchedules: EntityTable<CareSchedule, 'id'>;
   taskLogs: EntityTable<TaskLog, 'id'>;
+  speciesDrafts: EntityTable<SpeciesDraftRecord, 'id'>;
 };
 
 /** Schema version 1 (M2). Kept verbatim so upgrades are tested from the real previous shape. */
@@ -102,6 +104,9 @@ export function createDb(name = 'plantpal'): PlantPalDB {
     careSchedules: 'id, gardenId, specimenId, workspaceId',
     taskLogs: 'id, &opId, gardenId, specimenId, occurrenceKey, at, workspaceId',
   });
+  // v5 (M7): species drafted on this device (cited AI drafts awaiting review). Health cases gain
+  // optional fields through schema defaults, so they need no data migration.
+  db.version(5).stores({ speciesDrafts: 'id, workspaceId, scientificName' });
   return db;
 }
 
@@ -125,6 +130,7 @@ export const RECORD_TABLES = [
   'planItems',
   'careSchedules',
   'taskLogs',
+  'speciesDrafts',
 ] as const;
 export type RecordTable = (typeof RECORD_TABLES)[number];
 

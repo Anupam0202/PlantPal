@@ -199,7 +199,7 @@ describe('Dexie upgrade to v4', () => {
     old.close();
     const upgraded = createDb(name);
     await upgraded.open();
-    expect(upgraded.verno).toBe(4);
+    expect(upgraded.verno).toBeGreaterThanOrEqual(4);
     expect((await upgraded.containers.get('c1'))?.name).toBe('Old pot');
     expect(await upgraded.careSchedules.count()).toBe(0);
     upgraded.close();

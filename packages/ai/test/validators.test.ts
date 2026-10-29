@@ -24,6 +24,8 @@ describe('prohibited claims', () => {
     ['It is not toxic to dogs.', 'edibility'],
     ['Not only is it pretty, it is edible.', 'edibility'],
     ['You can eat the leaves.', 'edibility'],
+    ['Safe to eat raw.', 'edibility'],
+    ['Pet-friendly and safe for cats.', 'edibility'],
     ['Las hojas son comestibles.', 'edibility'],
     ['ये पत्ते खाने योग्य हैं।', 'edibility'],
     ['Spray imidacloprid on the leaves.', 'pesticide'],

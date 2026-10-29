@@ -16,6 +16,9 @@ import {
   altTextV1,
   captureParseV1,
   GeminiClient,
+  healthTriageV1,
+  photoIdV1,
+  speciesDraftV1,
   listModels,
   pickModels,
   plainExplainV1,
@@ -36,6 +39,9 @@ const MODULES: Record<AiFeatureId, PromptModule<any, any>> = {
   'capture-parse': captureParseV1,
   'alt-text': altTextV1,
   'plain-explain': plainExplainV1,
+  'health-triage': healthTriageV1,
+  'photo-id': photoIdV1,
+  'species-draft': speciesDraftV1,
 };
 
 if (process.env.CI) {

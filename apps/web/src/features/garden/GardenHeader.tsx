@@ -10,6 +10,7 @@ const TABS = [
   { to: '/garden', key: 'tabPlants' },
   { to: '/garden/spaces', key: 'tabSpaces' },
   { to: '/garden/journal', key: 'tabJournal' },
+  { to: '/garden/health', key: 'tabHealth' },
 ] as const;
 
 /** Garden title, switcher and section tabs shared by the garden pages. */
@@ -71,7 +72,7 @@ export function GardenHeader({
                   to={tab.to}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
-                    '-mb-px inline-flex h-11 items-center border-b-2 px-4 text-body-s font-medium',
+                    '-mb-px inline-flex h-11 items-center border-b-2 px-3 text-body-s font-medium',
                     active ? 'border-accent text-accent-ink' : 'border-transparent text-muted hover:text-ink',
                   )}
                   activeOptions={{ exact: true }}

@@ -1,5 +1,8 @@
 import { climateDeltas, climateSummary } from '@plantpal/domain';
 import type {
+  SpeciesMatch,
+  SpeciesMedia,
+  SpeciesNames,
   AirQuality,
   ClimateProfile,
   ClimateProjection,
@@ -19,6 +22,10 @@ import { fetchJson } from './core/http';
 import { TokenBucket } from './core/limiter';
 import { PROVIDERS } from './core/registry';
 import {
+  commonsFixture,
+  speciesMatchFixture,
+  wikidataLabelsFixture,
+  wikidataSearchFixture,
   airFixture,
   dailyFixture,
   elevationFixture,
@@ -32,6 +39,14 @@ import { elevationUrl, parseElevation } from './openMeteo/elevation';
 import { forecastUrl, parseForecast } from './openMeteo/forecast';
 import { geocodingUrl, parsePlaces } from './openMeteo/geocoding';
 import { parseSolarClimatology, solarClimatologyUrl } from './nasaPower/climatology';
+import { parseSpeciesMatch, speciesMatchUrl } from './gbif/species';
+import { commonsUrl, parseCommons } from './wikimedia/commons';
+import {
+  parseWikidataLabels,
+  parseWikidataSearch,
+  wikidataLabelsUrl,
+  wikidataSearchUrl,
+} from './wikimedia/wikidata';
 
 export type ProviderMode = 'live' | 'mock';
 
@@ -237,6 +252,61 @@ export class EnvClient {
     const p = run().finally(() => this.inflight.delete(key));
     this.inflight.set(key, p);
     return p;
+  }
+
+  /** Resolves a plant name against the GBIF backbone (F5 candidates, species intake). */
+  speciesMatch(name: string, signal?: AbortSignal): Promise<SpeciesMatch> {
+    const q = name.trim().replace(/\s+/g, ' ').slice(0, 120);
+    return this.get(
+      'gbif',
+      'species-match',
+      { q: q.toLowerCase() },
+      speciesMatchUrl(q),
+      () => speciesMatchFixture(q),
+      (json, retrievedAt, demo) => parseSpeciesMatch(json, { query: q, retrievedAt, demo }),
+      signal,
+    );
+  }
+
+  /** Openly licensed photos of a species from Wikimedia Commons. */
+  speciesMedia(scientificName: string, signal?: AbortSignal): Promise<SpeciesMedia> {
+    const q = scientificName.trim().replace(/\s+/g, ' ').slice(0, 120);
+    return this.get(
+      'wikimedia-commons',
+      'species-media',
+      { q: q.toLowerCase() },
+      commonsUrl(q),
+      () => commonsFixture(q),
+      (json, retrievedAt, demo) => parseCommons(json, { retrievedAt, demo }),
+      signal,
+    );
+  }
+
+  /** Common names in English, Hindi and Spanish from Wikidata, found by GBIF taxon id. */
+  async speciesNames(gbifKey: number, scientificName: string, signal?: AbortSignal): Promise<SpeciesNames> {
+    const found = await this.get(
+      'wikidata',
+      'search',
+      { gbifKey },
+      wikidataSearchUrl(gbifKey),
+      () => wikidataSearchFixture(gbifKey),
+      (json) => ({ qid: parseWikidataSearch(json), retrievedAt: new Date(this.now()).toISOString() }),
+      signal,
+    );
+    const demo = this.opts.mode === 'mock';
+    if (!found.qid)
+      return parseWikidataLabels(null, { qid: null, scientificName, retrievedAt: found.retrievedAt, demo });
+    const qid = found.qid;
+    return this.get(
+      'wikidata',
+      'labels',
+      { qid },
+      wikidataLabelsUrl(qid),
+      () => wikidataLabelsFixture(qid),
+      (json, retrievedAt, isDemo) =>
+        parseWikidataLabels(json, { qid, scientificName, retrievedAt, demo: isDemo }),
+      signal,
+    );
   }
 
   forecast(lat: number, lon: number, signal?: AbortSignal): Promise<Forecast> {

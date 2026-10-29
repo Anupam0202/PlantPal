@@ -15,3 +15,4 @@ export * from './water';
 export * from './alerts';
 export * from './season';
 export * from './careplan';
+export * from './health';

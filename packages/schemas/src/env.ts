@@ -34,6 +34,8 @@ export const PROVIDER_IDS = [
   'open-meteo-climate',
   'nasa-power',
   'gbif',
+  'wikimedia-commons',
+  'wikidata',
 ] as const;
 export const ProviderId = z.enum(PROVIDER_IDS);
 export type ProviderId = z.infer<typeof ProviderId>;
@@ -266,3 +268,46 @@ export const ClimateProjection = z.object({
   note: z.string(),
 });
 export type ClimateProjection = z.infer<typeof ClimateProjection>;
+
+/** A name resolved against the GBIF backbone (F5 candidates and species intake). */
+export const SpeciesMatch = z.object({
+  provenance: Provenance,
+  query: z.string(),
+  /** True only for an exact or fuzzy match at species rank or below with confidence ≥ 80. */
+  resolved: z.boolean(),
+  usageKey: z.number().int().nullable(),
+  /** The accepted name's key when the match is a synonym. */
+  acceptedKey: z.number().int().nullable(),
+  scientificName: z.string().nullable(),
+  canonicalName: z.string().nullable(),
+  rank: z.string().nullable(),
+  status: z.string().nullable(),
+  matchType: z.string(),
+  confidence: z.number().nullable(),
+  family: z.string().nullable(),
+});
+export type SpeciesMatch = z.infer<typeof SpeciesMatch>;
+
+/** Openly licensed photos from Wikimedia Commons, each with its own licence and author. */
+export const SpeciesMedia = z.object({
+  provenance: Provenance,
+  items: z.array(
+    z.object({
+      title: z.string(),
+      thumbUrl: z.string().url(),
+      pageUrl: z.string().url(),
+      licence: z.string(),
+      licenceUrl: z.string().nullable(),
+      author: z.string(),
+    }),
+  ),
+});
+export type SpeciesMedia = z.infer<typeof SpeciesMedia>;
+
+/** Common names from Wikidata (CC0), found through the GBIF taxon id (P846). */
+export const SpeciesNames = z.object({
+  provenance: Provenance,
+  wikidataId: z.string().nullable(),
+  names: z.object({ en: z.array(z.string()), hi: z.array(z.string()), es: z.array(z.string()) }),
+});
+export type SpeciesNames = z.infer<typeof SpeciesNames>;

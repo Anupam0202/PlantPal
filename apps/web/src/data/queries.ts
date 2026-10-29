@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type {
+  HealthCase,
+  SpeciesDraftRecord,
   CareEvent,
   CareSchedule,
   Container,
@@ -294,4 +296,40 @@ export function useRecentCare(gardenId: string | undefined, sinceMs: number): Ca
         : [],
     [gardenId, sinceMs],
   );
+}
+
+export function useHealthCases(gardenId: string | undefined): HealthCase[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? (await db.healthCases.where('gardenId').equals(gardenId).toArray())
+            .filter((c) => c.deletedAt === null)
+            .sort((a, b) => b.openedAt - a.openedAt)
+        : [],
+    [gardenId],
+  );
+}
+
+export function useHealthCase(id: string): HealthCase | null | undefined {
+  return useLiveQuery(async () => {
+    const c = await db.healthCases.get(id);
+    return c && c.deletedAt === null ? c : null;
+  }, [id]);
+}
+
+export function useSpeciesDrafts(): SpeciesDraftRecord[] | undefined {
+  return useLiveQuery(
+    async () =>
+      (await db.speciesDrafts.toArray())
+        .filter((d) => d.deletedAt === null)
+        .sort((a, b) => b.createdAt - a.createdAt),
+    [],
+  );
+}
+
+export function useSpeciesDraft(id: string): SpeciesDraftRecord | null | undefined {
+  return useLiveQuery(async () => {
+    const d = await db.speciesDrafts.get(id);
+    return d && d.deletedAt === null ? d : null;
+  }, [id]);
 }

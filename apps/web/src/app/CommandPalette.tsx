@@ -1,7 +1,18 @@
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
 import { useNavigate } from '@tanstack/react-router';
 import { Command } from 'cmdk';
-import { Database, Moon, NotebookPen, Plus, Search, Settings, Sprout, Sun } from 'lucide-react';
+import {
+  Database,
+  Moon,
+  NotebookPen,
+  Plus,
+  Search,
+  Settings,
+  Sprout,
+  Sun,
+  BookOpen,
+  HeartPulse,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useT } from '../i18n';
 import { usePrefs } from '../state/prefs';
@@ -98,6 +109,22 @@ export function CommandPalette({
                 >
                   <Sprout className="size-5 text-muted" aria-hidden="true" />
                   {t.garden.addPlant}
+                </Command.Item>
+                <Command.Item
+                  value={`${t.garden.newHealthCase} health sick plant`}
+                  onSelect={() => run(() => void navigate({ to: '/garden/health/new' }))}
+                  className={item}
+                >
+                  <HeartPulse className="size-5 text-muted" aria-hidden="true" />
+                  {t.garden.newHealthCase}
+                </Command.Item>
+                <Command.Item
+                  value={`${t.garden.speciesIndex} species plants guide`}
+                  onSelect={() => run(() => void navigate({ to: '/species' }))}
+                  className={item}
+                >
+                  <BookOpen className="size-5 text-muted" aria-hidden="true" />
+                  {t.garden.speciesIndex}
                 </Command.Item>
                 <Command.Item
                   value={`${t.garden.newGarden} new garden`}

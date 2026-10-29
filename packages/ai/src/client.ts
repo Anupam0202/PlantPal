@@ -2,6 +2,7 @@ import type { AiDataCategory, ModelRole } from '@plantpal/schemas';
 import { z } from 'zod';
 import { GEMINI_BASE } from './discovery';
 import { AiError, classifyGeminiError, redactKeys } from './errors';
+import { sharedPolicy, type PolicyContext } from './policy';
 import {
   consentedSections,
   partsOf,
@@ -171,6 +172,29 @@ export function responseSchema(schema: z.ZodType): Record<string, unknown> {
  * Policy: ≤ 2 attempts and only for retryable failures; 30 s deadline; one schema repair; re-discover
  * once on MODEL_UNAVAILABLE; never hop across a list of models; no background calls.
  */
+export interface GroundedResult {
+  text: string;
+  /** Web sources from the grounding metadata, deduplicated. */
+  sources: Array<{ url: string; title: string }>;
+  meta: AiRunMeta;
+}
+
+/** A prose request with Google Search grounding (F3 step 1). */
+export interface GroundedModule<I> {
+  id: string;
+  version: number;
+  role: ModelRole;
+  maxOutputTokens: number;
+  temperature: number;
+  task: string;
+  prompt: (input: I) => string;
+  policy: (input: I) => PolicyContext;
+}
+
+interface GroundingChunk {
+  web?: { uri?: string; title?: string };
+}
+
 export class GeminiClient implements AiClient {
   private readonly f: typeof fetch;
   private readonly sleep: (ms: number) => Promise<void>;
@@ -182,15 +206,82 @@ export class GeminiClient implements AiClient {
     this.now = o.now ?? (() => Date.now());
   }
 
+  private async keyOrThrow(signal?: AbortSignal): Promise<string> {
+    if (signal?.aborted) throw new AiError('CANCELLED', 'Cancelled');
+    const key = await this.o.getKey();
+    if (!key) throw new AiError('KEY_MISSING', 'Add your Gemini API key in Settings › AI.');
+    return key;
+  }
+
+  private newMeta(feature: string, version: number, role: ModelRole): AiRunMeta {
+    const model = this.o.roles()[role];
+    if (!model) throw new AiError('MODEL_UNAVAILABLE', `No ${role} model is available for this key.`);
+    return {
+      feature,
+      promptVersion: version,
+      model,
+      attempts: 0,
+      repaired: false,
+      degraded: [],
+      inputTokens: 0,
+      outputTokens: 0,
+      ms: 0,
+    };
+  }
+
+  /**
+   * Sends one logical request under the policy: ≤ 2 attempts for retryable failures, one
+   * re-discovery on MODEL_UNAVAILABLE, and an unsupported thinking setting dropped once.
+   */
+  private async send(
+    role: ModelRole,
+    meta: AiRunMeta,
+    signal: AbortSignal | undefined,
+    attempt: (model: string, useThinking: boolean) => Promise<{ text: string; json: GeminiResponse }>,
+    state: { useThinking: boolean; rediscovered: boolean },
+  ): Promise<{ text: string; json: GeminiResponse }> {
+    for (;;) {
+      meta.attempts++;
+      try {
+        return await attempt(meta.model, state.useThinking);
+      } catch (e) {
+        if (!(e instanceof AiError)) throw e;
+        if (state.useThinking && e.opts.status === 400 && /thinking/i.test(e.message)) {
+          state.useThinking = false;
+          meta.degraded.push('thinking');
+          meta.attempts--;
+          continue;
+        }
+        if (e.code === 'MODEL_UNAVAILABLE' && !state.rediscovered && this.o.rediscover) {
+          state.rediscovered = true;
+          const next = (await this.o.rediscover())[role];
+          if (next && next !== meta.model) {
+            meta.model = next;
+            meta.degraded.push('rediscovered');
+            meta.attempts--;
+            continue;
+          }
+          throw e;
+        }
+        if (e.retryable && meta.attempts < MAX_ATTEMPTS) {
+          const wait = e.retryAfterMs ?? 1000;
+          if (wait > MAX_RETRY_WAIT_MS) throw e;
+          await this.sleep(wait);
+          if (signal?.aborted) throw new AiError('CANCELLED', 'Cancelled');
+          continue;
+        }
+        throw e;
+      }
+    }
+  }
+
   async generateStructured<I, T>(
     m: PromptModule<I, T>,
     input: I,
     opts: GenerateOptions = {},
   ): Promise<AiResult<T>> {
     const started = this.now();
-    if (opts.signal?.aborted) throw new AiError('CANCELLED', 'Cancelled');
-    const key = await this.o.getKey();
-    if (!key) throw new AiError('KEY_MISSING', 'Add your Gemini API key in Settings › AI.');
+    const key = await this.keyOrThrow(opts.signal);
 
     const { sections, blockedBy } = consentedSections(m.sections(input), opts.allowed ?? null);
     if (blockedBy.length > 0) throw new AiError('CONSENT_REQUIRED', `Needs: ${blockedBy.join(', ')}`);
@@ -202,75 +293,42 @@ export class GeminiClient implements AiClient {
         });
     }
 
-    let model = this.o.roles()[m.role];
-    if (!model) throw new AiError('MODEL_UNAVAILABLE', `No ${m.role} model is available for this key.`);
-
-    const meta: AiRunMeta = {
-      feature: m.id,
-      promptVersion: m.version,
-      model,
-      attempts: 0,
-      repaired: false,
-      degraded: [],
-      inputTokens: 0,
-      outputTokens: 0,
-      ms: 0,
-    };
+    const meta = this.newMeta(m.id, m.version, m.role);
     const system = systemInstruction(m, input);
     const jsonSchema = responseSchema(m.schema);
-    let useThinking = true;
-    let rediscovered = false;
+    const state = { useThinking: true, rediscovered: false };
     const contents: Array<{ role: 'user' | 'model'; parts: GeminiPart[] }> = [{ role: 'user', parts }];
 
-    const call = async (): Promise<string> => {
-      for (;;) {
-        meta.attempts++;
-        const thinking = useThinking ? thinkingConfig(model!, m.thinking) : null;
-        const body = {
-          systemInstruction: { parts: [{ text: system }] },
-          contents,
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseJsonSchema: jsonSchema,
-            temperature: m.temperature,
-            maxOutputTokens: m.maxOutputTokens,
-            ...(thinking ? { thinkingConfig: thinking } : {}),
+    const call = async (): Promise<string> =>
+      (
+        await this.send(
+          m.role,
+          meta,
+          opts.signal,
+          (model, useThinking) => {
+            const thinking = useThinking ? thinkingConfig(model, m.thinking) : null;
+            if (!thinking) state.useThinking = false;
+            return this.post(
+              model,
+              key,
+              {
+                systemInstruction: { parts: [{ text: system }] },
+                contents,
+                generationConfig: {
+                  responseMimeType: 'application/json',
+                  responseJsonSchema: jsonSchema,
+                  temperature: m.temperature,
+                  maxOutputTokens: m.maxOutputTokens,
+                  ...(thinking ? { thinkingConfig: thinking } : {}),
+                },
+              },
+              meta,
+              opts.signal,
+            );
           },
-        };
-        try {
-          return await this.post(model!, key, body, meta, opts.signal);
-        } catch (e) {
-          if (!(e instanceof AiError)) throw e;
-          // An unsupported thinking setting degrades once and does not count as an attempt.
-          if (useThinking && thinking && e.opts.status === 400 && /thinking/i.test(e.message)) {
-            useThinking = false;
-            meta.degraded.push('thinking');
-            meta.attempts--;
-            continue;
-          }
-          if (e.code === 'MODEL_UNAVAILABLE' && !rediscovered && this.o.rediscover) {
-            rediscovered = true;
-            const next = (await this.o.rediscover())[m.role];
-            if (next && next !== model) {
-              model = next;
-              meta.model = next;
-              meta.degraded.push('rediscovered');
-              meta.attempts--;
-              continue;
-            }
-            throw e;
-          }
-          if (e.retryable && meta.attempts < MAX_ATTEMPTS) {
-            const wait = e.retryAfterMs ?? 1000;
-            if (wait > MAX_RETRY_WAIT_MS) throw e;
-            await this.sleep(wait);
-            if (opts.signal?.aborted) throw new AiError('CANCELLED', 'Cancelled');
-            continue;
-          }
-          throw e;
-        }
-      }
-    };
+          state,
+        )
+      ).text;
 
     const parse = (text: string): { ok: true; data: T } | { ok: false; errors: string[] } => {
       let raw: unknown;
@@ -294,7 +352,6 @@ export class GeminiClient implements AiClient {
     if (!result.ok) {
       // One repair attempt with the validator errors.
       meta.repaired = true;
-      meta.attempts = Math.max(meta.attempts, 1);
       contents.push({ role: 'model', parts: [{ text: first }] });
       contents.push({
         role: 'user',
@@ -315,13 +372,56 @@ export class GeminiClient implements AiClient {
     return { data: result.data, meta };
   }
 
+  /** Prose answer with Google Search grounding; sources come only from the grounding metadata. */
+  async generateGrounded<I>(
+    m: GroundedModule<I>,
+    input: I,
+    opts: { signal?: AbortSignal } = {},
+  ): Promise<GroundedResult> {
+    const started = this.now();
+    const key = await this.keyOrThrow(opts.signal);
+    const meta = this.newMeta(m.id, m.version, m.role);
+    const system = `${sharedPolicy(m.policy(input))}\n\n${m.task}`;
+    const { text, json } = await this.send(
+      m.role,
+      meta,
+      opts.signal,
+      (model) =>
+        this.post(
+          model,
+          key,
+          {
+            systemInstruction: { parts: [{ text: system }] },
+            contents: [{ role: 'user', parts: [{ text: m.prompt(input) }] }],
+            tools: [{ google_search: {} }],
+            generationConfig: { temperature: m.temperature, maxOutputTokens: m.maxOutputTokens },
+          },
+          meta,
+          opts.signal,
+        ),
+      { useThinking: false, rediscovered: false },
+    );
+    const chunks = ((
+      json.candidates?.[0] as { groundingMetadata?: { groundingChunks?: GroundingChunk[] } } | undefined
+    )?.groundingMetadata?.groundingChunks ?? []) as GroundingChunk[];
+    const seen = new Set<string>();
+    const sources = chunks.flatMap((c) => {
+      const url = c.web?.uri;
+      if (!url || !/^https:\/\//.test(url) || seen.has(url)) return [];
+      seen.add(url);
+      return [{ url, title: (c.web?.title ?? new URL(url).hostname).slice(0, 200) }];
+    });
+    meta.ms = this.now() - started;
+    return { text, sources, meta };
+  }
+
   private async post(
     model: string,
     key: string,
     body: unknown,
     meta: AiRunMeta,
     signal: AbortSignal | undefined,
-  ): Promise<string> {
+  ): Promise<{ text: string; json: GeminiResponse }> {
     const deadline = AbortSignal.timeout(this.o.deadlineMs ?? 30_000);
     const combined = signal ? AbortSignal.any([signal, deadline]) : deadline;
     let res: Response;
@@ -354,7 +454,7 @@ export class GeminiClient implements AiClient {
       outputTokens,
       at: new Date(this.now()).toISOString(),
     });
-    return finalText(json ?? {});
+    return { text: finalText(json ?? {}), json: json ?? {} };
   }
 }
 

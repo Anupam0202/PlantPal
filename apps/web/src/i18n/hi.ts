@@ -97,6 +97,9 @@ export const hi: Messages = {
     tabPlants: 'पौधे',
     tabSpaces: 'जगहें',
     tabJournal: 'डायरी',
+    tabHealth: 'स्वास्थ्य',
+    newHealthCase: 'नया स्वास्थ्य मामला',
+    speciesIndex: 'पौधे अ–ज्ञ',
     addPlant: 'पौधा जोड़ें',
     searchPlants: 'पौधे खोजें',
     noMatches: 'इन फ़िल्टरों से कोई पौधा मेल नहीं खाता।',
@@ -606,6 +609,7 @@ export const hi: Messages = {
       planItems: 'योजना के विकल्प',
       careSchedules: 'देखभाल कार्यक्रम',
       taskLogs: 'कार्य इतिहास',
+      speciesDrafts: 'प्रजाति ड्राफ़्ट',
     },
   },
   migrate: {

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { roundCoords } from '@plantpal/providers';
 import type { Garden } from '@plantpal/schemas';
 import { useEffect, useState } from 'react';
-import { getEnvSource } from './source';
+import { getEnvSource, getSpeciesClient } from './source';
 
 export interface Coords {
   lat: number;
@@ -115,4 +115,35 @@ export function useNow(intervalMs = 60_000): number {
     return () => clearInterval(id);
   }, [intervalMs]);
   return now;
+}
+
+/** GBIF backbone match for a plant name (cached for a week). */
+export function useSpeciesMatch(name: string | null) {
+  return useQuery({
+    queryKey: ['species', 'match', name?.trim().toLowerCase()],
+    queryFn: ({ signal }) => getSpeciesClient().speciesMatch(name!, signal),
+    enabled: Boolean(name && name.trim().length >= 3),
+    staleTime: Number.POSITIVE_INFINITY,
+    retry: false,
+  });
+}
+
+export function useSpeciesMedia(scientificName: string | null) {
+  return useQuery({
+    queryKey: ['species', 'media', scientificName?.toLowerCase()],
+    queryFn: ({ signal }) => getSpeciesClient().speciesMedia(scientificName!, signal),
+    enabled: Boolean(scientificName),
+    staleTime: Number.POSITIVE_INFINITY,
+    retry: false,
+  });
+}
+
+export function useSpeciesNames(gbifKey: number | null, scientificName: string) {
+  return useQuery({
+    queryKey: ['species', 'names', gbifKey],
+    queryFn: ({ signal }) => getSpeciesClient().speciesNames(gbifKey!, scientificName, signal),
+    enabled: gbifKey !== null,
+    staleTime: Number.POSITIVE_INFINITY,
+    retry: false,
+  });
 }
