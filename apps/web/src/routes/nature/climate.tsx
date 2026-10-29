@@ -19,6 +19,7 @@ import { Page } from '../../app/Page';
 import { useActiveGarden } from '../../data/queries';
 import { gardenCoords, useClimateProfile, useClimateProjection } from '../../env/hooks';
 import { useCareT } from '../../features/care/messages';
+import { ClimatePlain } from '../../features/env/ClimatePlain';
 import { GardenLoading, NoGarden } from '../../features/garden/NoGarden';
 import { monthName } from '../../features/plan/engine';
 import { useFormat } from '../../i18n';
@@ -299,6 +300,7 @@ function ClimatePage() {
                 )}
               </Card>
             </div>
+            <ClimatePlain profile={p} model={model} />
             <Section title={m.climate.normals} headingLevel={2}>
               <NormalsChart months={p.months} />
               <p className="text-caption text-muted">{m.climate.period(p.period, p.years)}</p>

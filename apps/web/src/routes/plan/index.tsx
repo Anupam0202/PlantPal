@@ -35,6 +35,7 @@ import {
   useCandidates,
 } from '../../features/plan/engine';
 import { Matches } from '../../features/plan/Matches';
+import { PlanExplainer } from '../../features/plan/PlanExplainer';
 import { usePlanT } from '../../features/plan/messages';
 import { usePlanContext } from '../../features/plan/usePlanContext';
 import { useFormat, useT } from '../../i18n';
@@ -225,6 +226,13 @@ function PlanPage() {
                 {m.seed.lightBody}
               </Notice>
             )}
+            <PlanExplainer
+              garden={{ ...garden, profile }}
+              zone={zone}
+              ctx={ctx}
+              candidates={candidates}
+              selection={selection}
+            />
             <Matches
               candidates={candidates}
               chosen={selection}

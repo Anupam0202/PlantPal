@@ -1,4 +1,4 @@
-import type { CareKind } from '@plantpal/schemas';
+import type { CaptureProposal as AiCaptureProposal, CareKind } from '@plantpal/schemas';
 
 /**
  * Deterministic Quick Capture parser for short English notes such as "watered tomatoes 2 l" or
@@ -23,7 +23,9 @@ export type CaptureProposal =
       countLabel: string | null;
       text: string;
     }
-  | { type: 'note'; specimenIds: string[]; text: string };
+  | { type: 'note'; specimenIds: string[]; text: string }
+  /** A one-off to-do (from the AI reader); saved as a single-occurrence custom task. */
+  | { type: 'task'; specimenIds: string[]; title: string; dueOn: string | null; text: string };
 
 export interface CaptureSpecimen {
   id: string;
@@ -41,8 +43,15 @@ const VERBS: Array<[RegExp, CareKind | 'harvest' | 'note']> = [
   [/^(harvested|harvest|picked)\b/i, 'harvest'],
 ];
 
+/**
+ * A number and its unit. The lookbehind lets a match start only at the beginning of a number and the
+ * quantifiers are bounded, so long runs of digits cannot cause polynomial backtracking.
+ */
 const AMOUNT_RE =
-  /(\d+(?:[.,]\d+)?)\s*(ml|millilitres?|milliliters?|l|litres?|liters?|ltrs?|kg|kilos?|g|grams?|gms?|pieces?|pcs|bunch(?:es)?|heads?|fruits?)\b\.?/i;
+  /(?<![\d.,])(\d{1,7}(?:[.,]\d{1,3})?)\s{0,3}(ml|millilitres?|milliliters?|l|litres?|liters?|ltrs?|kg|kilos?|g|grams?|gms?|pieces?|pcs|bunch(?:es)?|heads?|fruits?)\b\.?/i;
+
+/** Longest note the reader looks at; longer text is cut, never scanned in full. */
+const MAX_INPUT = 2000;
 
 function normalize(s: string): string {
   return s
@@ -82,8 +91,7 @@ function parseClause(clause: string, specimens: readonly CaptureSpecimen[]): Cap
   const text = clause.trim();
   const verb = VERBS.find(([re]) => re.test(text));
   const amount = AMOUNT_RE.exec(text);
-  const rest = text
-    .replace(verb?.[0] ?? /^$/, '')
+  const rest = (verb ? text.replace(verb[0], '') : text)
     .replace(AMOUNT_RE, '')
     .replace(/\b(the|my|some|a|an|of|to|on|in)\b/gi, ' ')
     .replace(/\s+/g, ' ')
@@ -125,8 +133,48 @@ function parseClause(clause: string, specimens: readonly CaptureSpecimen[]): Cap
 /** Splits free text into clauses (",", ";", new lines, " then ") and parses each one. */
 export function parseQuickCapture(input: string, specimens: readonly CaptureSpecimen[]): CaptureProposal[] {
   return input
+    .slice(0, MAX_INPUT)
     .split(/[;\n]|,(?!\d)|\bthen\b/i)
     .map((c) => c.trim())
     .filter((c) => c.length > 0)
     .map((c) => parseClause(c, specimens));
+}
+
+/**
+ * Maps a validated AI proposal (F2) onto the same proposal shape the deterministic reader produces,
+ * so both go through one review-and-confirm list. Units are normalised here, not by the model.
+ */
+export function captureFromAi(p: AiCaptureProposal): CaptureProposal {
+  const ids = p.specimenId ? [p.specimenId] : [];
+  switch (p.type) {
+    case 'careEvent':
+      return {
+        type: 'care',
+        kind: p.kind,
+        specimenIds: ids,
+        plantText: null,
+        amountMl: p.amount
+          ? Math.round(p.amount.unit === 'l' ? p.amount.value * 1000 : p.amount.value)
+          : null,
+        text: p.sourceSpan,
+      };
+    case 'harvest':
+      return {
+        type: 'harvest',
+        specimenIds: ids,
+        plantText: null,
+        massG: p.massG,
+        count: p.count,
+        countLabel: p.countLabel,
+        text: p.sourceSpan,
+      };
+    case 'task':
+      return { type: 'task', specimenIds: ids, title: p.title, dueOn: p.dueOn, text: p.sourceSpan };
+    case 'observation':
+      return {
+        type: 'note',
+        specimenIds: ids,
+        text: p.count !== null ? `${p.text} (${p.count})` : p.text,
+      };
+  }
 }

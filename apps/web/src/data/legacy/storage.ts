@@ -30,6 +30,16 @@ export function hasLegacyData(storage: Storage | undefined = globalThis.localSto
   );
 }
 
+/** The plaintext v3 Gemini key, read only to move it into the vault (then deleted). */
+export function readPlaintextKey(storage: Storage | undefined = globalThis.localStorage): string | null {
+  try {
+    const v = storage?.getItem(LEGACY_KEYS.apiKey);
+    return v && v.trim() ? v.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Deletes the plaintext v3 Gemini key from this browser. */
 export function deletePlaintextKey(storage: Storage | undefined = globalThis.localStorage): void {
   try {

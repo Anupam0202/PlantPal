@@ -108,3 +108,24 @@ export function dataUrlToBlob(dataUrl: string): Blob {
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return new Blob([bytes], { type: m[1] ?? 'application/octet-stream' });
 }
+
+/**
+ * A smaller copy for AI (§18.4: ≤ 1536 px on the long edge). Re-encoding drops any metadata again.
+ * Returned as base64 for the request body; it never touches storage.
+ */
+export async function imageForAi(
+  blob: Blob,
+  maxEdge = 1536,
+): Promise<{ mimeType: 'image/webp' | 'image/jpeg'; data: string }> {
+  const bitmap = await createImageBitmap(blob);
+  try {
+    const out = await encode(bitmap, maxEdge, 0.8);
+    const bytes = new Uint8Array(await out.arrayBuffer());
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000)
+      bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return { mimeType: out.type === 'image/webp' ? 'image/webp' : 'image/jpeg', data: btoa(bin) };
+  } finally {
+    bitmap.close();
+  }
+}

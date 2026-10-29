@@ -58,3 +58,81 @@ describe('quick capture parser', () => {
     expect(matchSpecimens('Curry leaves look yellow', specimens)).toEqual(['c']);
   });
 });
+
+describe('AI proposals map onto the review list', () => {
+  it('normalises litres, keeps nulls and turns tasks into to-dos', async () => {
+    const { captureFromAi } = await import('../src/quickCapture');
+    expect(
+      captureFromAi({
+        type: 'careEvent',
+        specimenId: 's1',
+        kind: 'water',
+        amount: { value: 1.5, unit: 'l' },
+        when: 'now',
+        sourceSpan: 'watered 1.5 l',
+      }),
+    ).toEqual({
+      type: 'care',
+      kind: 'water',
+      specimenIds: ['s1'],
+      plantText: null,
+      amountMl: 1500,
+      text: 'watered 1.5 l',
+    });
+    expect(
+      captureFromAi({
+        type: 'careEvent',
+        specimenId: null,
+        kind: 'feed',
+        amount: null,
+        when: 'earlierToday',
+        sourceSpan: 'fed',
+      }),
+    ).toMatchObject({
+      specimenIds: [],
+      amountMl: null,
+    });
+    expect(
+      captureFromAi({
+        type: 'task',
+        specimenId: 's2',
+        title: 'Repot mint',
+        dueOn: '2026-11-01',
+        sourceSpan: 'repot mint',
+      }),
+    ).toEqual({
+      type: 'task',
+      specimenIds: ['s2'],
+      title: 'Repot mint',
+      dueOn: '2026-11-01',
+      text: 'repot mint',
+    });
+    expect(
+      captureFromAi({
+        type: 'observation',
+        specimenId: null,
+        kind: 'visitor',
+        text: 'Bees seen',
+        count: 0,
+        sourceSpan: '0 bees',
+      }),
+    ).toEqual({
+      type: 'note',
+      specimenIds: [],
+      text: 'Bees seen (0)',
+    });
+  });
+});
+
+describe('reader safety (CodeQL)', () => {
+  it('stays fast on long runs of digits and still reads amounts', () => {
+    const start = performance.now();
+    parseQuickCapture(`watered basil ${'9'.repeat(5000)}`, []);
+    parseQuickCapture(`watered ${'9.'.repeat(3000)}x`, []);
+    expect(performance.now() - start).toBeLessThan(200);
+    const [p] = parseQuickCapture('watered tomato 1,5 l', [{ id: 'a', displayName: 'Tomato' }]);
+    expect(p).toMatchObject({ type: 'care', amountMl: 1500, specimenIds: ['a'] });
+    const [q] = parseQuickCapture('watered tomato 250ml', [{ id: 'a', displayName: 'Tomato' }]);
+    expect(q).toMatchObject({ amountMl: 250 });
+  });
+});

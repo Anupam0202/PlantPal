@@ -26,6 +26,8 @@ jobs:
       - run: pnpm typecheck
       - name: Catalogue facts have units, evidence and sources
         run: pnpm check:catalog
+      - name: AI eval gate (replayed cases; 0 prohibited claims)
+        run: pnpm eval
       - run: pnpm test
       - run: pnpm build
       - name: Scan build output for secrets (L01)

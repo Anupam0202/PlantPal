@@ -648,6 +648,17 @@ export async function linkMedia(mediaIds: string[], link: NonNullable<Media['lin
   });
 }
 
+/** Saves the alt text a person wrote or confirmed (never saved straight from AI output). */
+export async function setMediaAlt(id: string, alt: string): Promise<Media> {
+  return writeTx([db.media], async () => {
+    const m = await db.media.get(id);
+    if (!m || m.deletedAt !== null) throw new RecordNotFoundError('media', id);
+    const next = MediaSchema.parse({ ...m, alt: alt.trim().slice(0, 200) });
+    await db.media.put(next);
+    return next;
+  });
+}
+
 export async function deleteMedia(id: string, now = Date.now()): Promise<void> {
   await writeTx([db.media, db.mediaBlobs], async () => {
     const m = await db.media.get(id);

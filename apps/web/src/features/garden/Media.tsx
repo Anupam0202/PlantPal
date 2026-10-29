@@ -1,6 +1,8 @@
 import { Button, cn, Spinner } from '@plantpal/ui';
 import type { Media } from '@plantpal/schemas';
-import { Camera, ImageOff, Link2, X } from 'lucide-react';
+import { Camera, ImageOff, Link2, Type, X } from 'lucide-react';
+import { AltTextEditor } from './AltText';
+import { useAiT } from '../../ai/messages';
 import { useRef, useState } from 'react';
 import { deleteMedia, storeImage } from '../../data/commands';
 import { useMedia, useMediaUrl } from '../../data/queries';
@@ -100,9 +102,12 @@ export function PhotoField({
   label?: string;
 }) {
   const t = useT();
+  const at = useAiT();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
   const media = useMedia(value);
+  const editingMedia = media?.find((m) => m.id === editing && m.kind === 'stored') ?? null;
 
   const onFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -130,10 +135,23 @@ export function PhotoField({
           {media.map((m) => (
             <li key={m.id} className="relative">
               <MediaThumb media={m} />
+              {m.kind === 'stored' && (
+                <button
+                  type="button"
+                  onClick={() => setEditing(editing === m.id ? null : m.id)}
+                  className="absolute -bottom-2 -left-2 inline-flex h-8 items-center gap-1 rounded-full border border-line bg-raised px-2 text-caption font-medium text-ink shadow-1 hover:bg-sunken"
+                  aria-label={at.alt.edit(at.alt.photo)}
+                  aria-pressed={editing === m.id}
+                >
+                  <Type className="size-3.5" aria-hidden="true" />
+                  {m.alt ? '✓' : null}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
                   onChange(value.filter((id) => id !== m.id));
+                  if (editing === m.id) setEditing(null);
                   void deleteMedia(m.id);
                 }}
                 className="absolute -top-2 -right-2 inline-flex size-8 items-center justify-center rounded-full border border-line bg-raised text-ink shadow-1 hover:bg-sunken"
@@ -144,6 +162,9 @@ export function PhotoField({
             </li>
           ))}
         </ul>
+      )}
+      {editingMedia && (
+        <AltTextEditor key={editingMedia.id} media={editingMedia} onDone={() => setEditing(null)} />
       )}
       <div className="flex items-center gap-3">
         <input

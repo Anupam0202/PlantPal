@@ -25,6 +25,7 @@ import { Route as PlanIndexRouteImport } from './routes/plan/index'
 import { Route as PlanCalendarRouteImport } from './routes/plan/calendar'
 import { Route as PlanSunRouteImport } from './routes/plan/sun'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as SettingsAiRouteImport } from './routes/settings/ai'
 import { Route as SettingsDataRouteImport } from './routes/settings/data'
 import { Route as SettingsMigrateRouteImport } from './routes/settings/migrate'
 import { Route as SettingsSourcesRouteImport } from './routes/settings/sources'
@@ -111,6 +112,11 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsAiRoute = SettingsAiRouteImport.update({
+  id: '/settings/ai',
+  path: '/settings/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsDataRoute = SettingsDataRouteImport.update({
   id: '/settings/data',
   path: '/settings/data',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/nature/climate': typeof NatureClimateRoute
   '/plan/calendar': typeof PlanCalendarRoute
   '/plan/sun': typeof PlanSunRoute
+  '/settings/ai': typeof SettingsAiRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
   '/settings/sources': typeof SettingsSourcesRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/nature/climate': typeof NatureClimateRoute
   '/plan/calendar': typeof PlanCalendarRoute
   '/plan/sun': typeof PlanSunRoute
+  '/settings/ai': typeof SettingsAiRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
   '/settings/sources': typeof SettingsSourcesRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/nature/climate': typeof NatureClimateRoute
   '/plan/calendar': typeof PlanCalendarRoute
   '/plan/sun': typeof PlanSunRoute
+  '/settings/ai': typeof SettingsAiRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
   '/settings/sources': typeof SettingsSourcesRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/nature/climate'
     | '/plan/calendar'
     | '/plan/sun'
+    | '/settings/ai'
     | '/settings/data'
     | '/settings/migrate'
     | '/settings/sources'
@@ -244,6 +254,7 @@ export interface FileRouteTypes {
     | '/nature/climate'
     | '/plan/calendar'
     | '/plan/sun'
+    | '/settings/ai'
     | '/settings/data'
     | '/settings/migrate'
     | '/settings/sources'
@@ -267,6 +278,7 @@ export interface FileRouteTypes {
     | '/nature/climate'
     | '/plan/calendar'
     | '/plan/sun'
+    | '/settings/ai'
     | '/settings/data'
     | '/settings/migrate'
     | '/settings/sources'
@@ -291,6 +303,7 @@ export interface RootRouteChildren {
   NatureClimateRoute: typeof NatureClimateRoute
   PlanCalendarRoute: typeof PlanCalendarRoute
   PlanSunRoute: typeof PlanSunRoute
+  SettingsAiRoute: typeof SettingsAiRoute
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsMigrateRoute: typeof SettingsMigrateRoute
   SettingsSourcesRoute: typeof SettingsSourcesRoute
@@ -417,6 +430,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/ai': {
+      id: '/settings/ai'
+      path: '/settings/ai'
+      fullPath: '/settings/ai'
+      preLoaderRoute: typeof SettingsAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/data': {
       id: '/settings/data'
       path: '/settings/data'
@@ -467,6 +487,7 @@ const rootRouteChildren: RootRouteChildren = {
   NatureClimateRoute: NatureClimateRoute,
   PlanCalendarRoute: PlanCalendarRoute,
   PlanSunRoute: PlanSunRoute,
+  SettingsAiRoute: SettingsAiRoute,
   SettingsDataRoute: SettingsDataRoute,
   SettingsMigrateRoute: SettingsMigrateRoute,
   SettingsSourcesRoute: SettingsSourcesRoute,

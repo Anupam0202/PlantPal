@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./vault": "./src/vault.ts",
+    "./errors": "./src/errors.ts"
   },
   "types": "./src/index.ts",
   "scripts": {
@@ -12,8 +14,6 @@
   },
   "dependencies": {
     "@plantpal/schemas": "workspace:*",
-    "@plantpal/domain": "workspace:*",
-    "@google/genai": "^2.31.0",
     "zod": "^4.6.7"
   },
   "sideEffects": false

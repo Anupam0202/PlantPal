@@ -12,11 +12,26 @@ import {
   Notice,
 } from '@plantpal/ui';
 import { CARE_KINDS, WATER_SOURCES, type CareKind, type Specimen, type WaterSource } from '@plantpal/schemas';
-import { parseQuickCapture, todayIn, type CaptureProposal } from '@plantpal/domain';
+import { captureFromAi, parseQuickCapture, todayIn, type CaptureProposal } from '@plantpal/domain';
+import type { CaptureParseInput } from '@plantpal/ai';
+import type { CaptureProposals } from '@plantpal/schemas';
 import { Camera, Droplets, Leaf, NotebookPen, Scissors, ShoppingBasket, Wand2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { addObservation, deleteMedia, linkMedia, logCare, logHarvest, voidEntry } from '../../data/commands';
+import {
+  addObservation,
+  createSchedule,
+  deleteMedia,
+  deleteSchedule,
+  linkMedia,
+  logCare,
+  logHarvest,
+  voidEntry,
+} from '../../data/commands';
+import { AiButton, AiFlow } from '../../ai/AiButton';
+import { useAiT } from '../../ai/messages';
+import { useAiAction } from '../../ai/useAiAction';
+import { usePrefs } from '../../state/prefs';
 import { useActiveGarden, useSpecimens } from '../../data/queries';
 import { useT } from '../../i18n';
 import { useCapture, type CaptureMode } from '../../state/capture';
@@ -29,7 +44,9 @@ const WATER_PRESETS_ML = [250, 500, 1000, 2000, 5000];
 const PRIMARY: CaptureMode[] = ['water', 'feed', 'prune', 'note', 'photo', 'harvest'];
 const OTHER_CARE = CARE_KINDS.filter((k) => !['water', 'feed', 'prune'].includes(k));
 
-type Created = { table: 'careEvents' | 'observations' | 'harvests'; id: string };
+type Created =
+  | { table: 'careEvents' | 'observations' | 'harvests'; id: string }
+  | { table: 'careSchedules'; id: string; version: number };
 
 function useWideScreen() {
   const [wide, setWide] = useState(
@@ -69,13 +86,37 @@ export function QuickCapture() {
   const [mediaIds, setMediaIds] = useState<string[]>([]);
   const [freeText, setFreeText] = useState('');
   const [proposals, setProposals] = useState<CaptureProposal[]>([]);
+  const [fromAi, setFromAi] = useState(false);
   const [busy, setBusy] = useState(false);
+  const at = useAiT();
+  const locale = usePrefs((s) => s.locale);
+  const units = usePrefs((s) => s.units);
 
   const tz = garden?.timezone ?? 'UTC';
   const today = todayIn(tz);
   const plants = useMemo(
     () => (specimens ?? []).filter((s) => !s.holding && ['active', 'planned', 'dormant'].includes(s.status)),
     [specimens],
+  );
+
+  // F2: the AI reader proposes; nothing is saved until the person confirms (§18.5).
+  const aiRead = useAiAction<CaptureParseInput, CaptureProposals>(
+    'capture-parse',
+    () =>
+      freeText.trim()
+        ? {
+            policy: { locale, units, seasonModel: `${garden?.hemisphere ?? 'unknown'} hemisphere` },
+            text: freeText.trim(),
+            today,
+            specimens: plants.map((p) => ({ id: p.id, name: p.displayName })),
+          }
+        : null,
+    {
+      onResult: (r) => {
+        setProposals(r.proposals.map(captureFromAi));
+        setFromAi(true);
+      },
+    },
   );
 
   // Reset whenever the sheet opens.
@@ -96,6 +137,8 @@ export function QuickCapture() {
     setMediaIds([]);
     setFreeText('');
     setProposals([]);
+    setFromAi(false);
+    aiRead.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on open
   }, [open]);
 
@@ -196,6 +239,17 @@ export function QuickCapture() {
           notes: p.text,
         });
         created.push({ table: 'harvests', id: h.id });
+      } else if (p.type === 'task') {
+        const day = p.dueOn && p.dueOn >= today ? p.dueOn : today;
+        const sc = await createSchedule(gardenId, {
+          specimenId: p.specimenIds[0] ?? null,
+          zoneId: null,
+          kind: 'custom',
+          title: p.title.slice(0, 120),
+          rule: { freq: 'daily', interval: 1, startOn: day, until: day },
+          origin: 'user',
+        });
+        created.push({ table: 'careSchedules', id: sc.id, version: sc.version });
       } else {
         const targets = p.specimenIds.length > 0 ? p.specimenIds : [null];
         for (const specimenId of targets) {
@@ -228,9 +282,11 @@ export function QuickCapture() {
         action: {
           label: t.common.undo,
           onClick: () => {
-            void Promise.all(created.map((c) => voidEntry(c.table, c.id))).catch((e: unknown) =>
-              reportError(t, e),
-            );
+            void Promise.all(
+              created.map((c) =>
+                c.table === 'careSchedules' ? deleteSchedule(c.id, c.version) : voidEntry(c.table, c.id),
+              ),
+            ).catch((e: unknown) => reportError(t, e));
           },
         },
       });
@@ -298,6 +354,7 @@ export function QuickCapture() {
                 {t.capture.proposals}
               </h3>
               <p className="text-body-s text-muted">{t.capture.proposalsHint}</p>
+              {fromAi && <Badge className="self-start">{at.suggestedByAi}</Badge>}
               <ul className="flex flex-col gap-2">
                 {proposals.map((p, i) => (
                   <li key={i} className="flex items-start gap-3 rounded-md border border-line bg-surface p-3">
@@ -307,7 +364,9 @@ export function QuickCapture() {
                           ? t.labels.care[p.kind]
                           : p.type === 'harvest'
                             ? t.capture.harvest
-                            : t.capture.observe}
+                            : p.type === 'task'
+                              ? `${at.capture.task}: ${p.title}`
+                              : t.capture.observe}
                       </p>
                       <p className="text-body-s text-muted">
                         {p.specimenIds.length > 0
@@ -319,6 +378,7 @@ export function QuickCapture() {
                           <Badge>{p.amountMl === null ? t.journal.amountUnknown : u.water(p.amountMl)}</Badge>
                         )}
                         {p.type === 'harvest' && p.massG !== null && <Badge>{u.mass(p.massG)}</Badge>}
+                        {p.type === 'task' && <Badge>{at.capture.due(p.dueOn ?? today)}</Badge>}
                         {p.type === 'harvest' && p.count !== null && (
                           <Badge>{`${p.count} ${p.countLabel ?? ''}`.trim()}</Badge>
                         )}
@@ -512,12 +572,23 @@ export function QuickCapture() {
                 type="button"
                 variant="secondary"
                 disabled={!freeText.trim()}
-                onClick={() => setProposals(parseQuickCapture(freeText, plants))}
+                onClick={() => {
+                  setProposals(parseQuickCapture(freeText, plants));
+                  setFromAi(false);
+                }}
               >
                 <Wand2 className="size-4" aria-hidden="true" />
                 {t.capture.readIt}
               </Button>
             </div>
+            {freeText.trim() && (
+              <div className="flex flex-col gap-2">
+                <div>
+                  <AiButton ai={aiRead} label={at.capture.button} />
+                </div>
+                <AiFlow ai={aiRead} fallback={at.capture.fallback} />
+              </div>
+            )}
             <p className="text-caption text-muted">{t.capture.typeItHint}</p>
           </section>
           {plants.length === 0 && mode === 'harvest' && <Notice tone="info">{t.capture.noPlants}</Notice>}
