@@ -242,6 +242,27 @@ export const ClimateProfile = z.object({
   months: z.array(z.object({ tmeanC: nn, tminC: nn, tmaxC: nn, precipMm: nn })),
   annualMeanC: nn,
   annualPrecipMm: nn,
+  /** By month, January first: 90th percentile of daily maximum, 10th percentile of daily minimum. */
+  tmaxP90ByMonth: z.array(nn).nullable().default(null),
+  tminP10ByMonth: z.array(nn).nullable().default(null),
   method: z.string(),
 });
 export type ClimateProfile = z.infer<typeof ClimateProfile>;
+
+const Range3 = z.object({ min: z.number(), median: z.number(), max: z.number() }).nullable();
+
+/**
+ * Climate model change for a place (§6.15, L08): each model against its own baseline, as a multi-model
+ * range. HighResMIP runs follow one forcing pathway; no scenario is selectable or named.
+ */
+export const ClimateProjection = z.object({
+  provenance: Provenance,
+  baseline: z.string(),
+  future: z.string(),
+  models: z.array(z.string()),
+  perModel: z.array(z.object({ model: z.string(), dTmeanC: z.number(), dPrecipPct: z.number().nullable() })),
+  dTmeanC: Range3,
+  dPrecipPct: Range3,
+  note: z.string(),
+});
+export type ClimateProjection = z.infer<typeof ClimateProjection>;

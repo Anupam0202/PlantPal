@@ -1,7 +1,8 @@
-import { climateSummary } from '@plantpal/domain';
+import { climateDeltas, climateSummary } from '@plantpal/domain';
 import type {
   AirQuality,
   ClimateProfile,
+  ClimateProjection,
   Elevation,
   Forecast,
   PlaceSearch,
@@ -25,7 +26,7 @@ import {
   geocodingFixture,
   solarFixture,
 } from './fixtures';
-import { archiveUrl, parseArchive } from './openMeteo/history';
+import { archiveUrl, CLIMATE_MODELS, climateUrl, parseArchive, parseClimate } from './openMeteo/history';
 import { airUrl, parseAir } from './openMeteo/air';
 import { elevationUrl, parseElevation } from './openMeteo/elevation';
 import { forecastUrl, parseForecast } from './openMeteo/forecast';
@@ -150,7 +151,8 @@ export class EnvClient {
     id: ProviderId,
     endpoint: string,
     params: Record<string, string | number | null>,
-    url: string,
+    /** One URL, or several fetched in order (the parser then receives an array of bodies). */
+    url: string | readonly string[],
     fixture: () => unknown,
     parse: (json: unknown, retrievedAt: string, demo: boolean) => T,
     signal?: AbortSignal,
@@ -189,17 +191,23 @@ export class EnvClient {
           json = fixture();
           latencyMs = 0;
         } else {
-          const res = await fetchJson(url, {
-            provider: id,
-            deadlineMs: info.deadlineMs,
-            fetch: this.opts.fetch,
-            signal,
-            now: this.now,
-            sleep: this.opts.sleep,
-            headers: this.opts.userAgent ? { 'User-Agent': this.opts.userAgent } : undefined,
-          });
-          json = res.json;
-          latencyMs = res.latencyMs;
+          const urls = typeof url === 'string' ? [url] : url;
+          const bodies: unknown[] = [];
+          latencyMs = 0;
+          for (const u of urls) {
+            const res = await fetchJson(u, {
+              provider: id,
+              deadlineMs: info.deadlineMs,
+              fetch: this.opts.fetch,
+              signal,
+              now: this.now,
+              sleep: this.opts.sleep,
+              headers: this.opts.userAgent ? { 'User-Agent': this.opts.userAgent } : undefined,
+            });
+            bodies.push(res.json);
+            latencyMs += res.latencyMs;
+          }
+          json = typeof url === 'string' ? bodies[0] : bodies;
         }
         const value = parse(json, new Date(this.now()).toISOString(), this.opts.mode === 'mock');
         await this.opts.cache.set(key, {
@@ -346,8 +354,68 @@ export class EnvClient {
           months: s.normals.months,
           annualMeanC: s.normals.annualMeanC,
           annualPrecipMm: s.normals.annualPrecipMm,
+          tmaxP90ByMonth: s.tmaxP90ByMonth,
+          tminP10ByMonth: s.tminP10ByMonth,
           method:
             'Daily ERA5 reanalysis; hardiness from the mean annual extreme minimum; frost dates are the 50th/90th percentile of last spring and first autumn frost (≤ 0 °C). Reanalysis smooths local extremes.',
+        };
+      },
+      signal,
+    );
+  }
+
+  /**
+   * Climate model change (§6.15): CMIP6 HighResMIP daily data for 1991–2014 and 2031–2050, each model
+   * compared with its own baseline. About 3 MB of JSON per coarse cell; cached for a year.
+   */
+  climateProjection(lat: number, lon: number, signal?: AbortSignal): Promise<ClimateProjection> {
+    const c = roundCoords(lat, lon, PROVIDERS['open-meteo-climate'].gridDeg ?? 0.1);
+    const info = PROVIDERS['open-meteo-climate'];
+    const baseline: [number, number] = [1991, 2014];
+    const future: [number, number] = [2031, 2050];
+    return this.get(
+      'open-meteo-climate',
+      'projection',
+      c,
+      [climateUrl(c.lat, c.lon, baseline[0], baseline[1]), climateUrl(c.lat, c.lon, future[0], future[1])],
+      () => [
+        dailyFixture({ from: baseline[0], to: baseline[1], models: CLIMATE_MODELS }),
+        dailyFixture({ from: future[0], to: future[1], models: CLIMATE_MODELS, mean: 16.3 }),
+      ],
+      (json, retrievedAt, demo) => {
+        const [a, b] = Array.isArray(json) ? json : [json, null];
+        const base = parseClimate(a);
+        const fut = b ? parseClimate(b) : [];
+        const merged = base.map((m) => {
+          const f = fut.find((x) => x.model === m.model);
+          return {
+            model: m.model,
+            series: f
+              ? {
+                  dates: [...m.series.dates, ...f.series.dates],
+                  tmax: [...m.series.tmax, ...f.series.tmax],
+                  tmin: [...m.series.tmin, ...f.series.tmin],
+                  precip: [...m.series.precip, ...f.series.precip],
+                }
+              : m.series,
+          };
+        });
+        const d = climateDeltas(merged, baseline, future);
+        return {
+          provenance: {
+            provider: 'open-meteo-climate',
+            retrievedAt,
+            lat: c.lat,
+            lon: c.lon,
+            grid: 'model grids ≈ 0.1–0.5°, downscaled by Open-Meteo',
+            model: d.models.join(', ') || null,
+            licence: info.licence,
+            attribution: info.attribution,
+            sourceUrl: info.sourceUrl,
+            stale: false,
+            demo,
+          },
+          ...d,
         };
       },
       signal,

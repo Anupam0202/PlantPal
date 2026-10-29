@@ -10,3 +10,8 @@ export * from './solar';
 export * from './climate';
 export * from './sunhours';
 export * from './eligibility';
+export * from './care';
+export * from './water';
+export * from './alerts';
+export * from './season';
+export * from './careplan';

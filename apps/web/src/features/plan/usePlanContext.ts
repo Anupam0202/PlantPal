@@ -42,6 +42,7 @@ export function usePlanContext(
     () =>
       zone
         ? contextOf({
+            normals: measured?.months ?? null,
             lat,
             region: garden.region,
             profile: garden.profile,

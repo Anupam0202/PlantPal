@@ -71,6 +71,8 @@ export interface EligibilityContext {
   containerMarginC: number;
   /** Current month in the garden's time zone, 0 = January. */
   month: number;
+  /** Sowing months from local climatology (§6.15); without them a hemisphere and latitude rule is used. */
+  sowWindows?: { warm: number[]; cool: number[] } | null;
 }
 
 export type RuleId = 'E1' | 'E2' | 'E3' | 'E4' | 'E5' | 'E6' | 'E7';
@@ -400,7 +402,17 @@ function e6(t: Taxon, ctx: EligibilityContext, out: Finding[]) {
 }
 
 function e7(t: Taxon, ctx: EligibilityContext, out: Finding[]): Candidate['timing'] {
-  const months = sowMonths(trait(t, 'sowSeason') ?? 'any', ctx.lat);
+  const season = trait(t, 'sowSeason') ?? 'any';
+  let months = sowMonths(season, ctx.lat);
+  if (ctx.sowWindows && season !== 'any') {
+    const local = season === 'warm' ? ctx.sowWindows.warm : ctx.sowWindows.cool;
+    if (local.length > 0) months = local;
+    else {
+      // No month suits this crop here on average: allow it, but say so (choose tolerant varieties).
+      out.push({ rule: 'E7', outcome: 'tradeoff', code: 'noIdealWindow', params: { season } });
+      return { sowNow: false, nextMonth: null };
+    }
+  }
   if (months.includes(ctx.month)) return { sowNow: true, nextMonth: null };
   const next =
     Array.from({ length: 12 }, (_, i) => (ctx.month + i + 1) % 12).find((m) => months.includes(m)) ?? null;

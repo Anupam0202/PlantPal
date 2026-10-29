@@ -15,7 +15,8 @@ import {
   SelectField,
   Spinner,
 } from '@plantpal/ui';
-import { Sun } from 'lucide-react';
+import { CalendarDays, Sun } from 'lucide-react';
+import { useCareT } from '../../features/care/messages';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Page } from '../../app/Page';
@@ -57,6 +58,7 @@ const EMPTY_PROFILE: GardenProfile = {
 function PlanPage() {
   const t = useT();
   const m = usePlanT();
+  const cm = useCareT();
   const fmt = useFormat();
   const navigate = useNavigate();
   const { zone: zoneParam } = Route.useSearch();
@@ -151,12 +153,18 @@ function PlanPage() {
         title={m.plan.title}
         description={t.plan.emptyBody}
         actions={
-          zone ? (
-            <Link to="/plan/sun" search={{ zone: zone.id }} className={buttonClasses('secondary')}>
-              <Sun className="size-4" aria-hidden="true" />
-              {m.plan.sunFinder}
+          <>
+            {zone ? (
+              <Link to="/plan/sun" search={{ zone: zone.id }} className={buttonClasses('secondary')}>
+                <Sun className="size-4" aria-hidden="true" />
+                {m.plan.sunFinder}
+              </Link>
+            ) : null}
+            <Link to="/plan/calendar" className={buttonClasses('secondary')}>
+              <CalendarDays className="size-4" aria-hidden="true" />
+              {cm.calendar.title}
             </Link>
-          ) : null
+          </>
         }
       />
 

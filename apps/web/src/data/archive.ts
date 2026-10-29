@@ -6,6 +6,7 @@ import {
   ARCHIVE_FORMAT_VERSION,
   ArchiveManifest,
   CareEvent,
+  CareSchedule,
   Container,
   Draft,
   Garden,
@@ -18,6 +19,7 @@ import {
   PlanItem,
   SoilTest,
   Specimen,
+  TaskLog,
   Zone,
   type ArchiveFile,
 } from '@plantpal/schemas';
@@ -42,6 +44,8 @@ const TABLES = {
   drafts: Draft,
   plans: Plan,
   planItems: PlanItem,
+  careSchedules: CareSchedule,
+  taskLogs: TaskLog,
 } as const;
 export type ArchiveTable = keyof typeof TABLES;
 const TABLE_NAMES = Object.keys(TABLES) as ArchiveTable[];

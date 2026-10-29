@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type {
   CareEvent,
+  CareSchedule,
   Container,
   Garden,
   Harvest,
@@ -11,6 +12,7 @@ import type {
   Plan,
   PlanItem,
   Specimen,
+  TaskLog,
   Zone,
 } from '@plantpal/schemas';
 import { db, getMeta } from './db';
@@ -256,5 +258,40 @@ export function usePlanItems(gardenId: string | undefined): PlanItem[] | undefin
     async () =>
       gardenId ? (await db.planItems.where('gardenId').equals(gardenId).toArray()).filter(alive) : [],
     [gardenId],
+  );
+}
+
+export function useSchedules(gardenId: string | undefined): CareSchedule[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId ? (await db.careSchedules.where('gardenId').equals(gardenId).toArray()).filter(alive) : [],
+    [gardenId],
+  );
+}
+
+/** Task history (including voided rows, which the care engine ignores) since `sinceMs`. */
+export function useTaskLogs(gardenId: string | undefined, sinceMs: number): TaskLog[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? (await db.taskLogs.where('gardenId').equals(gardenId).toArray()).filter((l) => l.at >= sinceMs)
+        : [],
+    [gardenId, sinceMs],
+  );
+}
+
+/** Non-voided care events since `sinceMs` (watering resets the pot's water balance). */
+export function useRecentCare(gardenId: string | undefined, sinceMs: number): CareEvent[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? (
+            await db.careEvents
+              .where('[gardenId+occurredAt]')
+              .between([gardenId, sinceMs], [gardenId, Number.MAX_SAFE_INTEGER])
+              .toArray()
+          ).filter(alive)
+        : [],
+    [gardenId, sinceMs],
   );
 }

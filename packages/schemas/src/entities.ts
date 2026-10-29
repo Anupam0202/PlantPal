@@ -208,6 +208,8 @@ export const CONTAINER_MATERIALS = [
   'other',
 ] as const;
 
+export const SUBSTRATE_TYPES = ['potting-mix', 'peat-free', 'coir', 'garden-soil', 'gritty'] as const;
+
 const Cm = z.number().finite().positive().max(10_000);
 export const ContainerDims = z.object({
   diameterCm: Cm.optional(),
@@ -229,6 +231,10 @@ export const Container = z.object({
   material: z.enum(CONTAINER_MATERIALS).nullable(),
   drainageHoles: z.boolean().nullable(),
   substrate: ShortText,
+  /** Substrate class for the water balance; null means unknown (wider estimates, check more often). */
+  substrateType: z.enum(SUBSTRATE_TYPES).nullable().default(null),
+  /** Personal water factor learned from soil checks (§6.4), bounded to [0.5, 2]. */
+  waterFactor: z.number().min(0.5).max(2).default(1),
   notes: LongText,
   source: RecordSource,
 });
@@ -393,6 +399,81 @@ export const Harvest = z.object({
   source: RecordSource,
 });
 export type Harvest = z.infer<typeof Harvest>;
+
+// ---------------------------------------------------------------- care schedules and task history
+
+export const TASK_KINDS = [
+  'check-water',
+  'water',
+  'feed',
+  'prune',
+  'pest-check',
+  'harvest',
+  'custom',
+] as const;
+export type TaskKindValue = (typeof TASK_KINDS)[number];
+
+export const RecurrenceRule = z.object({
+  freq: z.enum(['daily', 'weekly', 'monthly']),
+  interval: z.number().int().min(1).max(365),
+  byWeekday: z.array(z.number().int().min(1).max(7)).max(7).optional(),
+  startOn: LocalDate,
+  until: LocalDate.nullable().optional(),
+  at: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .nullable()
+    .optional(),
+});
+
+/** A care rule for one plant or space. Editing the rule bumps `version` and `effectiveFrom` (§6.6). */
+export const CareSchedule = z.object({
+  ...versioned,
+  gardenId: Id,
+  specimenId: Id.nullable(),
+  zoneId: Id.nullable(),
+  kind: z.enum(TASK_KINDS),
+  /** User wording for custom tasks; default kinds are named by the app in the user's language. */
+  title: ShortText,
+  rule: RecurrenceRule,
+  effectiveFrom: LocalDate,
+  pausedUntil: LocalDate.nullable(),
+  /** `engine`: created from traits; `user`: added or edited by the user. */
+  origin: z.enum(['engine', 'user']),
+  source: RecordSource,
+});
+export type CareSchedule = z.infer<typeof CareSchedule>;
+
+export const SOIL_CHECKS = ['dry', 'moist', 'wet'] as const;
+export const LEAF_CHECKS = ['fine', 'droopy', 'yellowing', 'spots'] as const;
+export const SKIP_REASONS = ['rained', 'moist', 'away', 'other'] as const;
+
+/**
+ * What happened to one task occurrence (append-only). A "done" or "checked" is final; "checked, still
+ * moist" counts as completed care (appropriate inaction). Ids for "done" are derived from the
+ * occurrence key, so a double tap or offline replay cannot complete a task twice.
+ */
+export const TaskLog = z.object({
+  ...appendOnly,
+  occurrenceKey: z.string().max(160),
+  scheduleId: Id.nullable(),
+  specimenId: Id.nullable(),
+  kind: z.enum(TASK_KINDS),
+  action: z.enum(['done', 'checked', 'skipped', 'snoozed']),
+  at: EpochMs,
+  occurredOn: LocalDate,
+  snoozeUntil: EpochMs.nullable(),
+  reason: z.enum(SKIP_REASONS).nullable(),
+  check: z
+    .object({
+      soil: z.enum(SOIL_CHECKS).nullable(),
+      leaves: z.enum(LEAF_CHECKS).nullable(),
+      pests: z.boolean().nullable(),
+    })
+    .nullable(),
+  careEventId: Id.nullable(),
+});
+export type TaskLog = z.infer<typeof TaskLog>;
 
 // ---------------------------------------------------------------- plans
 

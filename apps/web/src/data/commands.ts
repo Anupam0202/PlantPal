@@ -1,6 +1,7 @@
 import type { Table } from 'dexie';
 import {
   CareEvent as CareEventSchema,
+  CareSchedule as CareScheduleSchema,
   Container as ContainerSchema,
   Garden as GardenSchema,
   Harvest as HarvestSchema,
@@ -9,10 +10,12 @@ import {
   Plan as PlanSchema,
   PlanItem as PlanItemSchema,
   Specimen as SpecimenSchema,
+  TaskLog as TaskLogSchema,
   Workspace as WorkspaceSchema,
   Zone as ZoneSchema,
   type CareEvent,
   type CareKind,
+  type CareSchedule,
   type Container,
   type Garden,
   type Harvest,
@@ -22,11 +25,21 @@ import {
   type PlanItem,
   type Specimen,
   type SpecimenStatus,
+  type TaskLog,
   type WaterSource,
   type Workspace,
   type Zone,
 } from '@plantpal/schemas';
-import { containerVolumeL, instantForLocalDate, localDateOf, newId, todayIn } from '@plantpal/domain';
+import {
+  containerVolumeL,
+  deterministicId,
+  instantForLocalDate,
+  localDateOf,
+  newId,
+  recalibrate,
+  todayIn,
+  type ScheduleDraft,
+} from '@plantpal/domain';
 import { CLIENT_SCHEMA, db, getMeta, setMeta } from './db';
 import { RecordNotFoundError, VersionConflictError } from './errors';
 import { withQuotaRecovery } from './storage';
@@ -830,6 +843,273 @@ export async function deletePlan(id: string, baseVersion: number, now = Date.now
     const cur = assertUpdatable(await db.plans.get(id), 'plan', id, baseVersion);
     await db.plans.put({ ...cur, deletedAt: now, updatedAt: now, version: cur.version + 1 });
     await enqueue(cur.workspaceId, 'plan.delete', id, null, baseVersion, now);
+  });
+}
+
+// ---------------------------------------------------------------- care schedules and tasks
+
+export type ScheduleInput = Pick<CareSchedule, 'specimenId' | 'zoneId' | 'kind' | 'title' | 'rule'> & {
+  origin?: CareSchedule['origin'];
+};
+
+async function addSchedule(
+  garden: Garden,
+  input: ScheduleInput,
+  today: string,
+  now: number,
+): Promise<CareSchedule> {
+  const s = CareScheduleSchema.parse({
+    id: newId(now),
+    workspaceId: garden.workspaceId,
+    gardenId: garden.id,
+    createdAt: now,
+    updatedAt: now,
+    version: 1,
+    deletedAt: null,
+    effectiveFrom: today,
+    pausedUntil: null,
+    origin: input.origin ?? 'user',
+    source: null,
+    ...input,
+  });
+  await db.careSchedules.add(s);
+  await enqueue(garden.workspaceId, 'careSchedule.create', s.id, s, null, now);
+  return s;
+}
+
+export async function createSchedule(
+  gardenId: string,
+  input: ScheduleInput,
+  now = Date.now(),
+): Promise<CareSchedule> {
+  return writeTx([db.careSchedules, db.gardens, db.specimens], async () => {
+    const garden = await db.gardens.get(gardenId);
+    if (!garden || garden.deletedAt !== null) throw new RecordNotFoundError('garden', gardenId);
+    await checkSpecimenInGarden(garden.id, input.specimenId);
+    return addSchedule(garden, input, todayIn(garden.timezone, now), now);
+  });
+}
+
+/** Changes the whole series from today: a new version, so past occurrences keep their identity. */
+export async function updateSchedule(
+  id: string,
+  baseVersion: number,
+  patch: Partial<Pick<CareSchedule, 'rule' | 'title' | 'pausedUntil'>>,
+  now = Date.now(),
+): Promise<CareSchedule> {
+  return writeTx([db.careSchedules, db.gardens], async () => {
+    const cur = assertUpdatable(await db.careSchedules.get(id), 'careSchedule', id, baseVersion);
+    const garden = await db.gardens.get(cur.gardenId);
+    const today = todayIn(garden?.timezone ?? 'UTC', now);
+    const ruleChanged = patch.rule !== undefined;
+    const next = CareScheduleSchema.parse({
+      ...cur,
+      ...patch,
+      origin: ruleChanged ? 'user' : cur.origin,
+      effectiveFrom: ruleChanged ? today : cur.effectiveFrom,
+      version: cur.version + 1,
+      updatedAt: now,
+    });
+    await db.careSchedules.put(next);
+    await enqueue(cur.workspaceId, 'careSchedule.update', id, patch, baseVersion, now);
+    return next;
+  });
+}
+
+export async function deleteSchedule(id: string, baseVersion: number, now = Date.now()): Promise<void> {
+  await writeTx([db.careSchedules], async () => {
+    const cur = assertUpdatable(await db.careSchedules.get(id), 'careSchedule', id, baseVersion);
+    await db.careSchedules.put({ ...cur, deletedAt: now, updatedAt: now, version: cur.version + 1 });
+    await enqueue(cur.workspaceId, 'careSchedule.delete', id, null, baseVersion, now);
+  });
+}
+
+/** A planned plant goes in: it becomes active with its planting date and gets its default schedules. */
+export async function markPlanted(
+  specimenId: string,
+  baseVersion: number,
+  plantedOn: string,
+  schedules: readonly ScheduleDraft[],
+  now = Date.now(),
+): Promise<Specimen> {
+  return writeTx([db.specimens, db.careSchedules, db.gardens], async () => {
+    const cur = assertUpdatable(await db.specimens.get(specimenId), 'specimen', specimenId, baseVersion);
+    const garden = await db.gardens.get(cur.gardenId);
+    if (!garden || garden.deletedAt !== null) throw new RecordNotFoundError('garden', cur.gardenId);
+    const next = SpecimenSchema.parse({
+      ...cur,
+      status: 'active',
+      plantedOn,
+      version: cur.version + 1,
+      updatedAt: now,
+    });
+    await db.specimens.put(next);
+    await enqueue(
+      cur.workspaceId,
+      'specimen.update',
+      cur.id,
+      { status: 'active', plantedOn },
+      baseVersion,
+      now,
+    );
+    const today = todayIn(garden.timezone, now);
+    for (const d of schedules) {
+      const { byWeekday, ...rule } = d.rule;
+      await addSchedule(
+        garden,
+        {
+          specimenId: cur.id,
+          zoneId: cur.zoneId,
+          kind: d.kind,
+          title: '',
+          rule: { ...rule, ...(byWeekday ? { byWeekday: [...byWeekday] } : {}) },
+          origin: 'engine',
+        },
+        today,
+        now,
+      );
+    }
+    return next;
+  });
+}
+
+export interface TaskInput {
+  gardenId: string;
+  occurrenceKey: string;
+  scheduleId: string | null;
+  specimenId: string | null;
+  kind: TaskLog['kind'];
+  action: TaskLog['action'];
+  /** When the occurrence was due; seeds the idempotent id. */
+  dueAt: number;
+  reason?: TaskLog['reason'];
+  snoozeUntil?: number | null;
+  check?: TaskLog['check'];
+  /** For "done" on watering tasks: the amount actually given (not an estimate). */
+  water?: { amountMl: number | null; source: WaterSource | null };
+  /** For soil checks: what the engine predicted, so the pot's water factor can learn (§6.4). */
+  predicted?: 'dry' | 'moist' | null;
+}
+
+const CARE_KIND_OF: Partial<Record<TaskLog['kind'], CareKind>> = {
+  water: 'water',
+  'check-water': 'water',
+  feed: 'feed',
+  prune: 'prune',
+  'pest-check': 'pest-check',
+};
+
+/**
+ * Records what happened to a task occurrence. "Done" and "checked" are idempotent per occurrence:
+ * a double tap or an offline replay returns the existing record instead of logging care twice.
+ */
+export async function logTask(input: TaskInput, now = Date.now()): Promise<TaskLog> {
+  return writeTx([db.taskLogs, db.careEvents, db.gardens, db.specimens, db.containers], async () => {
+    const garden = await db.gardens.get(input.gardenId);
+    if (!garden || garden.deletedAt !== null) throw new RecordNotFoundError('garden', input.gardenId);
+    await checkSpecimenInGarden(garden.id, input.specimenId);
+    const final = input.action === 'done' || input.action === 'checked';
+    const id = final
+      ? deterministicId(input.dueAt, `task:${input.action}:${input.occurrenceKey}`)
+      : newId(now);
+    if (final) {
+      const existing = await db.taskLogs.get(id);
+      if (existing && existing.deletedAt === null) return existing;
+    }
+    const occurredOn = todayIn(garden.timezone, now);
+    let careEventId: string | null = null;
+    const careKind = CARE_KIND_OF[input.kind];
+    if (input.action === 'done' && careKind) {
+      const isWater = careKind === 'water';
+      const ev = CareEventSchema.parse({
+        id: newId(now),
+        opId: newId(now),
+        workspaceId: garden.workspaceId,
+        gardenId: garden.id,
+        specimenId: input.specimenId,
+        kind: careKind,
+        amountMl: isWater ? (input.water?.amountMl ?? null) : null,
+        waterSource: isWater ? (input.water?.source ?? null) : null,
+        occurrenceKey: input.occurrenceKey,
+        notes: '',
+        mediaIds: [],
+        occurredAt: now,
+        occurredOn,
+        dateUncertain: false,
+        createdAt: now,
+        deletedAt: null,
+        source: null,
+      });
+      await db.careEvents.add(ev);
+      await enqueue(garden.workspaceId, 'careEvent.create', ev.id, ev, null, now, ev.opId);
+      careEventId = ev.id;
+    }
+    const log = TaskLogSchema.parse({
+      id,
+      opId: newId(now),
+      workspaceId: garden.workspaceId,
+      gardenId: garden.id,
+      occurrenceKey: input.occurrenceKey,
+      scheduleId: input.scheduleId,
+      specimenId: input.specimenId,
+      kind: input.kind,
+      action: input.action,
+      at: now,
+      occurredOn,
+      snoozeUntil: input.action === 'snoozed' ? (input.snoozeUntil ?? null) : null,
+      reason: input.action === 'skipped' ? (input.reason ?? 'other') : null,
+      check: input.check ?? null,
+      careEventId,
+      createdAt: now,
+      deletedAt: null,
+    });
+    await db.taskLogs.add(log);
+    await enqueue(garden.workspaceId, 'taskLog.create', log.id, log, null, now, log.opId);
+
+    // Learn from the check: a pot that was wetter or drier than predicted adjusts its water factor.
+    const soil = input.check?.soil ?? null;
+    if (input.action === 'checked' && soil && input.predicted && input.specimenId) {
+      const sp = await db.specimens.get(input.specimenId);
+      const container = sp?.containerId ? await db.containers.get(sp.containerId) : undefined;
+      if (container && container.deletedAt === null) {
+        const factor = recalibrate(container.waterFactor ?? 1, input.predicted, soil);
+        if (factor !== container.waterFactor) {
+          const next = ContainerSchema.parse({
+            ...container,
+            waterFactor: factor,
+            version: container.version + 1,
+            updatedAt: now,
+          });
+          await db.containers.put(next);
+          await enqueue(
+            container.workspaceId,
+            'container.update',
+            container.id,
+            { waterFactor: factor },
+            container.version,
+            now,
+          );
+        }
+      }
+    }
+    return log;
+  });
+}
+
+/** Undo for a task action: voids the log and any care event it created (append-only, never deleted). */
+export async function voidTask(id: string, now = Date.now()): Promise<void> {
+  await writeTx([db.taskLogs, db.careEvents], async () => {
+    const log = await db.taskLogs.get(id);
+    if (!log || log.deletedAt !== null) return;
+    await db.taskLogs.put({ ...log, deletedAt: now });
+    await enqueue(log.workspaceId, 'taskLog.void', id, null, null, now);
+    if (log.careEventId) {
+      const ev = await db.careEvents.get(log.careEventId);
+      if (ev && ev.deletedAt === null) {
+        await db.careEvents.put({ ...ev, deletedAt: now });
+        await enqueue(ev.workspaceId, 'careEvent.void', ev.id, null, null, now);
+      }
+    }
   });
 }
 

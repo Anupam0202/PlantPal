@@ -1,3 +1,5 @@
+import { monthlyExtremes } from './season';
+
 /**
  * Climate computations on daily series (S7). Every result states its period, method and coverage.
  * Inputs come from reanalysis (Open-Meteo Historical, ERA5) or CMIP6 HighResMIP (Open-Meteo Climate).
@@ -353,6 +355,9 @@ export interface ClimateSummary {
   hotSummers: boolean | null;
   koppen: string | null;
   normals: Normals;
+  /** 90th percentile of daily maximum and 10th percentile of daily minimum, by month (heat and frost context). */
+  tmaxP90ByMonth: Array<number | null>;
+  tminP10ByMonth: Array<number | null>;
 }
 
 export const HOT_DAY_C = 35;
@@ -404,6 +409,7 @@ export function climateSummary(
     if (!frost.lastSpring || !frost.firstAutumn) seasonDays = 365;
     else seasonDays = (dayOfYear(frost.firstAutumn.p50) - dayOfYear(frost.lastSpring.p50) + 365) % 365;
   }
+  const extremes = monthlyExtremes(inRange.dates, inRange.tmax, inRange.tmin);
   const tmaxKnown = inRange.tmax.filter((v): v is number => v != null);
   const hotDaysPerYear =
     normals.years > 0 && tmaxKnown.length > 0
@@ -421,5 +427,7 @@ export function climateSummary(
     hotSummers: hotDaysPerYear === null ? null : hotDaysPerYear >= HOT_SUMMER_DAYS,
     koppen: normals.years >= 10 && normals.coverage >= 0.8 ? koppen(normals.months, hemisphere) : null,
     normals,
+    tmaxP90ByMonth: extremes.tmaxP90,
+    tminP10ByMonth: extremes.tminP10,
   };
 }

@@ -223,6 +223,7 @@ function Seed() {
     () =>
       zones.map((z) =>
         contextOf({
+          normals: measured?.months ?? null,
           lat: base?.lat ?? (hemisphere === 'south' ? -30 : null),
           region,
           profile,

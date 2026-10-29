@@ -92,14 +92,9 @@ export function ForecastStrip({ q }: { q: Q<Forecast> }) {
     <Card padding="md">
       <CardHead title={t.env.next7} q={q} />
       {d ? (
-        // Scrollable on small screens, so it must be reachable by keyboard.
-        <div
-          tabIndex={0}
-          role="region"
-          aria-label={t.env.next7}
-          className="-mx-1 overflow-x-auto rounded-md pb-1 focus-visible:outline-2 focus-visible:outline-focus"
-        >
-          <ol className="flex snap-x gap-1">
+        // Seven equal columns that always fit: no sideways scrolling on phones.
+        <div>
+          <ol className="grid grid-cols-7 gap-0.5 sm:gap-1">
             {d.date.map((day, i) => {
               const kind = weatherKind(d.weatherCode[i]);
               const label =
@@ -112,9 +107,9 @@ export function ForecastStrip({ q }: { q: Q<Forecast> }) {
               return (
                 <li
                   key={day}
-                  className="flex min-w-18 snap-start flex-col items-center gap-1 rounded-md px-2 py-2 text-center"
+                  className="flex min-w-0 flex-col items-center gap-1 rounded-md px-0.5 py-2 text-center"
                 >
-                  <span className="text-caption font-medium text-muted">{label}</span>
+                  <span className="max-w-full truncate text-caption font-medium text-muted">{label}</span>
                   <span className="text-accent-ink">
                     <WeatherIcon kind={kind} className="size-6" />
                   </span>

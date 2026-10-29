@@ -17,6 +17,7 @@ import { Page } from '../app/Page';
 import { getMigrationState } from '../data/legacy/run';
 import { hasLegacyData } from '../data/legacy/storage';
 import { useActiveGarden, useRecordCounts, useSpecimens, useTimeline } from '../data/queries';
+import { CareCockpit } from '../features/care/Cockpit';
 import { NextSteps } from '../features/garden/NextSteps';
 import { Timeline } from '../features/garden/Timeline';
 import {
@@ -122,17 +123,14 @@ function TodayPage() {
       />
       <div className="mt-6 flex flex-col gap-6">
         <MigrationBanner />
-        <NextSteps garden={garden} />
         {coords ? (
-          <>
-            <LivingSky garden={garden} forecast={forecast.data}>
-              <NowDetails q={forecast} />
-            </LivingSky>
-            <ForecastStrip q={forecast} />
-          </>
-        ) : (
-          <NoLocation />
-        )}
+          <LivingSky garden={garden} forecast={forecast.data}>
+            <NowDetails q={forecast} />
+          </LivingSky>
+        ) : null}
+        <CareCockpit garden={garden} />
+        <NextSteps garden={garden} />
+        {coords ? <ForecastStrip q={forecast} /> : <NoLocation />}
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <Card padding="lg">
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -157,9 +155,6 @@ function TodayPage() {
           </div>
         </div>
         {coords && <PlaceCard lat={coords.lat} lon={coords.lon} elevation={elevation} solar={solar} />}
-        <Card padding="md" variant="sunken">
-          <p className="text-body-s text-muted">{t.today.nextSteps}</p>
-        </Card>
       </div>
     </Page>
   );

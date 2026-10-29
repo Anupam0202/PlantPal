@@ -345,3 +345,14 @@ describe('ranking and set builder', () => {
     expect(d.directHours).toBeGreaterThan(15);
   });
 });
+
+describe('E7 with local sowing windows', () => {
+  it('uses climatology windows and says when no month is ideal', () => {
+    const c = ctx({ month: 9, sowWindows: { warm: [5, 6, 7], cool: [] } });
+    const lettuce = evaluate(T('lactuca-sativa'), c);
+    expect(lettuce.status).toBe('ELIGIBLE');
+    expect(lettuce.findings.find((f) => f.rule === 'E7')?.code).toBe('noIdealWindow');
+    const basil = evaluate(T('ocimum-basilicum'), c);
+    expect(basil.timing).toEqual({ sowNow: false, nextMonth: 5 });
+  });
+});

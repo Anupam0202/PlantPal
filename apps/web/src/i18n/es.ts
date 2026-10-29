@@ -610,6 +610,8 @@ export const es: Messages = {
       drafts: 'Borradores privados',
       plans: 'Planes',
       planItems: 'Opciones del plan',
+      careSchedules: 'Calendarios de cuidado',
+      taskLogs: 'Historial de tareas',
     },
   },
   migrate: {

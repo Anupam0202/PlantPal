@@ -2,6 +2,7 @@ import { SEED_PACK, sourceById, taxonById } from '@plantpal/catalog';
 import {
   manualClimate,
   rankCandidates,
+  sowWindows,
   type Candidate,
   type ClimateFacts,
   type EligibilityContext,
@@ -57,6 +58,8 @@ export function climateFactsOf(
 }
 
 export interface PlanInputs {
+  /** Local monthly normals, when measured: sowing windows come from them (§6.15). */
+  normals?: ClimateProfile['months'] | null;
   lat: number | null;
   region: Garden['region'];
   profile: GardenProfile | null;
@@ -77,6 +80,7 @@ export function contextOf(i: PlanInputs): EligibilityContext {
     goals: i.profile?.goals ?? [],
     containerMarginC: 5,
     month: i.month,
+    sowWindows: i.normals ? sowWindows(i.normals) : null,
   };
 }
 

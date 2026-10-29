@@ -145,7 +145,7 @@ describe('Dexie upgrade to v3', () => {
 
     const upgraded = createDb(name);
     await upgraded.open();
-    expect(upgraded.verno).toBe(3);
+    expect(upgraded.verno).toBeGreaterThanOrEqual(3);
     expect((await upgraded.gardens.get('g1'))?.name).toBe('Old garden');
     expect(await upgraded.plans.count()).toBe(0);
     upgraded.close();

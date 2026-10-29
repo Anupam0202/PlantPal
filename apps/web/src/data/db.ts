@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type {
   CareEvent,
+  CareSchedule,
   Container,
   Draft,
   Garden,
@@ -13,12 +14,13 @@ import type {
   PlanItem,
   SoilTest,
   Specimen,
+  TaskLog,
   Workspace,
   Zone,
 } from '@plantpal/schemas';
 
 /** Bumped with every Dexie schema change; sent with outbox ops so the server knows the client shape. */
-export const CLIENT_SCHEMA = 3;
+export const CLIENT_SCHEMA = 4;
 
 export interface MediaBlob {
   id: string;
@@ -59,6 +61,8 @@ export type PlantPalDB = Dexie & {
   facts: EntityTable<FactRow, 'key'>;
   plans: EntityTable<Plan, 'id'>;
   planItems: EntityTable<PlanItem, 'id'>;
+  careSchedules: EntityTable<CareSchedule, 'id'>;
+  taskLogs: EntityTable<TaskLog, 'id'>;
 };
 
 /** Schema version 1 (M2). Kept verbatim so upgrades are tested from the real previous shape. */
@@ -93,6 +97,11 @@ export function createDb(name = 'plantpal'): PlantPalDB {
     plans: 'id, gardenId, workspaceId',
     planItems: 'id, planId, gardenId, workspaceId, taxonId',
   });
+  // v4 (M5): care schedules and the append-only task history.
+  db.version(4).stores({
+    careSchedules: 'id, gardenId, specimenId, workspaceId',
+    taskLogs: 'id, &opId, gardenId, specimenId, occurrenceKey, at, workspaceId',
+  });
   return db;
 }
 
@@ -114,6 +123,8 @@ export const RECORD_TABLES = [
   'drafts',
   'plans',
   'planItems',
+  'careSchedules',
+  'taskLogs',
 ] as const;
 export type RecordTable = (typeof RECORD_TABLES)[number];
 

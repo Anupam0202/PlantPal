@@ -25,6 +25,7 @@ import {
   useZones,
   useMedia,
 } from '../../../data/queries';
+import { CarePanel } from '../../../features/care/CarePanel';
 import { reportError } from '../../../features/garden/errors';
 import { useLocalDayLabel } from '../../../features/garden/format';
 import { MediaThumb } from '../../../features/garden/Media';
@@ -172,6 +173,7 @@ function PlantPage() {
               <p className="mt-3 text-body-s whitespace-pre-line text-ink">{specimen.notes}</p>
             )}
           </Card>
+          <CarePanel specimen={specimen} garden={garden} />
         </div>
         <Section title={t.plant.timeline} headingLevel={2}>
           {items && items.length === 0 ? (

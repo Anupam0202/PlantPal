@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import {
   AirQuality,
   ClimateProfile,
+  ClimateProjection,
   Elevation,
   Forecast,
   PlaceSearch,
@@ -74,6 +75,12 @@ const climateRoute = envRoute(
   'Local climate profile: hardiness, frost dates, season length, heat days, normals (ERA5, last 10 years)',
   Coords,
   ClimateProfile,
+);
+const projectionRoute = envRoute(
+  '/api/v1/env/projection',
+  'Climate model change 2031–2050 vs 1991–2014, per model against its own baseline (CMIP6 HighResMIP)',
+  Coords,
+  ClimateProjection,
 );
 const placesRoute = envRoute(
   '/api/v1/env/places',
@@ -207,6 +214,14 @@ export function createApp(deps: AppDeps) {
     const { lat, lon } = c.req.valid('query');
     try {
       return send(c, await deps.env.climateProfile(lat, lon, c.req.raw.signal), 7 * 86_400);
+    } catch (e) {
+      return providerProblem(c, e) as never;
+    }
+  });
+  app.openapi(projectionRoute, async (c) => {
+    const { lat, lon } = c.req.valid('query');
+    try {
+      return send(c, await deps.env.climateProjection(lat, lon, c.req.raw.signal), 30 * 86_400);
     } catch (e) {
       return providerProblem(c, e) as never;
     }

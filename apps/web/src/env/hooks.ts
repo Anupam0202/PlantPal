@@ -72,6 +72,17 @@ export function useClimateProfile(c: Coords | null) {
   });
 }
 
+/** Climate model change; only fetched on request because the download is large (~3 MB). */
+export function useClimateProjection(c: Coords | null, enabled: boolean) {
+  return useQuery({
+    queryKey: key('projection', c, 0.1),
+    queryFn: ({ signal }) => getEnvSource().climateProjection(c!.lat, c!.lon, signal),
+    enabled: c !== null && enabled,
+    staleTime: Number.POSITIVE_INFINITY,
+    ...common,
+  });
+}
+
 export function usePlaceSearch(query: string, lang: string) {
   const [debounced, setDebounced] = useState(query);
   useEffect(() => {

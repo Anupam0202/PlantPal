@@ -608,6 +608,8 @@ export const en = {
       drafts: 'Private drafts',
       plans: 'Plans',
       planItems: 'Plan choices',
+      careSchedules: 'Care schedules',
+      taskLogs: 'Task history',
     },
   },
   migrate: {

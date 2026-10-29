@@ -13,7 +13,15 @@ function todayIn(tz: string): string {
 }
 
 /** Answers provider requests with fixtures shaped like the real APIs, and records what was sent. */
-export async function mockProviders(page: Page, opts: { airDown?: boolean; allDown?: boolean } = {}) {
+export async function mockProviders(
+  page: Page,
+  opts: {
+    airDown?: boolean;
+    allDown?: boolean;
+    /** Edit the forecast before it is served (e.g. a frosty night). */
+    patchForecast?: (f: ReturnType<typeof fixtures.forecastFixture>) => void;
+  } = {},
+) {
   const sent: string[] = [];
   const state = { airDown: opts.airDown ?? false };
   if (opts.allDown) {
@@ -39,14 +47,14 @@ export async function mockProviders(page: Page, opts: { airDown?: boolean; allDo
   await page.route('https://api.open-meteo.com/v1/forecast**', (route) => {
     const url = new URL(route.request().url());
     const south = Number(url.searchParams.get('latitude')) < 0;
-    return reply(
-      fixtures.forecastFixture({
-        start: todayIn(south ? 'Australia/Sydney' : 'Asia/Kolkata'),
-        currentHour: new Date().getUTCHours(),
-        timezone: south ? 'Australia/Sydney' : 'Asia/Kolkata',
-        utcOffsetSeconds: south ? 39600 : 19800,
-      }),
-    )(route);
+    const body = fixtures.forecastFixture({
+      start: todayIn(south ? 'Australia/Sydney' : 'Asia/Kolkata'),
+      currentHour: new Date().getUTCHours(),
+      timezone: south ? 'Australia/Sydney' : 'Asia/Kolkata',
+      utcOffsetSeconds: south ? 39600 : 19800,
+    });
+    opts.patchForecast?.(body);
+    return reply(body)(route);
   });
   await page.route('https://api.open-meteo.com/v1/elevation**', reply(fixtures.elevationFixture(559)));
   await page.route('https://air-quality-api.open-meteo.com/**', (route) => {
@@ -55,6 +63,13 @@ export async function mockProviders(page: Page, opts: { airDown?: boolean; allDo
     return route.fulfill({ status: 200, headers: cors, body: JSON.stringify(fixtures.airFixture()) });
   });
   await page.route('https://power.larc.nasa.gov/**', reply(fixtures.solarFixture()));
+  await page.route('https://climate-api.open-meteo.com/**', (route) => {
+    const url = new URL(route.request().url());
+    const from = Number(url.searchParams.get('start_date')?.slice(0, 4));
+    const to = Number(url.searchParams.get('end_date')?.slice(0, 4));
+    const models = (url.searchParams.get('models') ?? '').split(',').filter(Boolean);
+    return reply(fixtures.dailyFixture({ from, to, models, mean: from >= 2031 ? 16.3 : 15 }))(route);
+  });
   await page.route('https://archive-api.open-meteo.com/**', (route) => {
     const url = new URL(route.request().url());
     const from = Number(url.searchParams.get('start_date')?.slice(0, 4));

@@ -604,6 +604,8 @@ export const hi: Messages = {
       drafts: 'निजी ड्राफ़्ट',
       plans: 'योजनाएँ',
       planItems: 'योजना के विकल्प',
+      careSchedules: 'देखभाल कार्यक्रम',
+      taskLogs: 'कार्य इतिहास',
     },
   },
   migrate: {

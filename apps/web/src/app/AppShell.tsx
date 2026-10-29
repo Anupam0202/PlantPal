@@ -254,8 +254,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Toaster
         position="bottom-center"
         offset={88}
+        mobileOffset={{ bottom: 88 }}
         toastOptions={{
           className: '!rounded-lg !border !border-line !bg-raised !text-ink !shadow-3 !font-sans',
+          classNames: {
+            // Sonner's default action button colours do not meet contrast on our surfaces.
+            actionButton: '!bg-accent !text-on-accent !font-medium',
+            cancelButton: '!bg-sunken !text-ink',
+          },
         }}
       />
     </>

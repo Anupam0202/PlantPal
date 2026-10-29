@@ -132,4 +132,43 @@ describe('EnvClient', () => {
     expect(p.seasonDays).toBe(365);
     expect(p.hardinessZone).not.toBeNull();
   });
+
+  it('climate projection compares each model with its own baseline from two fetches (L08)', async () => {
+    const f = vi
+      .fn<typeof fetch>()
+      .mockImplementationOnce(async () =>
+        ok(fixtures.dailyFixture({ from: 1991, to: 2014, models: ['MRI_AGCM3_2_S', 'EC_Earth3P_HR'] })),
+      )
+      .mockImplementationOnce(async () =>
+        ok(
+          fixtures.dailyFixture({
+            from: 2031,
+            to: 2050,
+            models: ['MRI_AGCM3_2_S', 'EC_Earth3P_HR'],
+            mean: 16.5,
+          }),
+        ),
+      );
+    const { client } = setup(f);
+    const p = await client.climateProjection(18.52, 73.86);
+    expect(f).toHaveBeenCalledTimes(2);
+    expect(String(f.mock.calls[0]?.[0])).toContain('start_date=1991-01-01');
+    expect(String(f.mock.calls[1]?.[0])).toContain('end_date=2050-12-31');
+    expect(p.baseline).toBe('1991–2014');
+    expect(p.future).toBe('2031–2050');
+    expect(p.models).toEqual(['MRI_AGCM3_2_S', 'EC_Earth3P_HR']);
+    expect(p.dTmeanC?.median).toBeCloseTo(1.5, 1);
+    expect(p.note).toMatch(/no emission scenario/);
+  });
+
+  it('climate profile carries monthly heat and cold extremes', async () => {
+    const client = new EnvClient({
+      mode: 'mock',
+      cache: new MemoryCache(),
+      now: () => Date.parse('2026-10-28T09:00:00Z'),
+    });
+    const p = await client.climateProfile(51.5, -0.1);
+    expect(p.tmaxP90ByMonth).toHaveLength(12);
+    expect(p.tmaxP90ByMonth?.every((x) => typeof x === 'number')).toBe(true);
+  });
 });
