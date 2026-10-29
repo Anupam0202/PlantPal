@@ -178,7 +178,7 @@ test('nature nearby sends only a rounded point and says records reflect effort',
   await expect(page.getByTestId('nearby-insects')).toContainText('Asian honey bee');
   await expect(page.getByTestId('nearby-insects')).not.toContainText('Apidae');
   await expect(page.getByTestId('nearby-gbif')).toContainText('Only openly licensed records');
-  const inat = sent.filter((u) => u.includes('api.inaturalist.org'));
+  const inat = sent.filter((u) => new URL(u).host === 'api.inaturalist.org');
   expect(inat.length).toBeGreaterThan(0);
   for (const u of inat) {
     const q = new URL(u).searchParams;
@@ -186,6 +186,12 @@ test('nature nearby sends only a rounded point and says records reflect effort',
     expect(q.get('lng')).toMatch(/^-?\d+(\.\d{1,2})?$/);
   }
   await page.getByRole('button', { name: '5 km' }).click();
-  await expect.poll(() => sent.some((u) => u.includes('radius=5'))).toBe(true);
+  await expect
+    .poll(() =>
+      sent.some(
+        (u) => new URL(u).host === 'api.inaturalist.org' && new URL(u).searchParams.get('radius') === '5',
+      ),
+    )
+    .toBe(true);
   await expectNoA11yViolations(page);
 });

@@ -63,7 +63,7 @@ describe('neighbourhood nature (§6.10, S8)', () => {
     const f = vi.fn(async (url: string | URL | Request) => {
       const u = String(url);
       return ok(
-        u.includes('inaturalist')
+        new URL(u).host === 'api.inaturalist.org'
           ? fixtures.inatSpeciesCountsFixture('birds')
           : fixtures.gbifNearbyFixtureFor('plants'),
       );
