@@ -77,6 +77,12 @@ export function GardenForm({
               }
             : null,
         notes,
+        // Country from place search drives regional rules (invasive lists); keep the old one otherwise.
+        ...(location?.countryCode
+          ? { region: { countryCode: location.countryCode, admin1: location.admin1 ?? null, l3: null } }
+          : location === null
+            ? { region: null }
+            : {}),
       });
     } finally {
       setBusy(false);

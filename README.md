@@ -33,7 +33,8 @@ PlantPal is being rebuilt as v4 ("Living Field Guide") milestone by milestone. S
 | M1        | Monorepo, design system, accessible app shell, PWA, strict CSP, CI                      | Done    |
 | M2        | Local-first garden data, journal, photos, export/import, migration from v3              | Done    |
 | M3        | Environmental data with provenance, API Worker, Living Sky, location                    | Done    |
-| M4–M5     | Plant catalogue and matching, care schedules and alerts                                 | Next    |
+| M4        | Plant catalogue, Sun Hours Finder, eligibility engine, Seed onboarding, plans           | Done    |
+| M5        | Care schedules, Today cockpit, alerts, Climate Fit                                      | Next    |
 | M6–M9     | Bring-your-own-key AI, plant health, identification, space designer, nature log, impact | Planned |
 | M10–M12   | Optional accounts and sync, shared gardens, community, release hardening                | Planned |
 

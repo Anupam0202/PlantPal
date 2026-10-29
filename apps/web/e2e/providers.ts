@@ -13,9 +13,24 @@ function todayIn(tz: string): string {
 }
 
 /** Answers provider requests with fixtures shaped like the real APIs, and records what was sent. */
-export async function mockProviders(page: Page, opts: { airDown?: boolean } = {}) {
+export async function mockProviders(page: Page, opts: { airDown?: boolean; allDown?: boolean } = {}) {
   const sent: string[] = [];
   const state = { airDown: opts.airDown ?? false };
+  if (opts.allDown) {
+    // Every provider host answers 503: the app must still work through manual answers.
+    for (const host of [
+      'https://geocoding-api.open-meteo.com/**',
+      'https://api.open-meteo.com/**',
+      'https://air-quality-api.open-meteo.com/**',
+      'https://archive-api.open-meteo.com/**',
+      'https://power.larc.nasa.gov/**',
+    ])
+      await page.route(host, (route) => {
+        sent.push(route.request().url());
+        return route.fulfill({ status: 503, headers: cors, body: '{}' });
+      });
+    return { sent, state };
+  }
   const reply = (body: unknown) => (route: Route) => {
     sent.push(route.request().url());
     return route.fulfill({ status: 200, headers: cors, body: JSON.stringify(body) });
@@ -40,6 +55,13 @@ export async function mockProviders(page: Page, opts: { airDown?: boolean } = {}
     return route.fulfill({ status: 200, headers: cors, body: JSON.stringify(fixtures.airFixture()) });
   });
   await page.route('https://power.larc.nasa.gov/**', reply(fixtures.solarFixture()));
+  await page.route('https://archive-api.open-meteo.com/**', (route) => {
+    const url = new URL(route.request().url());
+    const from = Number(url.searchParams.get('start_date')?.slice(0, 4));
+    const to = Number(url.searchParams.get('end_date')?.slice(0, 4));
+    // A warm, frost-free series (Pune-like), enough years for hardiness and frost statistics.
+    return reply(fixtures.dailyFixture({ from, to, mean: 25, amplitude: 4, diurnal: 7 }))(route);
+  });
   return { sent, state };
 }
 

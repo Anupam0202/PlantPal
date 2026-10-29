@@ -17,6 +17,7 @@ import { Page } from '../app/Page';
 import { getMigrationState } from '../data/legacy/run';
 import { hasLegacyData } from '../data/legacy/storage';
 import { useActiveGarden, useRecordCounts, useSpecimens, useTimeline } from '../data/queries';
+import { NextSteps } from '../features/garden/NextSteps';
 import { Timeline } from '../features/garden/Timeline';
 import {
   AirCard,
@@ -94,7 +95,7 @@ function TodayPage() {
           description={t.today.emptyBody}
           action={
             <div className="flex flex-wrap justify-center gap-3">
-              <Link to="/garden/new" className={buttonClasses('primary', 'lg')}>
+              <Link to="/welcome" className={buttonClasses('primary', 'lg')}>
                 {t.today.emptyAction}
               </Link>
               <Link to="/settings/data" className={buttonClasses('secondary', 'lg')}>
@@ -121,6 +122,7 @@ function TodayPage() {
       />
       <div className="mt-6 flex flex-col gap-6">
         <MigrationBanner />
+        <NextSteps garden={garden} />
         {coords ? (
           <>
             <LivingSky garden={garden} forecast={forecast.data}>

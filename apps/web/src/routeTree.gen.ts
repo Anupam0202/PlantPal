@@ -21,6 +21,7 @@ import { Route as GardenNewRouteImport } from './routes/garden/new'
 import { Route as GardenSpacesRouteImport } from './routes/garden/spaces'
 import { Route as NatureIndexRouteImport } from './routes/nature/index'
 import { Route as PlanIndexRouteImport } from './routes/plan/index'
+import { Route as PlanSunRouteImport } from './routes/plan/sun'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsDataRouteImport } from './routes/settings/data'
 import { Route as SettingsMigrateRouteImport } from './routes/settings/migrate'
@@ -88,6 +89,11 @@ const PlanIndexRoute = PlanIndexRouteImport.update({
   path: '/plan/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanSunRoute = PlanSunRouteImport.update({
+  id: '/plan/sun',
+  path: '/plan/sun',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/garden/journal': typeof GardenJournalRoute
   '/garden/new': typeof GardenNewRoute
   '/garden/spaces': typeof GardenSpacesRoute
+  '/plan/sun': typeof PlanSunRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
   '/settings/sources': typeof SettingsSourcesRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/garden/journal': typeof GardenJournalRoute
   '/garden/new': typeof GardenNewRoute
   '/garden/spaces': typeof GardenSpacesRoute
+  '/plan/sun': typeof PlanSunRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
   '/settings/sources': typeof SettingsSourcesRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/garden/journal': typeof GardenJournalRoute
   '/garden/new': typeof GardenNewRoute
   '/garden/spaces': typeof GardenSpacesRoute
+  '/plan/sun': typeof PlanSunRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
   '/settings/sources': typeof SettingsSourcesRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/garden/journal'
     | '/garden/new'
     | '/garden/spaces'
+    | '/plan/sun'
     | '/settings/data'
     | '/settings/migrate'
     | '/settings/sources'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/garden/journal'
     | '/garden/new'
     | '/garden/spaces'
+    | '/plan/sun'
     | '/settings/data'
     | '/settings/migrate'
     | '/settings/sources'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/garden/journal'
     | '/garden/new'
     | '/garden/spaces'
+    | '/plan/sun'
     | '/settings/data'
     | '/settings/migrate'
     | '/settings/sources'
@@ -252,6 +264,7 @@ export interface RootRouteChildren {
   GardenJournalRoute: typeof GardenJournalRoute
   GardenNewRoute: typeof GardenNewRoute
   GardenSpacesRoute: typeof GardenSpacesRoute
+  PlanSunRoute: typeof PlanSunRoute
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsMigrateRoute: typeof SettingsMigrateRoute
   SettingsSourcesRoute: typeof SettingsSourcesRoute
@@ -350,6 +363,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlanIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plan/sun': {
+      id: '/plan/sun'
+      path: '/plan/sun'
+      fullPath: '/plan/sun'
+      preLoaderRoute: typeof PlanSunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/': {
       id: '/settings/'
       path: '/settings'
@@ -404,6 +424,7 @@ const rootRouteChildren: RootRouteChildren = {
   GardenJournalRoute: GardenJournalRoute,
   GardenNewRoute: GardenNewRoute,
   GardenSpacesRoute: GardenSpacesRoute,
+  PlanSunRoute: PlanSunRoute,
   SettingsDataRoute: SettingsDataRoute,
   SettingsMigrateRoute: SettingsMigrateRoute,
   SettingsSourcesRoute: SettingsSourcesRoute,

@@ -12,7 +12,10 @@ export function NoGarden() {
       description={t.garden.noGardenBody}
       action={
         <div className="flex flex-wrap justify-center gap-3">
-          <Link to="/garden/new" className={buttonClasses('primary', 'lg')}>
+          <Link to="/welcome" className={buttonClasses('primary', 'lg')}>
+            {t.today.emptyAction}
+          </Link>
+          <Link to="/garden/new" className={buttonClasses('secondary', 'lg')}>
             {t.garden.createGarden}
           </Link>
           <Link to="/settings/data" className={buttonClasses('secondary', 'lg')}>

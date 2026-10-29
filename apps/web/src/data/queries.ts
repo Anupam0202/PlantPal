@@ -8,6 +8,8 @@ import type {
   LegacyAchievements,
   Media,
   Observation,
+  Plan,
+  PlanItem,
   Specimen,
   Zone,
 } from '@plantpal/schemas';
@@ -234,4 +236,25 @@ export function useRecordCounts(gardenId: string | undefined) {
       total: specimens.length,
     };
   }, [gardenId]);
+}
+
+/** Saved plans for a garden, newest first. */
+export function usePlans(gardenId: string | undefined): Plan[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? (await db.plans.where('gardenId').equals(gardenId).toArray())
+            .filter(alive)
+            .sort((a, b) => b.createdAt - a.createdAt)
+        : [],
+    [gardenId],
+  );
+}
+
+export function usePlanItems(gardenId: string | undefined): PlanItem[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId ? (await db.planItems.where('gardenId').equals(gardenId).toArray()).filter(alive) : [],
+    [gardenId],
+  );
 }

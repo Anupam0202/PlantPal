@@ -45,6 +45,7 @@ test('L06/L07: one failing source shows its own state and can be retried without
   const { state } = await mockProviders(page, { airDown: true });
   await createGardenAt(page, 'Pune', 'Pune');
   await page.getByRole('button', { name: 'Create a garden' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Balcony' })).toBeVisible();
   await page.goto('/today');
   await expect(page.getByRole('region', { name: 'Outside now' }).getByText('Up to date')).toBeVisible();
   const airHeading = page.getByRole('heading', { name: 'Air quality' });
@@ -61,6 +62,8 @@ test('L12: southern-hemisphere places are formatted and treated correctly', asyn
   await expect(page.getByText('33.87° S, 151.21° E')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Southern', pressed: true })).toBeVisible();
   await page.getByRole('button', { name: 'Create a garden' }).click();
+  // Wait for the save to finish before navigating away.
+  await expect(page.getByRole('heading', { level: 1, name: 'Balcony' })).toBeVisible();
   await page.goto('/garden/edit');
   await expect(page.getByText('Australia/Sydney')).toBeVisible();
 });
@@ -71,6 +74,7 @@ test('the data sources page reports provider health, and weather pages pass acce
   await mockProviders(page);
   await createGardenAt(page, 'Pune', 'Pune');
   await page.getByRole('button', { name: 'Create a garden' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Balcony' })).toBeVisible();
   await page.goto('/today');
   await expect(page.getByRole('region', { name: 'Outside now' }).getByText('Up to date')).toBeVisible();
   await expect(page.getByText('Moderate')).toBeVisible();
@@ -91,6 +95,7 @@ test.describe('under the production CSP', () => {
     await mockProviders(page);
     await createGardenAt(page, 'Pune', 'Pune');
     await page.getByRole('button', { name: 'Create a garden' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Balcony' })).toBeVisible();
     await page.goto('/today');
     await expect(page.getByText('Moderate')).toBeVisible();
     expect(violations).toEqual([]);

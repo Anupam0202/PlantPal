@@ -33,6 +33,9 @@ for (const path of [
   '/community',
   '/settings',
   '/welcome',
+  '/welcome?step=space',
+  '/welcome?step=location',
+  '/plan/sun',
   '/no-such-page',
 ]) {
   test(`no automated accessibility violations on ${path}`, async ({ page }) => {
@@ -108,6 +111,10 @@ test.describe('security headers', () => {
       '/garden/new',
       '/settings',
       '/settings/data',
+      '/welcome',
+      '/welcome?step=location',
+      '/plan',
+      '/plan/sun',
       '/dev/design-system',
     ]) {
       await page.goto(path);

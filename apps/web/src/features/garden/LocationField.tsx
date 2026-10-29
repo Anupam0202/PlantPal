@@ -13,6 +13,9 @@ export interface LocationValue {
   lon: number;
   /** Time zone of the chosen place, when the search result provides one. */
   timezone?: string | null;
+  /** ISO country and first-level region from place search (device location leaves them unknown). */
+  countryCode?: string | null;
+  admin1?: string | null;
 }
 
 /** Place search (Open-Meteo geocoding) or device location. Precise coordinates stay on the device. */
@@ -36,6 +39,8 @@ export function LocationField({
       lat: r.lat,
       lon: r.lon,
       timezone: r.timezone,
+      countryCode: r.countryCode,
+      admin1: r.admin1,
     });
     setQuery('');
   };
