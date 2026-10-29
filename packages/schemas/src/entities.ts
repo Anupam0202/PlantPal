@@ -732,3 +732,117 @@ export const SpeciesDraftRecord = z.object({
   promptVersion: z.number().int().nullable(),
 });
 export type SpeciesDraftRecord = z.infer<typeof SpeciesDraftRecord>;
+
+// ---------------------------------------------------------------- nature log (§6.10)
+
+export const NATURE_PROTOCOLS = ['fit-count', 'bird-count', 'sighting', 'phenology'] as const;
+export type NatureProtocol = (typeof NATURE_PROTOCOLS)[number];
+
+/** Insect groups of the UK Pollinator Monitoring Scheme FIT Count, in its order. */
+export const FIT_GROUPS = [
+  'bumblebees',
+  'honeybees',
+  'solitary-bees',
+  'wasps',
+  'hoverflies',
+  'other-flies',
+  'butterflies-moths',
+  'beetles',
+  'small-insects',
+  'other-insects',
+] as const;
+export type FitGroup = (typeof FIT_GROUPS)[number];
+
+/**
+ * Four states, never collapsed (S2): `NO` means "looked and it was not there"; `NOT_CHECKED` means
+ * nobody looked. `UNCERTAIN` keeps doubtful identifications out of totals without losing them.
+ */
+export const CHECK_STATES = ['YES', 'NO', 'UNCERTAIN', 'NOT_CHECKED'] as const;
+export type CheckState = (typeof CHECK_STATES)[number];
+
+export const PHENOPHASES = ['bud', 'flower', 'fruit', 'leaf-out'] as const;
+export type Phenophase = (typeof PHENOPHASES)[number];
+
+export const BEHAVIOURS = ['visiting-flower', 'larva', 'nesting', 'feeding', 'resting', 'other'] as const;
+export const SIGHTING_GROUPS = [
+  'bee',
+  'butterfly-moth',
+  'hoverfly',
+  'other-insect',
+  'bird',
+  'spider',
+  'reptile-amphibian',
+  'mammal',
+  'other',
+] as const;
+export const SKY_STATES = ['sunny', 'partly-cloudy', 'overcast'] as const;
+export const WIND_STATES = ['calm', 'light', 'moderate', 'strong'] as const;
+
+export const VisitRecord = z.object({
+  /** A FIT group, a sighting group, `bird` for bird counts, or a phenophase key for phenology. */
+  group: z.string().min(1).max(40),
+  taxonName: ShortText.nullable(),
+  /** Individuals counted. `null` when the protocol records a state instead of a count. */
+  count: z.number().int().nonnegative().nullable(),
+  state: z.enum(CHECK_STATES),
+  identityConfidence: z.enum(['confident', 'unsure']).nullable(),
+  behaviour: z.enum(BEHAVIOURS).nullable(),
+});
+export type VisitRecord = z.infer<typeof VisitRecord>;
+
+export const VisitWeather = z.object({
+  temperatureC: z.number().finite().min(-50).max(60).nullable(),
+  sky: z.enum(SKY_STATES).nullable(),
+  wind: z.enum(WIND_STATES).nullable(),
+  /** `MEASURED` when the person entered it, `MODELLED` when filled from the forecast. */
+  evidence: Evidence,
+});
+export type VisitWeather = z.infer<typeof VisitWeather>;
+
+/** One nature visit: a timed count, a sighting or a phenology check. Never edited, only voided. */
+export const NatureVisit = z.object({
+  ...appendOnly,
+  protocol: z.enum(NATURE_PROTOCOLS),
+  startedAt: EpochMs,
+  occurredOn: LocalDate,
+  /** Planned protocol length (600 s for FIT, 300 s for birds), or 0 for sightings and checks. */
+  plannedS: z.number().int().nonnegative().max(7200),
+  /** Time actually spent counting. A count stopped early is kept but never compared with full ones. */
+  durationS: z.number().int().nonnegative().max(7200),
+  zoneId: Id.nullable(),
+  specimenId: Id.nullable(),
+  /** Target flower for FIT counts: a catalogue taxon, a plant in the garden, or a typed name. */
+  targetTaxonId: z.string().max(80).nullable(),
+  targetName: ShortText,
+  /** Flowers (or flower heads) of the target in the 50 × 50 cm patch. */
+  patchFlowerCount: z.number().int().nonnegative().max(10_000).nullable(),
+  weather: VisitWeather.nullable(),
+  observerCount: z.number().int().min(1).max(50),
+  records: z.array(VisitRecord).max(200),
+  notes: LongText,
+  mediaIds: z.array(Id).max(20),
+});
+export type NatureVisit = z.infer<typeof NatureVisit>;
+
+// ---------------------------------------------------------------- pantry (§6.13)
+
+export const PANTRY_STATES = ['fresh', 'stored', 'preserved', 'given', 'composted', 'wasted'] as const;
+export type PantryState = (typeof PANTRY_STATES)[number];
+
+/** Produce on hand, from a harvest or added by hand. Quantities stay per dimension (S1). */
+export const PantryItem = z.object({
+  ...versioned,
+  gardenId: Id,
+  harvestId: Id.nullable(),
+  specimenId: Id.nullable(),
+  name: ShortText.min(1),
+  state: z.enum(PANTRY_STATES),
+  massG: OptionalAmount,
+  count: z.number().int().nonnegative().nullable(),
+  countLabel: z.string().trim().max(40).nullable(),
+  /** Set by the person; PlantPal never guesses food safety (S16). */
+  bestBefore: LocalDate.nullable(),
+  notes: LongText,
+  history: z.array(z.object({ state: z.enum(PANTRY_STATES), at: EpochMs })).max(50),
+});
+export type PantryItem = z.infer<typeof PantryItem>;

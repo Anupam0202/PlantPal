@@ -46,6 +46,8 @@ export interface TraitSpec {
   poll: Level;
   food: 'none' | Level;
   orn: Level;
+  /** Usual outdoor flowering months (1–12), northern-hemisphere reference. Omitted when unknown. */
+  bloom?: readonly number[];
 }
 
 const range = ([min, max]: Pair) => ({ min, max });
@@ -80,6 +82,7 @@ function traits(t: TraitSpec): TraitAssertion[] {
   ];
   if (t.indoor) out.push(draft('indoorLight', t.indoor));
   if (t.dtm) out.push(draft('daysToMaturity', range(t.dtm)));
+  if (t.bloom) out.push(draft('bloomMonths', [...t.bloom]));
   return out;
 }
 

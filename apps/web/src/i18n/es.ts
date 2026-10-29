@@ -68,6 +68,10 @@ export const es: Messages = {
     recent: 'Actividad reciente',
     nothingRecent: 'Aún no hay registros hoy. Pulsa «Registrar cuidado» cuando riegues, abones o notes algo.',
     seeJournal: 'Abrir diario',
+    useSoon: 'Usar pronto',
+    useSoonBody: (n: number) =>
+      `${n} productos de la despensa llegan a su fecha de uso en los próximos dos días.`,
+    openPantry: 'Abrir la despensa',
     nextSteps: 'Los recordatorios de cuidado y avisos del tiempo llegarán en una próxima actualización.',
     stepsTitle: 'Tus próximos tres pasos',
     stepPlantNow: (names: string) => `Consigue y planta ${names}`,
@@ -99,6 +103,7 @@ export const es: Messages = {
     tabSpaces: 'Espacios',
     tabJournal: 'Diario',
     tabHealth: 'Salud',
+    tabHarvest: 'Cosecha',
     newHealthCase: 'Nuevo caso de salud',
     speciesIndex: 'Plantas de la A a la Z',
     spaceDesigner: 'Diseñador de espacios',
@@ -619,6 +624,8 @@ export const es: Messages = {
       speciesDrafts: 'Borradores de especies',
       layouts: 'Diseños',
       layoutVersions: 'Versiones de diseños',
+      natureVisits: 'Visitas de naturaleza',
+      pantryItems: 'Despensa',
     },
   },
   migrate: {

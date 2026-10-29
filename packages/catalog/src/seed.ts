@@ -30,6 +30,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'medium',
       orn: 'low',
+      bloom: [7, 8, 9],
     },
     { toxicity: aspca('basil', { dogs: 'NON_TOXIC_LISTED', cats: 'NON_TOXIC_LISTED' }) },
   ),
@@ -54,6 +55,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'low',
       orn: 'medium',
+      bloom: [6, 7, 8, 9, 10],
     },
     { regions: [nativeDraft('IN')] },
   ),
@@ -78,6 +80,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'medium',
       orn: 'low',
+      bloom: [7, 8, 9],
     },
     {
       toxicity: aspca(
@@ -108,6 +111,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'medium',
       orn: 'medium',
+      bloom: [3, 4, 5],
     },
     {
       toxicity: aspca('rosemary', {
@@ -138,6 +142,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'medium',
       orn: 'medium',
+      bloom: [5, 6, 7],
     },
   ),
   taxon(
@@ -161,6 +166,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'medium',
       orn: 'medium',
+      bloom: [7, 8, 9],
     },
   ),
   taxon(
@@ -184,6 +190,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'low',
       orn: 'low',
+      bloom: [6, 7, 8],
     },
   ),
   taxon(
@@ -207,6 +214,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'medium',
       orn: 'low',
+      bloom: [6, 7, 8],
     },
   ),
   taxon(
@@ -230,6 +238,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'medium',
       orn: 'low',
+      bloom: [6, 7],
     },
     { toxicity: aspca('parsley', { dogs: 'TOXIC', cats: 'TOXIC', horses: 'TOXIC' }) },
   ),
@@ -254,6 +263,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'medium',
       orn: 'low',
+      bloom: [7, 8],
     },
   ),
   taxon(
@@ -277,6 +287,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'medium',
       orn: 'medium',
+      bloom: [5, 6],
     },
     { toxicity: aspca('chives', { dogs: 'TOXIC', cats: 'TOXIC', horses: 'TOXIC' }) },
   ),
@@ -348,6 +359,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'medium',
       orn: 'low',
+      bloom: [6, 7],
     },
   ),
 
@@ -373,6 +385,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'medium',
       orn: 'low',
+      bloom: [7, 8],
     },
   ),
   taxon(
@@ -396,6 +409,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'medium',
       orn: 'low',
+      bloom: [5, 6],
     },
   ),
   taxon(
@@ -419,6 +433,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'high',
       orn: 'medium',
+      bloom: [4, 5],
     },
   ),
   taxon(
@@ -442,6 +457,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'high',
       orn: 'medium',
+      bloom: [6, 7],
     },
   ),
   taxon(
@@ -465,6 +481,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'medium',
       orn: 'medium',
+      bloom: [7, 8, 9],
     },
   ),
   taxon(
@@ -488,6 +505,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'medium',
       orn: 'low',
+      bloom: [5, 6],
     },
   ),
   taxon(
@@ -511,6 +529,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'medium',
       orn: 'low',
+      bloom: [5, 6, 7],
     },
   ),
   taxon(
@@ -534,6 +553,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'medium',
       orn: 'low',
+      bloom: [6, 7],
     },
   ),
 
@@ -559,6 +579,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'high',
       orn: 'low',
+      bloom: [6, 7, 8, 9],
     },
     {
       toxicity: aspca(
@@ -589,6 +610,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'medium',
       orn: 'medium',
+      bloom: [6, 7, 8, 9],
     },
   ),
   taxon(
@@ -612,6 +634,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'high',
       orn: 'medium',
+      bloom: [6, 7, 8, 9],
     },
   ),
   taxon(
@@ -635,6 +658,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'high',
       orn: 'medium',
+      bloom: [7, 8, 9],
     },
   ),
   taxon(
@@ -658,6 +682,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'high',
       orn: 'low',
+      bloom: [6, 7, 8],
     },
   ),
   taxon(
@@ -681,6 +706,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'high',
       orn: 'low',
+      bloom: [5, 6, 7],
     },
   ),
   taxon(
@@ -704,6 +730,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'high',
       orn: 'low',
+      bloom: [6, 7, 8, 9],
     },
   ),
   taxon(
@@ -727,6 +754,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'high',
       orn: 'low',
+      bloom: [7, 8, 9],
     },
   ),
   taxon(
@@ -750,6 +778,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'high',
       orn: 'low',
+      bloom: [6, 7, 8, 9],
     },
   ),
   taxon(
@@ -773,6 +802,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'medium',
       orn: 'low',
+      bloom: [6, 7],
     },
   ),
   taxon(
@@ -796,6 +826,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'medium',
       orn: 'low',
+      bloom: [6, 7, 8],
     },
   ),
   taxon(
@@ -845,6 +876,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'medium',
       orn: 'low',
+      bloom: [4, 5, 6],
     },
   ),
   taxon(
@@ -868,6 +900,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'high',
       orn: 'high',
+      bloom: [3, 4, 5],
     },
   ),
   taxon(
@@ -891,6 +924,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'high',
       orn: 'high',
+      bloom: [4, 5],
     },
   ),
   taxon(
@@ -914,6 +948,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'high',
       orn: 'high',
+      bloom: [5, 6, 7],
     },
   ),
 
@@ -939,6 +974,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'none',
       orn: 'high',
+      bloom: [6, 7, 8, 9, 10],
     },
     { regions: [nativeDraft('IN', 'INTRODUCED'), nativeDraft('MX')] },
   ),
@@ -963,6 +999,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'none',
       orn: 'high',
+      bloom: [6, 7, 8, 9, 10],
     },
   ),
   taxon(
@@ -986,6 +1023,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'none',
       orn: 'high',
+      bloom: [6, 7, 8, 9, 10],
     },
   ),
   taxon(
@@ -1009,6 +1047,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'low',
       orn: 'high',
+      bloom: [7, 8, 9],
     },
     { regions: [nativeDraft('US')] },
   ),
@@ -1033,6 +1072,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'low',
       orn: 'high',
+      bloom: [6, 7, 8, 9, 10],
     },
     {
       toxicity: aspca('nasturtium', {
@@ -1063,6 +1103,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'low',
       orn: 'high',
+      bloom: [5, 6, 7, 8, 9, 10],
     },
     {
       toxicity: aspca(null, { cats: 'NON_TOXIC_LISTED' }, 'Listed as garden marigold on the ASPCA cat list.'),
@@ -1089,6 +1130,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'none',
       orn: 'high',
+      bloom: [5, 6, 7, 8, 9, 10],
     },
   ),
   taxon(
@@ -1112,6 +1154,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'low',
       orn: 'high',
+      bloom: [6, 7, 8],
     },
     { toxicity: aspca('lavender', { dogs: 'TOXIC', cats: 'TOXIC', horses: 'TOXIC' }) },
   ),
@@ -1136,6 +1179,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'none',
       orn: 'high',
+      bloom: [6, 7, 8],
     },
   ),
   taxon(
@@ -1159,6 +1203,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'none',
       orn: 'high',
+      bloom: [7, 8, 9],
     },
     { regions: [nativeDraft('US')] },
   ),
@@ -1183,6 +1228,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'none',
       orn: 'high',
+      bloom: [6, 7, 8, 9],
     },
     { regions: [nativeDraft('US'), nativeDraft('L3:MIN')] },
   ),
@@ -1207,6 +1253,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'none',
       orn: 'high',
+      bloom: [6, 7, 8],
     },
     { regions: [nativeDraft('US'), nativeDraft('L3:MIN')] },
   ),
@@ -1231,6 +1278,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'none',
       orn: 'high',
+      bloom: [7, 8],
     },
     { regions: [nativeDraft('US'), nativeDraft('L3:MIN')] },
   ),
@@ -1255,6 +1303,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'none',
       orn: 'high',
+      bloom: [3, 4, 5],
     },
     { regions: [nativeDraft('GB')] },
   ),
@@ -1279,6 +1328,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'none',
       orn: 'high',
+      bloom: [5, 6, 7, 8, 9],
     },
     { regions: [nativeDraft('AU'), nativeDraft('L3:NSW')] },
   ),
@@ -1303,6 +1353,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'none',
       orn: 'high',
+      bloom: [4, 5, 6, 7, 8, 9],
     },
     { regions: [nativeDraft('AU'), nativeDraft('L3:NSW')] },
   ),
@@ -1326,6 +1377,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'none',
       orn: 'medium',
+      bloom: [4, 5],
     },
     { regions: [nativeDraft('AU'), nativeDraft('L3:NSW')] },
   ),
@@ -1350,6 +1402,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'none',
       orn: 'high',
+      bloom: [5, 6, 7, 8, 9],
     },
     { regions: [nativeDraft('IN')] },
   ),
@@ -1374,6 +1427,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'none',
       orn: 'high',
+      bloom: [4, 5, 6, 7, 8, 9],
     },
   ),
   taxon(
@@ -1397,6 +1451,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'none',
       orn: 'high',
+      bloom: [5, 6, 7, 8, 9, 10],
     },
   ),
   taxon(
@@ -1420,6 +1475,7 @@ const TAXA: Taxon[] = [
       poll: 'high',
       food: 'none',
       orn: 'high',
+      bloom: [5, 6, 7, 8, 9, 10],
     },
     {
       regions: [listed('IN', SOURCES.griisIndia.id), listed('AU', SOURCES.ausWons.id)],
@@ -1447,6 +1503,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'none',
       orn: 'high',
+      bloom: [6, 7],
     },
     {
       toxicity: aspca(
@@ -1479,6 +1536,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'none',
       orn: 'high',
+      bloom: [5, 6, 7],
     },
   ),
 
@@ -1503,6 +1561,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'none',
       orn: 'high',
+      bloom: [5, 6, 7],
     },
   ),
   taxon(
@@ -1526,6 +1585,7 @@ const TAXA: Taxon[] = [
       poll: 'medium',
       food: 'low',
       orn: 'high',
+      bloom: [6, 7, 8, 9, 10],
     },
   ),
   taxon(
@@ -1549,6 +1609,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'none',
       orn: 'high',
+      bloom: [5, 6, 7, 8, 9, 10],
     },
   ),
   taxon(
@@ -1572,6 +1633,7 @@ const TAXA: Taxon[] = [
       poll: 'low',
       food: 'none',
       orn: 'high',
+      bloom: [],
     },
     { toxicity: aspca('boston-fern', { dogs: 'NON_TOXIC_LISTED', cats: 'NON_TOXIC_LISTED' }) },
   ),

@@ -119,6 +119,17 @@ export const PROVIDERS: Record<ProviderId, ProviderInfo> = {
     maxStaleMs: 180 * DAY,
     gridDeg: null,
   },
+  inaturalist: {
+    id: 'inaturalist',
+    name: 'iNaturalist',
+    licence: 'Observation data per observer licence; species counts shown with attribution',
+    attribution: 'Research-grade observations from iNaturalist users',
+    sourceUrl: 'https://www.inaturalist.org/',
+    deadlineMs: 8000,
+    ttlMs: 7 * DAY,
+    maxStaleMs: 30 * DAY,
+    gridDeg: 0.05,
+  },
   wikidata: {
     id: 'wikidata',
     name: 'Wikidata',

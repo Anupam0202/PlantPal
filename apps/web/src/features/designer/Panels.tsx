@@ -12,7 +12,12 @@ const n = (v: number) => (Math.round(v * 100) / 100).toString();
 export function ItemTable({ d }: { d: Designer }) {
   const m = useDesignerT();
   return (
-    <div className="overflow-x-auto rounded-lg border border-line">
+    <div
+      className="overflow-x-auto rounded-lg border border-line"
+      role="region"
+      aria-label={m.tableCaption}
+      tabIndex={0}
+    >
       <table className="w-full text-left text-body-s" data-testid="layout-table">
         <caption className="p-2 text-left text-caption text-muted">{m.tableCaption}</caption>
         <thead>

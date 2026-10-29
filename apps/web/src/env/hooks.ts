@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { roundCoords } from '@plantpal/providers';
-import type { Garden } from '@plantpal/schemas';
+import type { Garden, NearbyGroup } from '@plantpal/schemas';
 import { useEffect, useState } from 'react';
 import { getEnvSource, getSpeciesClient } from './source';
 
@@ -144,6 +144,28 @@ export function useSpeciesNames(gbifKey: number | null, scientificName: string) 
     queryFn: ({ signal }) => getSpeciesClient().speciesNames(gbifKey!, scientificName, signal),
     enabled: gbifKey !== null,
     staleTime: Number.POSITIVE_INFINITY,
+    retry: false,
+  });
+}
+
+/** Species recorded near the garden on iNaturalist (open API, called from the browser). */
+export function useNearbySpecies(c: Coords | null, radiusKm: number, group: NearbyGroup) {
+  return useQuery({
+    queryKey: ['nearby', 'species', c?.lat, c?.lon, radiusKm, group],
+    queryFn: ({ signal }) => getSpeciesClient().nearbySpecies(c!.lat, c!.lon, radiusKm, group, signal),
+    enabled: c !== null,
+    staleTime: 24 * 60 * 60_000,
+    retry: false,
+  });
+}
+
+/** GBIF occurrence records near the garden (CC0 and CC BY only). */
+export function useNearbyRecords(c: Coords | null, radiusKm: number, kingdom: 'plants' | 'animals') {
+  return useQuery({
+    queryKey: ['nearby', 'records', c?.lat, c?.lon, radiusKm, kingdom],
+    queryFn: ({ signal }) => getSpeciesClient().nearbyRecords(c!.lat, c!.lon, radiusKm, kingdom, signal),
+    enabled: c !== null,
+    staleTime: 24 * 60 * 60_000,
     retry: false,
   });
 }

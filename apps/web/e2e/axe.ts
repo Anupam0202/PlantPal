@@ -14,6 +14,17 @@ interface AxeViolation {
 /** Runs axe-core WCAG 2.2 A/AA rules on the current page and fails on any violation. */
 export async function expectNoA11yViolations(page: Page, context = 'page') {
   await page.addScriptTag({ path: axePath });
+  // Let finite animations (a toast fading in) finish, so contrast is measured on the settled page.
+  // Endless ones (spinners, skeletons) are skipped; the wait is capped.
+  await page.evaluate(async () => {
+    const finite = document
+      .getAnimations()
+      .filter((a) => a.effect?.getComputedTiming().iterations !== Number.POSITIVE_INFINITY);
+    await Promise.race([
+      Promise.all(finite.map((a) => a.finished.catch(() => undefined))),
+      new Promise((r) => setTimeout(r, 2000)),
+    ]);
+  });
   const violations = await page.evaluate(async () => {
     // @ts-expect-error axe is injected at runtime
     const result = await window.axe.run(document, {

@@ -129,6 +129,15 @@ test('no page is wider than a phone screen (mobile browsers would zoom the app o
     '/plan/calendar',
     '/nature',
     '/nature/climate',
+    '/nature/count',
+    '/nature/phenology',
+    '/nature/log',
+    '/nature/bloom',
+    '/nature/lens',
+    '/nature/nearby',
+    '/nature/impact',
+    '/garden/harvest',
+    '/plan/design',
     '/settings',
   ]) {
     await page.goto(path);

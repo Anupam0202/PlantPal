@@ -10,7 +10,9 @@ import {
   LayoutBody as LayoutBodySchema,
   SpeciesDraftRecord as SpeciesDraftSchema,
   Media as MediaSchema,
+  NatureVisit as NatureVisitSchema,
   Observation as ObservationSchema,
+  PantryItem as PantryItemSchema,
   Plan as PlanSchema,
   PlanItem as PlanItemSchema,
   Specimen as SpecimenSchema,
@@ -31,7 +33,10 @@ import {
   type HealthOutcome,
   type SpeciesDraftRecord,
   type Media,
+  type NatureVisit,
   type Observation,
+  type PantryItem,
+  type PantryState,
   type Plan,
   type PlanItem,
   type Specimen,
@@ -42,6 +47,7 @@ import {
   type Zone,
 } from '@plantpal/schemas';
 import {
+  canMovePantry,
   followUpDates,
   containerVolumeL,
   deterministicId,
@@ -549,10 +555,12 @@ export interface HarvestInput {
   notes: string;
   occurredOn?: string;
   destination?: Harvest['destination'];
+  /** Also put it in the pantry, with an optional best-before date the person sets. */
+  toPantry?: { bestBefore: string | null };
 }
 
 export async function logHarvest(input: HarvestInput, now = Date.now()): Promise<Harvest> {
-  return writeTx([db.harvests, db.gardens, db.specimens], async () => {
+  return writeTx([db.harvests, db.gardens, db.specimens, db.pantryItems], async () => {
     const { garden, occurredOn } = await whenFor(input.gardenId, input.occurredOn, now);
     await checkSpecimenInGarden(garden.id, input.specimenId);
     const h = HarvestSchema.parse({
@@ -577,11 +585,179 @@ export async function logHarvest(input: HarvestInput, now = Date.now()): Promise
     });
     await db.harvests.add(h);
     await enqueue(garden.workspaceId, 'harvest.create', h.id, h, null, now, h.opId);
+    if (input.toPantry) {
+      const p = PantryItemSchema.parse({
+        id: newId(now + 1),
+        workspaceId: garden.workspaceId,
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deletedAt: null,
+        gardenId: garden.id,
+        harvestId: h.id,
+        specimenId: h.specimenId,
+        name: h.plantName || 'Harvest',
+        state: 'fresh',
+        massG: h.massG,
+        count: h.count,
+        countLabel: h.countLabel,
+        bestBefore: input.toPantry.bestBefore,
+        notes: '',
+        history: [{ state: 'fresh', at: now }],
+      });
+      await db.pantryItems.add(p);
+      await enqueue(garden.workspaceId, 'pantryItem.create', p.id, p, null, now);
+    }
     return h;
   });
 }
 
-type AppendOnlyTable = 'careEvents' | 'observations' | 'harvests';
+// ---------------------------------------------------------------- nature log (M9)
+
+export interface VisitInput {
+  gardenId: string;
+  protocol: NatureVisit['protocol'];
+  startedAt: number;
+  plannedS: number;
+  durationS: number;
+  zoneId?: string | null;
+  specimenId?: string | null;
+  targetTaxonId?: string | null;
+  targetName?: string;
+  patchFlowerCount?: number | null;
+  weather?: NatureVisit['weather'];
+  observerCount?: number;
+  records: NatureVisit['records'];
+  notes?: string;
+  mediaIds?: string[];
+}
+
+/** Saves a nature visit as it was recorded. A zero count is data and is kept (S2). */
+export async function logVisit(input: VisitInput, now = Date.now()): Promise<NatureVisit> {
+  return writeTx([db.natureVisits, db.gardens, db.specimens], async () => {
+    const garden = await db.gardens.get(input.gardenId);
+    if (!garden || garden.deletedAt !== null) throw new RecordNotFoundError('garden', input.gardenId);
+    await checkSpecimenInGarden(garden.id, input.specimenId ?? null);
+    const v = NatureVisitSchema.parse({
+      id: newId(now),
+      opId: newId(now),
+      workspaceId: garden.workspaceId,
+      gardenId: garden.id,
+      createdAt: now,
+      deletedAt: null,
+      protocol: input.protocol,
+      startedAt: input.startedAt,
+      occurredOn: localDateOf(input.startedAt, garden.timezone),
+      plannedS: input.plannedS,
+      durationS: Math.min(input.durationS, 7200),
+      zoneId: input.zoneId ?? null,
+      specimenId: input.specimenId ?? null,
+      targetTaxonId: input.targetTaxonId ?? null,
+      targetName: input.targetName ?? '',
+      patchFlowerCount: input.patchFlowerCount ?? null,
+      weather: input.weather ?? null,
+      observerCount: input.observerCount ?? 1,
+      records: input.records,
+      notes: input.notes ?? '',
+      mediaIds: input.mediaIds ?? [],
+    });
+    await db.natureVisits.add(v);
+    await enqueue(garden.workspaceId, 'natureVisit.create', v.id, v, null, now, v.opId);
+    return v;
+  });
+}
+
+// ---------------------------------------------------------------- pantry (M9)
+
+export interface PantryInput {
+  gardenId: string;
+  name: string;
+  massG: number | null;
+  count: number | null;
+  countLabel: string | null;
+  bestBefore: string | null;
+  notes?: string;
+  specimenId?: string | null;
+}
+
+export async function addPantryItem(input: PantryInput, now = Date.now()): Promise<PantryItem> {
+  return writeTx([db.pantryItems, db.gardens, db.specimens], async () => {
+    const garden = await db.gardens.get(input.gardenId);
+    if (!garden || garden.deletedAt !== null) throw new RecordNotFoundError('garden', input.gardenId);
+    await checkSpecimenInGarden(garden.id, input.specimenId ?? null);
+    const p = PantryItemSchema.parse({
+      id: newId(now),
+      workspaceId: garden.workspaceId,
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+      deletedAt: null,
+      gardenId: garden.id,
+      harvestId: null,
+      specimenId: input.specimenId ?? null,
+      name: input.name,
+      state: 'fresh',
+      massG: input.massG,
+      count: input.count,
+      countLabel: input.count !== null ? input.countLabel : null,
+      bestBefore: input.bestBefore,
+      notes: input.notes ?? '',
+      history: [{ state: 'fresh', at: now }],
+    });
+    await db.pantryItems.add(p);
+    await enqueue(garden.workspaceId, 'pantryItem.create', p.id, p, null, now);
+    return p;
+  });
+}
+
+/** Moves produce on (stored, preserved, given, composted, wasted). Final states stay final. */
+export async function movePantryItem(
+  id: string,
+  baseVersion: number,
+  state: PantryState,
+  now = Date.now(),
+): Promise<PantryItem> {
+  return writeTx([db.pantryItems], async () => {
+    const cur = assertUpdatable(await db.pantryItems.get(id), 'pantryItem', id, baseVersion);
+    if (!canMovePantry(cur.state, state))
+      throw new RangeError(`Cannot move ${cur.state} produce to ${state}`);
+    const next = PantryItemSchema.parse({
+      ...cur,
+      state,
+      history: [...cur.history, { state, at: now }].slice(-50),
+      version: cur.version + 1,
+      updatedAt: now,
+    });
+    await db.pantryItems.put(next);
+    await enqueue(cur.workspaceId, 'pantryItem.update', id, next, baseVersion, now);
+    return next;
+  });
+}
+
+export async function updatePantryItem(
+  id: string,
+  baseVersion: number,
+  patch: Partial<Pick<PantryItem, 'name' | 'bestBefore' | 'notes' | 'massG' | 'count' | 'countLabel'>>,
+  now = Date.now(),
+): Promise<PantryItem> {
+  return writeTx([db.pantryItems], async () => {
+    const cur = assertUpdatable(await db.pantryItems.get(id), 'pantryItem', id, baseVersion);
+    const next = PantryItemSchema.parse({ ...cur, ...patch, version: cur.version + 1, updatedAt: now });
+    await db.pantryItems.put(next);
+    await enqueue(cur.workspaceId, 'pantryItem.update', id, next, baseVersion, now);
+    return next;
+  });
+}
+
+export async function deletePantryItem(id: string, baseVersion: number, now = Date.now()): Promise<void> {
+  await writeTx([db.pantryItems], async () => {
+    const cur = assertUpdatable(await db.pantryItems.get(id), 'pantryItem', id, baseVersion);
+    await db.pantryItems.put({ ...cur, deletedAt: now, updatedAt: now, version: cur.version + 1 });
+    await enqueue(cur.workspaceId, 'pantryItem.delete', id, null, baseVersion, now);
+  });
+}
+
+type AppendOnlyTable = 'careEvents' | 'observations' | 'harvests' | 'natureVisits';
 
 /** Voids an append-only record (soft delete). Used by Undo and by "remove entry". */
 export async function voidEntry(table: AppendOnlyTable, id: string, now = Date.now()): Promise<void> {
@@ -594,8 +770,12 @@ export async function voidEntry(table: AppendOnlyTable, id: string, now = Date.n
     if (!cur) throw new RecordNotFoundError(table, id);
     if (cur.deletedAt !== null) return;
     await t.put({ ...cur, deletedAt: now });
-    const entity =
-      table === 'careEvents' ? 'careEvent' : table === 'observations' ? 'observation' : 'harvest';
+    const entity = {
+      careEvents: 'careEvent',
+      observations: 'observation',
+      harvests: 'harvest',
+      natureVisits: 'natureVisit',
+    }[table];
     await enqueue(cur.workspaceId, `${entity}.void`, id, null, null, now);
   });
 }

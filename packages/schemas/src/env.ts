@@ -36,6 +36,7 @@ export const PROVIDER_IDS = [
   'gbif',
   'wikimedia-commons',
   'wikidata',
+  'inaturalist',
 ] as const;
 export const ProviderId = z.enum(PROVIDER_IDS);
 export type ProviderId = z.infer<typeof ProviderId>;
@@ -311,3 +312,37 @@ export const SpeciesNames = z.object({
   names: z.object({ en: z.array(z.string()), hi: z.array(z.string()), es: z.array(z.string()) }),
 });
 export type SpeciesNames = z.infer<typeof SpeciesNames>;
+
+/** Neighbourhood nature (§6.10, P2). Groups map to iNaturalist iconic taxa. */
+export const NEARBY_GROUPS = ['insects', 'birds', 'plants'] as const;
+export type NearbyGroup = (typeof NEARBY_GROUPS)[number];
+
+/** Species observed near the garden. Counts are observations, which reflect where people looked. */
+export const NearbySpecies = z.object({
+  provenance: Provenance,
+  group: z.enum(NEARBY_GROUPS),
+  radiusKm: z.number().positive(),
+  /** Distinct species with research-grade observations in the radius. */
+  totalTaxa: z.number().int().nonnegative(),
+  species: z.array(
+    z.object({
+      taxonId: z.number().int(),
+      name: z.string(),
+      commonName: z.string().nullable(),
+      observations: z.number().int().nonnegative(),
+    }),
+  ),
+});
+export type NearbySpecies = z.infer<typeof NearbySpecies>;
+
+/** GBIF occurrence records near the garden, open licences only. Records are not individuals or species. */
+export const NearbyRecords = z.object({
+  provenance: Provenance,
+  kingdom: z.enum(['plants', 'animals', 'fungi']),
+  radiusKm: z.number().positive(),
+  records: z.number().int().nonnegative(),
+  taxa: z.number().int().nonnegative(),
+  taxaCapped: z.boolean(),
+  licences: z.array(z.string()),
+});
+export type NearbyRecords = z.infer<typeof NearbyRecords>;

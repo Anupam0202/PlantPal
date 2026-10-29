@@ -66,6 +66,18 @@ export const TRAITS = {
   pollinatorValue: { value: Level, unit: null },
   foodValue: { value: z.enum(['none', 'low', 'medium', 'high']), unit: null },
   ornamentalValue: { value: Level, unit: null },
+  /**
+   * Months (1–12) the plant usually flowers outdoors, as reference timing for the northern hemisphere.
+   * Rotated six months for the south; tropical timing often differs, so the person's own flowering
+   * checks override it. An empty list means "does not flower" (for example ferns).
+   */
+  bloomMonths: {
+    value: z
+      .array(z.number().int().min(1).max(12))
+      .max(12)
+      .refine((m) => new Set(m).size === m.length, 'months must not repeat'),
+    unit: null,
+  },
 } as const;
 export type TraitKey = keyof typeof TRAITS;
 export type TraitValue<K extends TraitKey> = z.infer<(typeof TRAITS)[K]['value']>;

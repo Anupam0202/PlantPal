@@ -4,6 +4,8 @@ import type {
   HealthCase,
   Layout,
   LayoutVersion,
+  NatureVisit,
+  PantryItem,
   SpeciesDraftRecord,
   CareEvent,
   CareSchedule,
@@ -362,5 +364,55 @@ export function useLayoutVersions(layoutId: string): LayoutVersion[] | undefined
         (a, b) => b.version - a.version,
       ),
     [layoutId],
+  );
+}
+
+/** Nature visits for a garden, newest first. */
+export function useNatureVisits(gardenId: string | undefined): NatureVisit[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? (await db.natureVisits.where('gardenId').equals(gardenId).toArray())
+            .filter((v) => v.deletedAt === null)
+            .sort((a, b) => b.startedAt - a.startedAt)
+        : [],
+    [gardenId],
+  );
+}
+
+export function usePantry(gardenId: string | undefined): PantryItem[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? (await db.pantryItems.where('gardenId').equals(gardenId).toArray())
+            .filter((p) => p.deletedAt === null)
+            .sort((a, b) => b.updatedAt - a.updatedAt)
+        : [],
+    [gardenId],
+  );
+}
+
+export function useHarvests(gardenId: string | undefined): Harvest[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? (await db.harvests.where('gardenId').equals(gardenId).toArray())
+            .filter((h) => h.deletedAt === null)
+            .sort((a, b) => b.harvestedOn.localeCompare(a.harvestedOn) || b.createdAt - a.createdAt)
+        : [],
+    [gardenId],
+  );
+}
+
+/** Every watering in a garden (for the Impact Ledger). */
+export function useGardenCareEvents(gardenId: string | undefined): CareEvent[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? (await db.careEvents.where('gardenId').equals(gardenId).toArray()).filter(
+            (e) => e.deletedAt === null,
+          )
+        : [],
+    [gardenId],
   );
 }

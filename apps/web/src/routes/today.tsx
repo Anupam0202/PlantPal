@@ -19,6 +19,7 @@ import { hasLegacyData } from '../data/legacy/storage';
 import { useActiveGarden, useRecordCounts, useSpecimens, useTimeline } from '../data/queries';
 import { CareCockpit } from '../features/care/Cockpit';
 import { NextSteps } from '../features/garden/NextSteps';
+import { UseSoon } from '../features/garden/UseSoon';
 import { Timeline } from '../features/garden/Timeline';
 import {
   AirCard,
@@ -129,6 +130,7 @@ function TodayPage() {
           </LivingSky>
         ) : null}
         <CareCockpit garden={garden} />
+        <UseSoon garden={garden} />
         <NextSteps garden={garden} />
         {coords ? <ForecastStrip q={forecast} /> : <NoLocation />}
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">

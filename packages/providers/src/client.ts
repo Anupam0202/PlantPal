@@ -1,5 +1,8 @@
 import { climateDeltas, climateSummary } from '@plantpal/domain';
 import type {
+  NearbyGroup,
+  NearbyRecords,
+  NearbySpecies,
   SpeciesMatch,
   SpeciesMedia,
   SpeciesNames,
@@ -23,6 +26,8 @@ import { TokenBucket } from './core/limiter';
 import { PROVIDERS } from './core/registry';
 import {
   commonsFixture,
+  gbifNearbyFixtureFor,
+  inatSpeciesCountsFixture,
   speciesMatchFixture,
   wikidataLabelsFixture,
   wikidataSearchFixture,
@@ -40,6 +45,9 @@ import { forecastUrl, parseForecast } from './openMeteo/forecast';
 import { geocodingUrl, parsePlaces } from './openMeteo/geocoding';
 import { parseSolarClimatology, solarClimatologyUrl } from './nasaPower/climatology';
 import { parseSpeciesMatch, speciesMatchUrl } from './gbif/species';
+import { nearbyUrl, parseNearby, type KINGDOMS } from './gbif/occurrences';
+import { parseSpeciesCounts, speciesCountsUrl } from './inaturalist/speciesCounts';
+import { provenance } from './core/provenance';
 import { commonsUrl, parseCommons } from './wikimedia/commons';
 import {
   parseWikidataLabels,
@@ -305,6 +313,67 @@ export class EnvClient {
       () => wikidataLabelsFixture(qid),
       (json, retrievedAt, isDemo) =>
         parseWikidataLabels(json, { qid, scientificName, retrievedAt, demo: isDemo }),
+      signal,
+    );
+  }
+
+  /**
+   * Species seen near the garden (iNaturalist, research grade). Only a point rounded to about 5 km
+   * and the radius leave the device. Observations reflect where people looked, not abundance.
+   */
+  nearbySpecies(
+    lat: number,
+    lon: number,
+    radiusKm: number,
+    group: NearbyGroup,
+    signal?: AbortSignal,
+  ): Promise<NearbySpecies> {
+    const c = roundCoords(lat, lon, PROVIDERS.inaturalist.gridDeg ?? 0.05);
+    const r = Math.min(5, Math.max(1, Math.round(radiusKm)));
+    return this.get(
+      'inaturalist',
+      'species-counts',
+      { ...c, r, group },
+      speciesCountsUrl(c.lat, c.lon, r, group),
+      () => inatSpeciesCountsFixture(group),
+      (json, retrievedAt, demo) =>
+        parseSpeciesCounts(json, {
+          group,
+          radiusKm: r,
+          provenance: provenance('inaturalist', { retrievedAt, lat: c.lat, lon: c.lon, demo }),
+        }),
+      signal,
+    );
+  }
+
+  /** GBIF occurrence records near the garden (CC0 and CC BY only): records and distinct species. */
+  nearbyRecords(
+    lat: number,
+    lon: number,
+    radiusKm: number,
+    kingdom: keyof typeof KINGDOMS,
+    signal?: AbortSignal,
+  ): Promise<NearbyRecords> {
+    const c = roundCoords(lat, lon, PROVIDERS.gbif.gridDeg ?? 0.05);
+    const r = Math.min(5, Math.max(1, Math.round(radiusKm)));
+    return this.get(
+      'gbif',
+      'nearby',
+      { ...c, r, kingdom },
+      nearbyUrl(c.lat, c.lon, r, kingdom),
+      () => gbifNearbyFixtureFor(kingdom),
+      (json, retrievedAt, demo) => {
+        const n = parseNearby(json, { radiusKm: r, kingdom });
+        return {
+          provenance: provenance('gbif', { retrievedAt, lat: c.lat, lon: c.lon, demo }),
+          kingdom,
+          radiusKm: r,
+          records: n.records,
+          taxa: n.taxa,
+          taxaCapped: n.taxaCapped,
+          licences: [...n.licences],
+        };
+      },
       signal,
     );
   }

@@ -466,3 +466,56 @@ export function wikidataLabelsFixture(qid: string) {
     },
   };
 }
+
+/** iNaturalist species counts near a point (synthetic; shaped like the documented API). */
+export function inatSpeciesCountsFixture(group: 'insects' | 'birds' | 'plants') {
+  const rows: Record<typeof group, Array<[number, string, string | null, number, string]>> = {
+    insects: [
+      [1, 'Apis cerana', 'Asian honey bee', 41, 'species'],
+      [2, 'Xylocopa violacea', 'Violet carpenter bee', 17, 'species'],
+      [3, 'Danaus chrysippus', 'Plain tiger', 15, 'species'],
+      [4, 'Episyrphus balteatus', 'Marmalade hoverfly', 6, 'species'],
+      [5, 'Apidae', null, 3, 'family'],
+    ],
+    birds: [
+      [11, 'Passer domesticus', 'House sparrow', 88, 'species'],
+      [12, 'Acridotheres tristis', 'Common myna', 64, 'species'],
+      [13, 'Cinnyris asiaticus', 'Purple sunbird', 22, 'species'],
+    ],
+    plants: [
+      [21, 'Lantana camara', 'Lantana', 30, 'species'],
+      [22, 'Ocimum tenuiflorum', 'Holy basil', 9, 'species'],
+    ],
+  };
+  const list = rows[group];
+  return {
+    total_results: list.length,
+    page: 1,
+    per_page: 30,
+    results: list.map(([id, name, common, count, rank]) => ({
+      count,
+      taxon: { id, name, rank, preferred_common_name: common },
+    })),
+  };
+}
+
+/** GBIF occurrence search with a species facet (synthetic). */
+export function gbifNearbyFixtureFor(kingdom: 'plants' | 'animals' | 'fungi') {
+  const n = kingdom === 'plants' ? 1240 : kingdom === 'animals' ? 3310 : 85;
+  return {
+    offset: 0,
+    limit: 0,
+    endOfRecords: false,
+    count: n,
+    results: [],
+    facets: [
+      {
+        field: 'SPECIES_KEY',
+        counts: Array.from({ length: kingdom === 'fungi' ? 12 : 140 }, (_, i) => ({
+          name: String(5000000 + i),
+          count: Math.max(1, Math.round(n / (i + 4))),
+        })),
+      },
+    ],
+  };
+}

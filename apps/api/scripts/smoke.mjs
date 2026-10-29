@@ -52,7 +52,7 @@ const check = (cond, msg) => {
 
 await waitReady();
 const status = await (await fetch(`${base}/api/v1/status`)).json();
-check(status.ok === true && status.providers.length === 10, '/api/v1/status lists all 10 providers');
+check(status.ok === true && status.providers.length === 11, '/api/v1/status lists all 11 providers');
 
 const fc = await fetch(`${base}/api/v1/env/forecast?lat=18.52&lon=73.86`);
 const fcBody = await fc.json();

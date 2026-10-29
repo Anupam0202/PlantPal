@@ -27,19 +27,19 @@ Most plant apps guess. PlantPal shows its working:
 
 PlantPal is being rebuilt as v4 ("Living Field Guide") milestone by milestone. See [`RUN-STATE.md`](RUN-STATE.md) for the live tracker and [`docs/PlantPal-Master-Prompt-v4.md`](docs/PlantPal-Master-Prompt-v4.md) for the full specification.
 
-| Milestone | What it delivers                                                                     | State   |
-| --------- | ------------------------------------------------------------------------------------ | ------- |
-| M0        | Safety net: licence, community files, CodeQL, Dependabot, decision records           | Done    |
-| M1        | Monorepo, design system, accessible app shell, PWA, strict CSP, CI                   | Done    |
-| M2        | Local-first garden data, journal, photos, export/import, migration from v3           | Done    |
-| M3        | Environmental data with provenance, API Worker, Living Sky, location                 | Done    |
-| M4        | Plant catalogue, Sun Hours Finder, eligibility engine, Seed onboarding, plans        | Done    |
-| M5        | Care schedules, Today cockpit, Water-Wise checks, frost and heat alerts, Climate Fit | Done    |
-| M6        | AI with your own Gemini key: vault, model discovery, explanations, quick capture     | Done    |
-| M7        | Plant health cases, photo identification, species pages and cited species drafts     | Done    |
-| M8        | Space designer: plans to scale, checks, sun and shade, growth, versions, exports     | Done    |
-| M9        | Nature log, harvest and pantry, impact                                               | Next    |
-| M10–M12   | Optional accounts and sync, shared gardens, community, release hardening             | Planned |
+| Milestone | What it delivers                                                                                       | State |
+| --------- | ------------------------------------------------------------------------------------------------------ | ----- |
+| M0        | Safety net: licence, community files, CodeQL, Dependabot, decision records                             | Done  |
+| M1        | Monorepo, design system, accessible app shell, PWA, strict CSP, CI                                     | Done  |
+| M2        | Local-first garden data, journal, photos, export/import, migration from v3                             | Done  |
+| M3        | Environmental data with provenance, API Worker, Living Sky, location                                   | Done  |
+| M4        | Plant catalogue, Sun Hours Finder, eligibility engine, Seed onboarding, plans                          | Done  |
+| M5        | Care schedules, Today cockpit, Water-Wise checks, frost and heat alerts, Climate Fit                   | Done  |
+| M6        | AI with your own Gemini key: vault, model discovery, explanations, quick capture                       | Done  |
+| M7        | Plant health cases, photo identification, species pages and cited species drafts                       | Done  |
+| M8        | Space designer: plans to scale, checks, sun and shade, growth, versions, exports                       | Done  |
+| M9        | Nature log and timed counts, Bloom Bridge, native and invasive lens, harvest and pantry, impact ledger | Done  |
+| M10–M12   | Optional accounts and sync, shared gardens, community, release hardening                               | Next  |
 
 The previous single-file app (v3) has been retired; its known problems are tracked in [`docs/traceability.md`](docs/traceability.md).
 

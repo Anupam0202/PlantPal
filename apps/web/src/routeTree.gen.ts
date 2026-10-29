@@ -16,11 +16,21 @@ import { Route as CommunityIndexRouteImport } from './routes/community/index'
 import { Route as DevDesignSystemRouteImport } from './routes/dev/design-system'
 import { Route as GardenIndexRouteImport } from './routes/garden/index'
 import { Route as GardenEditRouteImport } from './routes/garden/edit'
+import { Route as GardenHarvestRouteImport } from './routes/garden/harvest'
 import { Route as GardenJournalRouteImport } from './routes/garden/journal'
 import { Route as GardenNewRouteImport } from './routes/garden/new'
 import { Route as GardenSpacesRouteImport } from './routes/garden/spaces'
 import { Route as NatureIndexRouteImport } from './routes/nature/index'
+import { Route as NatureBirdsRouteImport } from './routes/nature/birds'
+import { Route as NatureBloomRouteImport } from './routes/nature/bloom'
 import { Route as NatureClimateRouteImport } from './routes/nature/climate'
+import { Route as NatureCountRouteImport } from './routes/nature/count'
+import { Route as NatureImpactRouteImport } from './routes/nature/impact'
+import { Route as NatureLensRouteImport } from './routes/nature/lens'
+import { Route as NatureLogRouteImport } from './routes/nature/log'
+import { Route as NatureNearbyRouteImport } from './routes/nature/nearby'
+import { Route as NaturePhenologyRouteImport } from './routes/nature/phenology'
+import { Route as NatureSightingRouteImport } from './routes/nature/sighting'
 import { Route as PlanIndexRouteImport } from './routes/plan/index'
 import { Route as PlanCalendarRouteImport } from './routes/plan/calendar'
 import { Route as PlanSunRouteImport } from './routes/plan/sun'
@@ -75,6 +85,11 @@ const GardenEditRoute = GardenEditRouteImport.update({
   path: '/garden/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GardenHarvestRoute = GardenHarvestRouteImport.update({
+  id: '/garden/harvest',
+  path: '/garden/harvest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GardenJournalRoute = GardenJournalRouteImport.update({
   id: '/garden/journal',
   path: '/garden/journal',
@@ -95,9 +110,54 @@ const NatureIndexRoute = NatureIndexRouteImport.update({
   path: '/nature/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NatureBirdsRoute = NatureBirdsRouteImport.update({
+  id: '/nature/birds',
+  path: '/nature/birds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NatureBloomRoute = NatureBloomRouteImport.update({
+  id: '/nature/bloom',
+  path: '/nature/bloom',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NatureClimateRoute = NatureClimateRouteImport.update({
   id: '/nature/climate',
   path: '/nature/climate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NatureCountRoute = NatureCountRouteImport.update({
+  id: '/nature/count',
+  path: '/nature/count',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NatureImpactRoute = NatureImpactRouteImport.update({
+  id: '/nature/impact',
+  path: '/nature/impact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NatureLensRoute = NatureLensRouteImport.update({
+  id: '/nature/lens',
+  path: '/nature/lens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NatureLogRoute = NatureLogRouteImport.update({
+  id: '/nature/log',
+  path: '/nature/log',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NatureNearbyRoute = NatureNearbyRouteImport.update({
+  id: '/nature/nearby',
+  path: '/nature/nearby',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NaturePhenologyRoute = NaturePhenologyRouteImport.update({
+  id: '/nature/phenology',
+  path: '/nature/phenology',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NatureSightingRoute = NatureSightingRouteImport.update({
+  id: '/nature/sighting',
+  path: '/nature/sighting',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlanIndexRoute = PlanIndexRouteImport.update({
@@ -197,10 +257,20 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/dev/design-system': typeof DevDesignSystemRoute
   '/garden/edit': typeof GardenEditRoute
+  '/garden/harvest': typeof GardenHarvestRoute
   '/garden/journal': typeof GardenJournalRoute
   '/garden/new': typeof GardenNewRoute
   '/garden/spaces': typeof GardenSpacesRoute
+  '/nature/birds': typeof NatureBirdsRoute
+  '/nature/bloom': typeof NatureBloomRoute
   '/nature/climate': typeof NatureClimateRoute
+  '/nature/count': typeof NatureCountRoute
+  '/nature/impact': typeof NatureImpactRoute
+  '/nature/lens': typeof NatureLensRoute
+  '/nature/log': typeof NatureLogRoute
+  '/nature/nearby': typeof NatureNearbyRoute
+  '/nature/phenology': typeof NaturePhenologyRoute
+  '/nature/sighting': typeof NatureSightingRoute
   '/plan/calendar': typeof PlanCalendarRoute
   '/plan/sun': typeof PlanSunRoute
   '/settings/ai': typeof SettingsAiRoute
@@ -229,10 +299,20 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/dev/design-system': typeof DevDesignSystemRoute
   '/garden/edit': typeof GardenEditRoute
+  '/garden/harvest': typeof GardenHarvestRoute
   '/garden/journal': typeof GardenJournalRoute
   '/garden/new': typeof GardenNewRoute
   '/garden/spaces': typeof GardenSpacesRoute
+  '/nature/birds': typeof NatureBirdsRoute
+  '/nature/bloom': typeof NatureBloomRoute
   '/nature/climate': typeof NatureClimateRoute
+  '/nature/count': typeof NatureCountRoute
+  '/nature/impact': typeof NatureImpactRoute
+  '/nature/lens': typeof NatureLensRoute
+  '/nature/log': typeof NatureLogRoute
+  '/nature/nearby': typeof NatureNearbyRoute
+  '/nature/phenology': typeof NaturePhenologyRoute
+  '/nature/sighting': typeof NatureSightingRoute
   '/plan/calendar': typeof PlanCalendarRoute
   '/plan/sun': typeof PlanSunRoute
   '/settings/ai': typeof SettingsAiRoute
@@ -262,10 +342,20 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/dev/design-system': typeof DevDesignSystemRoute
   '/garden/edit': typeof GardenEditRoute
+  '/garden/harvest': typeof GardenHarvestRoute
   '/garden/journal': typeof GardenJournalRoute
   '/garden/new': typeof GardenNewRoute
   '/garden/spaces': typeof GardenSpacesRoute
+  '/nature/birds': typeof NatureBirdsRoute
+  '/nature/bloom': typeof NatureBloomRoute
   '/nature/climate': typeof NatureClimateRoute
+  '/nature/count': typeof NatureCountRoute
+  '/nature/impact': typeof NatureImpactRoute
+  '/nature/lens': typeof NatureLensRoute
+  '/nature/log': typeof NatureLogRoute
+  '/nature/nearby': typeof NatureNearbyRoute
+  '/nature/phenology': typeof NaturePhenologyRoute
+  '/nature/sighting': typeof NatureSightingRoute
   '/plan/calendar': typeof PlanCalendarRoute
   '/plan/sun': typeof PlanSunRoute
   '/settings/ai': typeof SettingsAiRoute
@@ -296,10 +386,20 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/dev/design-system'
     | '/garden/edit'
+    | '/garden/harvest'
     | '/garden/journal'
     | '/garden/new'
     | '/garden/spaces'
+    | '/nature/birds'
+    | '/nature/bloom'
     | '/nature/climate'
+    | '/nature/count'
+    | '/nature/impact'
+    | '/nature/lens'
+    | '/nature/log'
+    | '/nature/nearby'
+    | '/nature/phenology'
+    | '/nature/sighting'
     | '/plan/calendar'
     | '/plan/sun'
     | '/settings/ai'
@@ -328,10 +428,20 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/dev/design-system'
     | '/garden/edit'
+    | '/garden/harvest'
     | '/garden/journal'
     | '/garden/new'
     | '/garden/spaces'
+    | '/nature/birds'
+    | '/nature/bloom'
     | '/nature/climate'
+    | '/nature/count'
+    | '/nature/impact'
+    | '/nature/lens'
+    | '/nature/log'
+    | '/nature/nearby'
+    | '/nature/phenology'
+    | '/nature/sighting'
     | '/plan/calendar'
     | '/plan/sun'
     | '/settings/ai'
@@ -360,10 +470,20 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/dev/design-system'
     | '/garden/edit'
+    | '/garden/harvest'
     | '/garden/journal'
     | '/garden/new'
     | '/garden/spaces'
+    | '/nature/birds'
+    | '/nature/bloom'
     | '/nature/climate'
+    | '/nature/count'
+    | '/nature/impact'
+    | '/nature/lens'
+    | '/nature/log'
+    | '/nature/nearby'
+    | '/nature/phenology'
+    | '/nature/sighting'
     | '/plan/calendar'
     | '/plan/sun'
     | '/settings/ai'
@@ -393,10 +513,20 @@ export interface RootRouteChildren {
   WelcomeRoute: typeof WelcomeRoute
   DevDesignSystemRoute: typeof DevDesignSystemRoute
   GardenEditRoute: typeof GardenEditRoute
+  GardenHarvestRoute: typeof GardenHarvestRoute
   GardenJournalRoute: typeof GardenJournalRoute
   GardenNewRoute: typeof GardenNewRoute
   GardenSpacesRoute: typeof GardenSpacesRoute
+  NatureBirdsRoute: typeof NatureBirdsRoute
+  NatureBloomRoute: typeof NatureBloomRoute
   NatureClimateRoute: typeof NatureClimateRoute
+  NatureCountRoute: typeof NatureCountRoute
+  NatureImpactRoute: typeof NatureImpactRoute
+  NatureLensRoute: typeof NatureLensRoute
+  NatureLogRoute: typeof NatureLogRoute
+  NatureNearbyRoute: typeof NatureNearbyRoute
+  NaturePhenologyRoute: typeof NaturePhenologyRoute
+  NatureSightingRoute: typeof NatureSightingRoute
   PlanCalendarRoute: typeof PlanCalendarRoute
   PlanSunRoute: typeof PlanSunRoute
   SettingsAiRoute: typeof SettingsAiRoute
@@ -471,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GardenEditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/garden/harvest': {
+      id: '/garden/harvest'
+      path: '/garden/harvest'
+      fullPath: '/garden/harvest'
+      preLoaderRoute: typeof GardenHarvestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/garden/journal': {
       id: '/garden/journal'
       path: '/garden/journal'
@@ -499,11 +636,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NatureIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/nature/birds': {
+      id: '/nature/birds'
+      path: '/nature/birds'
+      fullPath: '/nature/birds'
+      preLoaderRoute: typeof NatureBirdsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nature/bloom': {
+      id: '/nature/bloom'
+      path: '/nature/bloom'
+      fullPath: '/nature/bloom'
+      preLoaderRoute: typeof NatureBloomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nature/climate': {
       id: '/nature/climate'
       path: '/nature/climate'
       fullPath: '/nature/climate'
       preLoaderRoute: typeof NatureClimateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nature/count': {
+      id: '/nature/count'
+      path: '/nature/count'
+      fullPath: '/nature/count'
+      preLoaderRoute: typeof NatureCountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nature/impact': {
+      id: '/nature/impact'
+      path: '/nature/impact'
+      fullPath: '/nature/impact'
+      preLoaderRoute: typeof NatureImpactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nature/lens': {
+      id: '/nature/lens'
+      path: '/nature/lens'
+      fullPath: '/nature/lens'
+      preLoaderRoute: typeof NatureLensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nature/log': {
+      id: '/nature/log'
+      path: '/nature/log'
+      fullPath: '/nature/log'
+      preLoaderRoute: typeof NatureLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nature/nearby': {
+      id: '/nature/nearby'
+      path: '/nature/nearby'
+      fullPath: '/nature/nearby'
+      preLoaderRoute: typeof NatureNearbyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nature/phenology': {
+      id: '/nature/phenology'
+      path: '/nature/phenology'
+      fullPath: '/nature/phenology'
+      preLoaderRoute: typeof NaturePhenologyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nature/sighting': {
+      id: '/nature/sighting'
+      path: '/nature/sighting'
+      fullPath: '/nature/sighting'
+      preLoaderRoute: typeof NatureSightingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/plan/': {
@@ -641,10 +841,20 @@ const rootRouteChildren: RootRouteChildren = {
   WelcomeRoute: WelcomeRoute,
   DevDesignSystemRoute: DevDesignSystemRoute,
   GardenEditRoute: GardenEditRoute,
+  GardenHarvestRoute: GardenHarvestRoute,
   GardenJournalRoute: GardenJournalRoute,
   GardenNewRoute: GardenNewRoute,
   GardenSpacesRoute: GardenSpacesRoute,
+  NatureBirdsRoute: NatureBirdsRoute,
+  NatureBloomRoute: NatureBloomRoute,
   NatureClimateRoute: NatureClimateRoute,
+  NatureCountRoute: NatureCountRoute,
+  NatureImpactRoute: NatureImpactRoute,
+  NatureLensRoute: NatureLensRoute,
+  NatureLogRoute: NatureLogRoute,
+  NatureNearbyRoute: NatureNearbyRoute,
+  NaturePhenologyRoute: NaturePhenologyRoute,
+  NatureSightingRoute: NatureSightingRoute,
   PlanCalendarRoute: PlanCalendarRoute,
   PlanSunRoute: PlanSunRoute,
   SettingsAiRoute: SettingsAiRoute,

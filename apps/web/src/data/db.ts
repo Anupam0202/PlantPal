@@ -11,8 +11,10 @@ import type {
   Layout,
   LayoutVersion,
   Media,
+  NatureVisit,
   Observation,
   OutboxOp,
+  PantryItem,
   Plan,
   PlanItem,
   SoilTest,
@@ -23,7 +25,7 @@ import type {
 } from '@plantpal/schemas';
 
 /** Bumped with every Dexie schema change; sent with outbox ops so the server knows the client shape. */
-export const CLIENT_SCHEMA = 6;
+export const CLIENT_SCHEMA = 7;
 
 export interface MediaBlob {
   id: string;
@@ -69,6 +71,8 @@ export type PlantPalDB = Dexie & {
   speciesDrafts: EntityTable<SpeciesDraftRecord, 'id'>;
   layouts: EntityTable<Layout, 'id'>;
   layoutVersions: EntityTable<LayoutVersion, 'id'>;
+  natureVisits: EntityTable<NatureVisit, 'id'>;
+  pantryItems: EntityTable<PantryItem, 'id'>;
 };
 
 /** Schema version 1 (M2). Kept verbatim so upgrades are tested from the real previous shape. */
@@ -116,6 +120,11 @@ export function createDb(name = 'plantpal'): PlantPalDB {
     layouts: 'id, gardenId, zoneId, workspaceId',
     layoutVersions: 'id, layoutId, workspaceId, [layoutId+version]',
   });
+  // v7 (M9): nature visits (timed counts, sightings, phenology checks) and the pantry.
+  db.version(7).stores({
+    natureVisits: 'id, &opId, gardenId, workspaceId, protocol, startedAt, specimenId',
+    pantryItems: 'id, gardenId, workspaceId, harvestId, state',
+  });
   return db;
 }
 
@@ -142,6 +151,8 @@ export const RECORD_TABLES = [
   'speciesDrafts',
   'layouts',
   'layoutVersions',
+  'natureVisits',
+  'pantryItems',
 ] as const;
 export type RecordTable = (typeof RECORD_TABLES)[number];
 

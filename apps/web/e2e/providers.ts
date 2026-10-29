@@ -81,6 +81,16 @@ export async function mockProviders(
     const key = Number((u.searchParams.get('srsearch') ?? '').split('=')[1]);
     return reply(fixtures.wikidataSearchFixture(key))(route);
   });
+  // Nature nearby: iNaturalist species counts and GBIF occurrence search.
+  await page.route('https://api.inaturalist.org/**', (route) => {
+    const iconic = new URL(route.request().url()).searchParams.get('iconic_taxa');
+    const group = iconic === 'Aves' ? 'birds' : iconic === 'Plantae' ? 'plants' : 'insects';
+    return reply(fixtures.inatSpeciesCountsFixture(group))(route);
+  });
+  await page.route('https://api.gbif.org/v1/occurrence/search**', (route) => {
+    const k = new URL(route.request().url()).searchParams.get('kingdomKey');
+    return reply(fixtures.gbifNearbyFixtureFor(k === '6' ? 'plants' : 'animals'))(route);
+  });
   // Commons thumbnails: a tiny image so pages render without the network.
   await page.route('https://upload.wikimedia.org/**', (route) =>
     route.fulfill({

@@ -173,7 +173,7 @@ describe('Dexie v6 upgrade', () => {
     v5.close();
     const v6 = createDb(name);
     await v6.open();
-    expect(v6.verno).toBe(6);
+    expect(v6.verno).toBeGreaterThanOrEqual(6);
     expect(await v6.table('meta').get('x')).toEqual({ key: 'x', value: 1 });
     expect(await v6.table('speciesDrafts').count()).toBe(1);
     expect(await v6.layouts.count()).toBe(0);
