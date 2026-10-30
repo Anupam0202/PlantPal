@@ -24,8 +24,8 @@ export interface TextFieldProps {
   error?: ReactNode;
   placeholder?: string;
   required?: boolean;
-  type?: 'text' | 'search' | 'email' | 'url' | 'password' | 'date';
-  /** For `type="date"`: earliest and latest allowed `YYYY-MM-DD`. */
+  type?: 'text' | 'search' | 'email' | 'url' | 'password' | 'date' | 'datetime-local';
+  /** For `type="date"` (`YYYY-MM-DD`) or `datetime-local` (`YYYY-MM-DDTHH:mm`): earliest and latest allowed. */
   min?: string;
   max?: string;
   name?: string;

@@ -31,6 +31,7 @@ for (const path of [
   '/plan',
   '/nature',
   '/community',
+  '/admin',
   '/settings',
   '/welcome',
   '/welcome?step=space',
@@ -44,6 +45,16 @@ for (const path of [
     await expectNoA11yViolations(page, path);
   });
 }
+
+test('without a community server, the community pages say it is not switched on', async ({ page }) => {
+  for (const path of ['/community', '/community/exchange', '/admin']) {
+    await page.goto(path);
+    await expect(page.getByRole('heading', { name: 'Community is not switched on' })).toBeVisible();
+  }
+  await expect(page).toHaveURL(/\/admin$/);
+  await page.goto('/community/exchange');
+  await expect(page).toHaveURL(/\/community\?tab=exchange$/);
+});
 
 test('unknown routes show a helpful not-found page', async ({ page }) => {
   await page.goto('/definitely/not/here');

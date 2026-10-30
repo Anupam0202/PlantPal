@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as SitRouteImport } from './routes/sit'
 import { Route as TodayRouteImport } from './routes/today'
@@ -45,6 +46,9 @@ import { Route as SettingsSharingRouteImport } from './routes/settings/sharing'
 import { Route as SettingsSourcesRouteImport } from './routes/settings/sources'
 import { Route as SpeciesIndexRouteImport } from './routes/species/index'
 import { Route as SpeciesTaxonKeyRouteImport } from './routes/species/$taxonKey'
+import { Route as CommunityEventsEventIdRouteImport } from './routes/community/events/$eventId'
+import { Route as CommunityExchangeIndexRouteImport } from './routes/community/exchange/index'
+import { Route as CommunityExchangeListingIdRouteImport } from './routes/community/exchange/$listingId'
 import { Route as GardenHealthIndexRouteImport } from './routes/garden/health/index'
 import { Route as GardenHealthCaseIdRouteImport } from './routes/garden/health/$caseId'
 import { Route as GardenHealthNewRouteImport } from './routes/garden/health/new'
@@ -59,6 +63,11 @@ import { Route as SpeciesDraftsDraftIdRouteImport } from './routes/species/draft
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinRoute = JoinRouteImport.update({
@@ -236,6 +245,22 @@ const SpeciesTaxonKeyRoute = SpeciesTaxonKeyRouteImport.update({
   path: '/species/$taxonKey',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CommunityEventsEventIdRoute = CommunityEventsEventIdRouteImport.update({
+  id: '/community/events/$eventId',
+  path: '/community/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityExchangeIndexRoute = CommunityExchangeIndexRouteImport.update({
+  id: '/community/exchange/',
+  path: '/community/exchange/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityExchangeListingIdRoute =
+  CommunityExchangeListingIdRouteImport.update({
+    id: '/community/exchange/$listingId',
+    path: '/community/exchange/$listingId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const GardenHealthIndexRoute = GardenHealthIndexRouteImport.update({
   id: '/garden/health/',
   path: '/garden/health/',
@@ -289,6 +314,7 @@ const SpeciesDraftsDraftIdRoute = SpeciesDraftsDraftIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/join': typeof JoinRoute
   '/sit': typeof SitRoute
   '/today': typeof TodayRoute
@@ -324,6 +350,8 @@ export interface FileRoutesByFullPath {
   '/plan/': typeof PlanIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/species/': typeof SpeciesIndexRoute
+  '/community/events/$eventId': typeof CommunityEventsEventIdRoute
+  '/community/exchange/$listingId': typeof CommunityExchangeListingIdRoute
   '/garden/health/$caseId': typeof GardenHealthCaseIdRoute
   '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
@@ -331,12 +359,14 @@ export interface FileRoutesByFullPath {
   '/garden/seeds/$lotId': typeof GardenSeedsLotIdRoute
   '/plan/design/$layoutId': typeof PlanDesignLayoutIdRoute
   '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
+  '/community/exchange/': typeof CommunityExchangeIndexRoute
   '/garden/health/': typeof GardenHealthIndexRoute
   '/garden/seeds/': typeof GardenSeedsIndexRoute
   '/plan/design/': typeof PlanDesignIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/join': typeof JoinRoute
   '/sit': typeof SitRoute
   '/today': typeof TodayRoute
@@ -372,6 +402,8 @@ export interface FileRoutesByTo {
   '/plan': typeof PlanIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/species': typeof SpeciesIndexRoute
+  '/community/events/$eventId': typeof CommunityEventsEventIdRoute
+  '/community/exchange/$listingId': typeof CommunityExchangeListingIdRoute
   '/garden/health/$caseId': typeof GardenHealthCaseIdRoute
   '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
@@ -379,6 +411,7 @@ export interface FileRoutesByTo {
   '/garden/seeds/$lotId': typeof GardenSeedsLotIdRoute
   '/plan/design/$layoutId': typeof PlanDesignLayoutIdRoute
   '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
+  '/community/exchange': typeof CommunityExchangeIndexRoute
   '/garden/health': typeof GardenHealthIndexRoute
   '/garden/seeds': typeof GardenSeedsIndexRoute
   '/plan/design': typeof PlanDesignIndexRoute
@@ -386,6 +419,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/join': typeof JoinRoute
   '/sit': typeof SitRoute
   '/today': typeof TodayRoute
@@ -421,6 +455,8 @@ export interface FileRoutesById {
   '/plan/': typeof PlanIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/species/': typeof SpeciesIndexRoute
+  '/community/events/$eventId': typeof CommunityEventsEventIdRoute
+  '/community/exchange/$listingId': typeof CommunityExchangeListingIdRoute
   '/garden/health/$caseId': typeof GardenHealthCaseIdRoute
   '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
@@ -428,6 +464,7 @@ export interface FileRoutesById {
   '/garden/seeds/$lotId': typeof GardenSeedsLotIdRoute
   '/plan/design/$layoutId': typeof PlanDesignLayoutIdRoute
   '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
+  '/community/exchange/': typeof CommunityExchangeIndexRoute
   '/garden/health/': typeof GardenHealthIndexRoute
   '/garden/seeds/': typeof GardenSeedsIndexRoute
   '/plan/design/': typeof PlanDesignIndexRoute
@@ -436,6 +473,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/join'
     | '/sit'
     | '/today'
@@ -471,6 +509,8 @@ export interface FileRouteTypes {
     | '/plan/'
     | '/settings/'
     | '/species/'
+    | '/community/events/$eventId'
+    | '/community/exchange/$listingId'
     | '/garden/health/$caseId'
     | '/garden/health/new'
     | '/garden/plants/$specimenId'
@@ -478,12 +518,14 @@ export interface FileRouteTypes {
     | '/garden/seeds/$lotId'
     | '/plan/design/$layoutId'
     | '/species/drafts/$draftId'
+    | '/community/exchange/'
     | '/garden/health/'
     | '/garden/seeds/'
     | '/plan/design/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/join'
     | '/sit'
     | '/today'
@@ -519,6 +561,8 @@ export interface FileRouteTypes {
     | '/plan'
     | '/settings'
     | '/species'
+    | '/community/events/$eventId'
+    | '/community/exchange/$listingId'
     | '/garden/health/$caseId'
     | '/garden/health/new'
     | '/garden/plants/$specimenId'
@@ -526,12 +570,14 @@ export interface FileRouteTypes {
     | '/garden/seeds/$lotId'
     | '/plan/design/$layoutId'
     | '/species/drafts/$draftId'
+    | '/community/exchange'
     | '/garden/health'
     | '/garden/seeds'
     | '/plan/design'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/join'
     | '/sit'
     | '/today'
@@ -567,6 +613,8 @@ export interface FileRouteTypes {
     | '/plan/'
     | '/settings/'
     | '/species/'
+    | '/community/events/$eventId'
+    | '/community/exchange/$listingId'
     | '/garden/health/$caseId'
     | '/garden/health/new'
     | '/garden/plants/$specimenId'
@@ -574,6 +622,7 @@ export interface FileRouteTypes {
     | '/garden/seeds/$lotId'
     | '/plan/design/$layoutId'
     | '/species/drafts/$draftId'
+    | '/community/exchange/'
     | '/garden/health/'
     | '/garden/seeds/'
     | '/plan/design/'
@@ -581,6 +630,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   JoinRoute: typeof JoinRoute
   SitRoute: typeof SitRoute
   TodayRoute: typeof TodayRoute
@@ -616,6 +666,8 @@ export interface RootRouteChildren {
   PlanIndexRoute: typeof PlanIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   SpeciesIndexRoute: typeof SpeciesIndexRoute
+  CommunityEventsEventIdRoute: typeof CommunityEventsEventIdRoute
+  CommunityExchangeListingIdRoute: typeof CommunityExchangeListingIdRoute
   GardenHealthCaseIdRoute: typeof GardenHealthCaseIdRoute
   GardenHealthNewRoute: typeof GardenHealthNewRoute
   GardenPlantsSpecimenIdRoute: typeof GardenPlantsSpecimenIdRoute
@@ -623,6 +675,7 @@ export interface RootRouteChildren {
   GardenSeedsLotIdRoute: typeof GardenSeedsLotIdRoute
   PlanDesignLayoutIdRoute: typeof PlanDesignLayoutIdRoute
   SpeciesDraftsDraftIdRoute: typeof SpeciesDraftsDraftIdRoute
+  CommunityExchangeIndexRoute: typeof CommunityExchangeIndexRoute
   GardenHealthIndexRoute: typeof GardenHealthIndexRoute
   GardenSeedsIndexRoute: typeof GardenSeedsIndexRoute
   PlanDesignIndexRoute: typeof PlanDesignIndexRoute
@@ -635,6 +688,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/join': {
@@ -882,6 +942,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpeciesTaxonKeyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/community/events/$eventId': {
+      id: '/community/events/$eventId'
+      path: '/community/events/$eventId'
+      fullPath: '/community/events/$eventId'
+      preLoaderRoute: typeof CommunityEventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community/exchange/': {
+      id: '/community/exchange/'
+      path: '/community/exchange'
+      fullPath: '/community/exchange/'
+      preLoaderRoute: typeof CommunityExchangeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community/exchange/$listingId': {
+      id: '/community/exchange/$listingId'
+      path: '/community/exchange/$listingId'
+      fullPath: '/community/exchange/$listingId'
+      preLoaderRoute: typeof CommunityExchangeListingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/garden/health/': {
       id: '/garden/health/'
       path: '/garden/health'
@@ -957,6 +1038,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   JoinRoute: JoinRoute,
   SitRoute: SitRoute,
   TodayRoute: TodayRoute,
@@ -992,6 +1074,8 @@ const rootRouteChildren: RootRouteChildren = {
   PlanIndexRoute: PlanIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   SpeciesIndexRoute: SpeciesIndexRoute,
+  CommunityEventsEventIdRoute: CommunityEventsEventIdRoute,
+  CommunityExchangeListingIdRoute: CommunityExchangeListingIdRoute,
   GardenHealthCaseIdRoute: GardenHealthCaseIdRoute,
   GardenHealthNewRoute: GardenHealthNewRoute,
   GardenPlantsSpecimenIdRoute: GardenPlantsSpecimenIdRoute,
@@ -999,6 +1083,7 @@ const rootRouteChildren: RootRouteChildren = {
   GardenSeedsLotIdRoute: GardenSeedsLotIdRoute,
   PlanDesignLayoutIdRoute: PlanDesignLayoutIdRoute,
   SpeciesDraftsDraftIdRoute: SpeciesDraftsDraftIdRoute,
+  CommunityExchangeIndexRoute: CommunityExchangeIndexRoute,
   GardenHealthIndexRoute: GardenHealthIndexRoute,
   GardenSeedsIndexRoute: GardenSeedsIndexRoute,
   PlanDesignIndexRoute: PlanDesignIndexRoute,

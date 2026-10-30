@@ -317,7 +317,10 @@ export class CommunityStore {
     return this.one<CommunityEvent>(this.eventSql('e.id = ?2'), viewer, id);
   }
 
-  /** RSVP "going" respects the capacity in one conditional insert. */
+  /**
+   * RSVP "going" respects the capacity in one conditional upsert. A refused change (full or cancelled)
+   * leaves the earlier answer as it was.
+   */
   async rsvp(
     eventId: string,
     userId: string,
@@ -328,19 +331,20 @@ export class CommunityStore {
       await this.run('DELETE FROM community_rsvps WHERE event_id = ? AND user_id = ?', eventId, userId);
       return true;
     }
-    await this.run('DELETE FROM community_rsvps WHERE event_id = ? AND user_id = ?', eventId, userId);
-    const added = await this.run(
+    const changed = await this.run(
       `INSERT INTO community_rsvps (event_id, user_id, status, created_at)
        SELECT ?1, ?2, ?3, ?4 FROM community_events e
         WHERE e.id = ?1 AND e.cancelled_at IS NULL AND e.visibility = 'visible'
           AND (?3 != 'going' OR e.capacity IS NULL
-               OR (SELECT COUNT(*) FROM community_rsvps r WHERE r.event_id = ?1 AND r.status = 'going') < e.capacity)`,
+               OR (SELECT COUNT(*) FROM community_rsvps r
+                    WHERE r.event_id = ?1 AND r.status = 'going' AND r.user_id != ?2) < e.capacity)
+       ON CONFLICT (event_id, user_id) DO UPDATE SET status = excluded.status`,
       eventId,
       userId,
       status,
       now,
     );
-    return added === 1;
+    return changed === 1;
   }
 
   async cancelEvent(id: string, organiserId: string, now: number) {

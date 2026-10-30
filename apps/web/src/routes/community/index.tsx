@@ -1,10 +1,23 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { EmptyState, PageHeader } from '@plantpal/ui';
-import { Users } from 'lucide-react';
+import { buttonClasses, Button, Card, PageHeader, Tabs } from '@plantpal/ui';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { ShieldCheck, UserRound } from 'lucide-react';
+import { useState } from 'react';
 import { Page } from '../../app/Page';
+import { CommunityGate, type Member } from '../../features/community/CommunityGate';
+import { Events } from '../../features/community/Events';
+import { Exchange } from '../../features/community/Exchange';
+import { Feed } from '../../features/community/Feed';
+import { useCommunityT } from '../../features/community/messages';
+import { ProfileForm } from '../../features/community/ProfileForm';
+import { BlockedPeople } from '../../features/community/Safety';
 import { useT } from '../../i18n';
 
+type Tab = 'feed' | 'events' | 'exchange';
+const TABS: Tab[] = ['feed', 'events', 'exchange'];
+
 export const Route = createFileRoute('/community/')({
+  validateSearch: (search: Record<string, unknown>): { tab?: Tab } =>
+    TABS.includes(search.tab as Tab) ? { tab: search.tab as Tab } : {},
   component: CommunityIndex,
 });
 
@@ -13,12 +26,55 @@ function CommunityIndex() {
   return (
     <Page>
       <PageHeader title={t.community.title} />
-      <EmptyState
-        className="mt-8"
-        illustration={<Users className="size-16" strokeWidth={1.25} aria-hidden="true" />}
-        title={t.community.disabledTitle}
-        description={t.community.disabledBody}
-      />
+      <CommunityGate>{(me) => <CommunityHome me={me} />}</CommunityGate>
     </Page>
+  );
+}
+
+function CommunityHome({ me }: { me: Member }) {
+  const t = useT();
+  const c = useCommunityT();
+  const navigate = Route.useNavigate();
+  const { tab = 'feed' } = Route.useSearch();
+  const [editing, setEditing] = useState(false);
+  return (
+    <div className="mt-2 flex flex-col gap-4">
+      <p className="text-body-s text-muted">{c.intro}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<UserRound className="size-4" aria-hidden="true" />}
+          aria-expanded={editing}
+          onClick={() => setEditing((v) => !v)}
+        >
+          {c.setup.edit}
+        </Button>
+        {me.staff && (
+          <Link to="/admin" className={buttonClasses('ghost', 'sm')}>
+            <ShieldCheck className="size-4" aria-hidden="true" />
+            {c.admin.link}
+          </Link>
+        )}
+      </div>
+      {editing && (
+        <div className="flex flex-col gap-3">
+          <ProfileForm profile={me.profile} onDone={() => setEditing(false)} />
+          <Card>
+            <BlockedPeople />
+          </Card>
+        </div>
+      )}
+      <Tabs<Tab>
+        label={t.community.title}
+        value={tab}
+        onValueChange={(next) => void navigate({ search: { tab: next }, replace: true })}
+        items={[
+          { value: 'feed', label: c.tabs.feed, content: tab === 'feed' && <Feed me={me} /> },
+          { value: 'events', label: c.tabs.events, content: tab === 'events' && <Events /> },
+          { value: 'exchange', label: c.tabs.exchange, content: tab === 'exchange' && <Exchange /> },
+        ]}
+      />
+    </div>
   );
 }

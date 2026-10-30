@@ -10,7 +10,6 @@ import {
   Section,
   TextField,
 } from '@plantpal/ui';
-import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { ChevronLeft, Plus, Share2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -19,6 +18,7 @@ import { Page } from '../../../app/Page';
 import { community } from '../../../community/api';
 import { addGerminationTest, deleteSeedLot } from '../../../data/commands';
 import { useGarden, useSeedLot, useSpecimens } from '../../../data/queries';
+import { useCommunity } from '../../../features/community/hooks';
 import { reportError } from '../../../features/garden/errors';
 import { GardenLoading } from '../../../features/garden/NoGarden';
 import { rateLabel, useSeedT } from '../../../features/garden/seedMessages';
@@ -45,11 +45,8 @@ function SeedLotPage() {
   const [busy, setBusy] = useState(false);
   const [offering, setOffering] = useState(false);
   // The exchange is offered only where the community is on and this person has a profile.
-  const exchange = useQuery({
-    queryKey: ['community-profile'],
-    queryFn: async () => ((await community.status()).enabled ? (await community.profile()).profile : null),
-    retry: false,
-  });
+  const communityState = useCommunity();
+  const canOffer = communityState.kind === 'ready' && communityState.profile !== null;
 
   if (lot === undefined || (lot && (garden === undefined || !specimens)))
     return (
@@ -105,8 +102,7 @@ function SeedLotPage() {
         publish: true,
       });
       toast.success(s.offered);
-      void r;
-      await navigate({ to: '/community' });
+      await navigate({ to: '/community/exchange/$listingId', params: { listingId: r.id } });
     } catch (e) {
       toast.error(e instanceof ApiError && e.message ? e.message : s.offerFailed);
     } finally {
@@ -211,7 +207,7 @@ function SeedLotPage() {
           )}
         </Section>
 
-        {exchange.data && (
+        {canOffer && (
           <Card className="flex flex-col gap-2">
             <Button
               variant="secondary"

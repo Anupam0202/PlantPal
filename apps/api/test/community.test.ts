@@ -223,6 +223,10 @@ describe('events', () => {
     expect((await call('b', 'PUT', `/api/v1/community/events/${id}/rsvp`, { status: 'going' })).status).toBe(
       409,
     );
+    const one = await call('b', 'GET', `/api/v1/community/events/${id}`);
+    expect(one.body!.event).toMatchObject({ title: 'Seed swap', going: 1, mine: 'maybe' });
+    expect((one.body!.event as { cancelledAt: number | null }).cancelledAt).not.toBeNull();
+    expect((await call('b', 'GET', '/api/v1/community/events/01JZZZZZZZZZZZZZZZZZZZZZZZ')).status).toBe(404);
   });
 });
 

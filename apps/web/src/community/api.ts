@@ -140,6 +140,7 @@ export const community = {
     endsAt: number;
     capacity: number | null;
   }) => call<{ id: string }>('POST', `${C}/events`, e),
+  event: (eventId: string) => call<{ event: CommunityEvent }>('GET', `${C}/events/${id(eventId)}`),
   rsvp: (eventId: string, status: 'going' | 'maybe' | null) =>
     call<{ event: CommunityEvent }>('PUT', `${C}/events/${id(eventId)}/rsvp`, { status }),
   cancelEvent: (eventId: string) => call<{ ok: true }>('POST', `${C}/events/${id(eventId)}/cancel`),

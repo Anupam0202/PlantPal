@@ -304,6 +304,24 @@ const completed = (await (
   await other.call('POST', `/api/v1/community/exchange/${offer.id}/complete`)
 ).json()) as Json;
 check(completed.listing?.state === 'completed', 'both confirm the handoff, then it completes');
+const soon = Date.now() + 86_400_000;
+const event = (await (
+  await call('POST', '/api/v1/community/events', {
+    title: 'Seed swap',
+    place: 'Library steps',
+    startsAt: soon,
+    endsAt: soon + 7_200_000,
+    capacity: 1,
+  })
+).json()) as Json;
+await call('PUT', `/api/v1/community/events/${event.id}/rsvp`, { status: 'going' });
+await other.call('PUT', `/api/v1/community/events/${event.id}/rsvp`, { status: 'maybe' });
+const full = await other.call('PUT', `/api/v1/community/events/${event.id}/rsvp`, { status: 'going' });
+const kept = (await (await other.call('GET', `/api/v1/community/events/${event.id}`)).json()) as Json;
+check(
+  full.status === 409 && kept.event?.mine === 'maybe' && kept.event?.going === 1,
+  'a full event refuses another “going” and keeps the earlier answer',
+);
 const map = (await (await call('GET', '/api/v1/community/map')).json()) as Json;
 check(
   Array.isArray(map.cells) && map.cells.length === 0,

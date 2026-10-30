@@ -134,6 +134,14 @@ const R = {
     tags: ['community'],
     responses: { ...CREATED, ...problems },
   }),
+  event: createRoute({
+    method: 'get',
+    path: '/api/v1/community/events/{id}',
+    summary: 'One event, with RSVP counts and my answer',
+    request: { params: z.object({ id: Id }) },
+    tags: ['community'],
+    responses: { ...OK, ...problems },
+  }),
   rsvp: createRoute({
     method: 'put',
     path: '/api/v1/community/events/{id}/rsvp',
@@ -440,6 +448,14 @@ export function registerCommunityRoutes(app: OpenAPIHono<Vars>, deps: CommunityD
     const g = await withProfile(c);
     if ('error' in g) return g.error as never;
     return c.json({ events: await s.events(areaOf(g.p, c.req.valid('query').area), g.u.id, now()) }, 200);
+  });
+
+  app.openapi(R.event, async (c) => {
+    const g = await withProfile(c);
+    if ('error' in g) return g.error as never;
+    const ev = await s.event(c.req.valid('param').id, g.u.id);
+    if (!ev) return fail(c, 404, 'NOT_FOUND');
+    return c.json({ event: ev }, 200);
   });
 
   app.openapi(R.createEvent, async (c) => {
