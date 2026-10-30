@@ -2,6 +2,7 @@
 // Mock providers only: no network calls leave the machine.
 import { execFileSync, spawn } from 'node:child_process';
 import { newId } from '@plantpal/domain';
+import { b64urlEncode } from '../src/lib/webpush';
 import { SoftPasskey } from '../test/webauthn';
 
 const port = Number(process.env.SMOKE_PORT ?? 8788);
@@ -18,8 +19,22 @@ execFileSync('pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', 'plantpal
 const secret = [...crypto.getRandomValues(new Uint8Array(24))]
   .map((b) => b.toString(16).padStart(2, '0'))
   .join('');
+// Throwaway VAPID keys: push routes are on, but nothing is ever sent to a real push service.
+const vapidPair = (await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, [
+  'sign',
+  'verify',
+])) as CryptoKeyPair;
+const vapidPublic = b64urlEncode(
+  new Uint8Array((await crypto.subtle.exportKey('raw', vapidPair.publicKey)) as ArrayBuffer),
+);
+const vapidPrivate = ((await crypto.subtle.exportKey('jwk', vapidPair.privateKey)) as JsonWebKey).d!;
 const args = ['exec', 'wrangler', 'dev', '--port', String(port), '--ip', '127.0.0.1'];
-const dev = spawn('pnpm', [...args, '--var', `BETTER_AUTH_SECRET:${secret}`], {
+const vars = [
+  `BETTER_AUTH_SECRET:${secret}`,
+  `VAPID_PUBLIC_KEY:${vapidPublic}`,
+  `VAPID_PRIVATE_KEY:${vapidPrivate}`,
+].flatMap((v) => ['--var', v]);
+const dev = spawn('pnpm', [...args, ...vars], {
   env,
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
@@ -202,6 +217,34 @@ check(
   'members get a "changed" ping after a push',
 );
 socket.close();
+
+const pushKey = (await (await call('GET', '/api/v1/push/key')).json()) as Json;
+check(pushKey.publicKey === vapidPublic, 'the VAPID public key is served for push subscriptions');
+const browser = (await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, [
+  'deriveBits',
+])) as CryptoKeyPair;
+const subscription = {
+  endpoint: 'https://fcm.googleapis.com/fcm/send/smoke-test',
+  keys: {
+    p256dh: b64urlEncode(
+      new Uint8Array((await crypto.subtle.exportKey('raw', browser.publicKey)) as ArrayBuffer),
+    ),
+    auth: b64urlEncode(crypto.getRandomValues(new Uint8Array(16))),
+  },
+};
+check(
+  (await call('POST', '/api/v1/push/subscriptions', subscription)).status === 201,
+  'a browser push subscription is saved (D1)',
+);
+check(
+  (await call('POST', '/api/v1/push/subscriptions', { ...subscription, endpoint: 'https://evil.example/x' }))
+    .status === 400,
+  'subscriptions to unknown push services are refused',
+);
+check(
+  (await call('DELETE', '/api/v1/push/subscriptions', { endpoint: subscription.endpoint })).status === 204,
+  'a push subscription is removed',
+);
 
 const page = await fetch(`${base}/garden/journal`);
 check(

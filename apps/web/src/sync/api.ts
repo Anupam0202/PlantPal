@@ -122,6 +122,12 @@ export const api = {
       `${ws(id)}/share-links/${encodeURIComponent(linkId)}/summary`,
     ),
 
+  pushKey: () => call<{ publicKey: string }>('GET', '/api/v1/push/key'),
+  subscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
+    call<{ id: string }>('POST', '/api/v1/push/subscriptions', sub),
+  unsubscribe: (endpoint: string) => call<void>('DELETE', '/api/v1/push/subscriptions', { endpoint }),
+  pushTest: () => call<{ sent: number; removed: number; failed: number }>('POST', '/api/v1/push/test'),
+
   sitterView: (token: string) => call<SitterView>('GET', `/api/v1/share/${encodeURIComponent(token)}`),
   sitterCare: (
     token: string,

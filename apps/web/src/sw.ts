@@ -64,3 +64,41 @@ self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') void self.skipWaiting();
 });
 clientsClaim();
+
+// Web Push (opt-in per device). The payload arrives end-to-end encrypted; only this worker reads it.
+self.addEventListener('push', (event) => {
+  let note: { title?: string; body?: string; url?: string; tag?: string } = {};
+  try {
+    note = (event.data?.json() as typeof note) ?? {};
+  } catch {
+    note = { body: event.data?.text() };
+  }
+  // Only same-app paths are opened from a notification.
+  const url =
+    typeof note.url === 'string' && note.url.startsWith('/') && !note.url.startsWith('//')
+      ? note.url
+      : '/today';
+  event.waitUntil(
+    self.registration.showNotification(note.title ?? 'PlantPal', {
+      body: note.body ?? '',
+      tag: note.tag,
+      icon: '/icons/icon-192.png',
+      data: { url },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = String((event.notification.data as { url?: string } | null)?.url ?? '/today');
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const open = windows.find((w) => new URL(w.url).origin === self.location.origin);
+      if (open) {
+        await open.focus();
+        await open.navigate(url).catch(() => undefined);
+      } else await self.clients.openWindow(url);
+    })(),
+  );
+});

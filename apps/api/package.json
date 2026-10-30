@@ -8,7 +8,8 @@
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "smoke": "tsx scripts/smoke.ts",
-    "auth:migration": "tsx scripts/auth-migration.ts"
+    "auth:migration": "tsx scripts/auth-migration.ts",
+    "vapid:keys": "tsx scripts/vapid-keys.ts"
   },
   "dependencies": {
     "@better-auth/passkey": "1.7.14",
@@ -29,6 +30,7 @@
     "@simplewebauthn/server": "13.3.3",
     "@types/node": "^24.0.0",
     "drizzle-kit": "^0.31.11",
+    "http_ece": "1.2.1",
     "tsx": "4.23.15",
     "wrangler": "^4.153.0"
   }

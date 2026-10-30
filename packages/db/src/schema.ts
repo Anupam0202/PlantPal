@@ -121,3 +121,19 @@ export const shareLinks = sqliteTable(
   },
   (t) => [index('share_links_workspace_idx').on(t.workspaceId)],
 );
+
+/** Web Push subscriptions (migration 0004). */
+export const pushSubscriptions = sqliteTable(
+  'push_subscriptions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    endpoint: text('endpoint').notNull().unique(),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    createdAt: integer('created_at').notNull(),
+    lastSuccessAt: integer('last_success_at'),
+    failures: integer('failures').notNull().default(0),
+  },
+  (t) => [index('push_subscriptions_user_idx').on(t.userId)],
+);

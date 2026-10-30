@@ -5,6 +5,7 @@ import { DurableRooms, type GardenRoom } from './garden-room';
 import { DurableRateLimiter, type Limiter } from './limiter-do';
 import { AccountsStore } from './lib/accounts';
 import { createAuth, sessionAuthenticator } from './lib/auth';
+import { PushStore } from './lib/push-store';
 import { D1StatusStore } from './lib/status-store';
 import { D1SyncRepo } from './lib/sync-repo';
 import { WorkersFactCache } from './lib/workers-cache';
@@ -27,6 +28,11 @@ export interface Env {
   PUBLIC_ORIGIN: string;
   /** Worker secret (`wrangler secret put BETTER_AUTH_SECRET`). Accounts stay off without it. */
   BETTER_AUTH_SECRET?: string;
+  /** Web Push (VAPID). The private key is a Worker secret; push stays off without both. */
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+  /** `mailto:` or `https:` contact sent to push services; defaults to CONTACT. */
+  VAPID_SUBJECT?: string;
 }
 
 /** Accounts off: every account route answers 401. */
@@ -44,7 +50,15 @@ let current: ExecutionContext | null = null;
 
 function build(env: Env): Built {
   const secret = env.BETTER_AUTH_SECRET ?? '';
-  const key = `${env.PROVIDERS}|${env.DISABLED_PROVIDERS ?? ''}|${env.ALLOWED_ORIGINS}|${env.PUBLIC_ORIGIN}|${secret.length >= 32}`;
+  const vapid =
+    env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY
+      ? {
+          publicKey: env.VAPID_PUBLIC_KEY,
+          privateKey: env.VAPID_PRIVATE_KEY,
+          subject: env.VAPID_SUBJECT || env.CONTACT,
+        }
+      : null;
+  const key = `${env.PROVIDERS}|${env.DISABLED_PROVIDERS ?? ''}|${env.ALLOWED_ORIGINS}|${env.PUBLIC_ORIGIN}|${secret.length >= 32}|${vapid?.publicKey ?? ''}`;
   if (cached?.key === key) return cached;
   const mode: ProviderMode = env.PROVIDERS === 'live' ? 'live' : 'mock';
   const status = new D1StatusStore(env.DB);
@@ -81,6 +95,7 @@ function build(env: Env): Built {
     mode,
     allowedOrigins,
     accounts: { accounts, sync: new D1SyncRepo(env.DB), auth: authenticator, rooms },
+    push: { store: new PushStore(env.DB), vapid },
     ...(auth ? { authHandler: (req: Request) => auth().handler(req) } : {}),
   });
   cached = {

@@ -15,6 +15,7 @@ import {
   useSyncStatus,
 } from '../../features/account/hooks';
 import { useAccountT } from '../../features/account/messages';
+import { Notifications } from '../../features/account/Notifications';
 import { SignInPanel } from '../../features/account/SignInPanel';
 import { useFormat } from '../../i18n';
 import { downloadBlob } from '../../lib/download';
@@ -68,6 +69,7 @@ function AccountPage() {
               </Button>
             </Card>
             <SyncSection serverWorkspaces={state.me.workspaces} />
+            <Notifications />
           </>
         )}
         <ReviewSection />

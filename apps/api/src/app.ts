@@ -16,6 +16,7 @@ import { problem } from './lib/problem';
 import type { RateLimiter } from './lib/rate-limit';
 import type { StatusStore } from './lib/status-store';
 import { registerAccountRoutes, type AccountsDeps } from './routes/accounts';
+import { registerPushRoutes, type PushDeps } from './routes/push';
 
 export interface AppDeps {
   env: EnvClient;
@@ -26,6 +27,8 @@ export interface AppDeps {
   traceId?: () => string;
   /** Accounts, sync and sharing (§14). Off when absent, so the env gateway runs on its own. */
   accounts?: Omit<AccountsDeps, 'limiter'>;
+  /** Web Push subscriptions and test sends (needs `accounts` for sign-in). */
+  push?: Omit<PushDeps, 'auth' | 'limiter'>;
   /** Better Auth's handler for `/api/auth/*`. Absent when no auth secret is configured. */
   authHandler?: (req: Request) => Promise<Response>;
 }
@@ -273,6 +276,8 @@ export function createApp(deps: AppDeps) {
   });
 
   if (deps.accounts) registerAccountRoutes(app, { ...deps.accounts, limiter: deps.limiter });
+  if (deps.accounts && deps.push)
+    registerPushRoutes(app, { ...deps.push, auth: deps.accounts.auth, limiter: deps.limiter });
 
   app.doc31('/api/v1/openapi.json', {
     openapi: '3.1.0',

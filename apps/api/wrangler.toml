@@ -20,6 +20,9 @@ DISABLED_PROVIDERS = ""
 # The passkey relying party is this origin's host. Accounts also need the BETTER_AUTH_SECRET
 # Worker secret (never committed); without it, account routes answer 401/503.
 PUBLIC_ORIGIN = "http://localhost:8787"
+# Web Push: set VAPID_PUBLIC_KEY here and VAPID_PRIVATE_KEY as a secret
+# (`pnpm --filter @plantpal/api vapid:keys` makes a pair). Push stays off without both.
+VAPID_PUBLIC_KEY = ""
 
 [[d1_databases]]
 binding = "DB"
