@@ -20,6 +20,7 @@ import {
 } from '@plantpal/sync';
 import { type AccountsStore, newToken, tokenHash, type SitterLink } from '../lib/accounts';
 import { problem } from '../lib/problem';
+import type { Rooms } from '../lib/rooms';
 import type { RateLimiter } from '../lib/rate-limit';
 
 /** Resolves the signed-in person from the request (Better Auth session in the Worker). */
@@ -32,6 +33,8 @@ export interface AccountsDeps {
   sync: SyncRepo;
   auth: Authenticator;
   limiter: RateLimiter;
+  /** Live change pings; absent where realtime is off (tests, plain Node). */
+  rooms?: Rooms;
   now?: () => number;
 }
 
@@ -298,6 +301,15 @@ export function registerAccountRoutes(app: OpenAPIHono<Vars>, deps: AccountsDeps
     });
   };
   const roleIn = (userId: string) => (workspaceId: string) => deps.accounts.roleOf(workspaceId, userId);
+  /** Realtime is best effort: a failed ping never fails the write (members also poll). */
+  const ping = async (workspaceId: string) => {
+    if (!deps.rooms) return;
+    try {
+      await deps.rooms.changed(workspaceId, await deps.sync.latestSeq(workspaceId));
+    } catch {
+      /* members still pull on focus and every minute */
+    }
+  };
 
   app.openapi(meRoute, async (c) => {
     const u = await userOr401(c);
@@ -326,6 +338,8 @@ export function registerAccountRoutes(app: OpenAPIHono<Vars>, deps: AccountsDeps
     if (slow) return slow as never;
     const { ops } = c.req.valid('json');
     const results = await applyPush(deps.sync, roleIn(u.id), u.id, ops, now());
+    const touched = new Set(ops.filter((_, i) => results[i]?.status === 'applied').map((o) => o.workspaceId));
+    for (const ws of touched) await ping(ws);
     return c.json({ results }, 200);
   });
 
@@ -403,6 +417,7 @@ export function registerAccountRoutes(app: OpenAPIHono<Vars>, deps: AccountsDeps
     if (theirs === 'owner' && (await deps.accounts.owners(id)) <= 1)
       return problem(c, 400, 'VALIDATION_FAILED', 'A garden needs at least one owner') as never;
     await deps.accounts.removeMember(id, userId);
+    await deps.rooms?.kick(id, userId).catch(() => undefined);
     return c.body(null, 204);
   });
 
@@ -622,6 +637,7 @@ export function registerAccountRoutes(app: OpenAPIHono<Vars>, deps: AccountsDeps
       t,
     );
     if (r.status !== 'applied') return problem(c, 400, 'VALIDATION_FAILED', r.message ?? undefined) as never;
+    await ping(g.link.workspaceId);
     return c.json({ id }, 201);
   });
 }

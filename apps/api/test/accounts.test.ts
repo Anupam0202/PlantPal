@@ -7,9 +7,11 @@ import { PullResponse, PushResponse, SnapshotResponse, type Role } from '@plantp
 import { createApp } from '../src/app';
 import { AccountsStore } from '../src/lib/accounts';
 import { MemoryRateLimiter } from '../src/lib/rate-limit';
+import { MemoryRooms } from '../src/lib/rooms';
 import { MemoryStatusStore } from '../src/lib/status-store';
 import { D1SyncRepo } from '../src/lib/sync-repo';
 import type { Authenticator } from '../src/routes/accounts';
+import { connectLive } from '../src/routes/live';
 import { createD1 } from './d1-shim';
 
 const T0 = Date.UTC(2026, 9, 1, 9);
@@ -119,6 +121,8 @@ async function setup(opts: { capacity?: number } = {}) {
   await d1.exec(sql('0002_sync.sql'));
   await d1.exec(sql('0003_auth.sql'));
   let now = T0;
+  const rooms = new MemoryRooms();
+  const accounts = new AccountsStore(d1);
   const app = createApp({
     env: new EnvClient({ mode: 'mock', cache: new MemoryCache() }),
     status: new MemoryStatusStore(),
@@ -126,7 +130,7 @@ async function setup(opts: { capacity?: number } = {}) {
     mode: 'mock',
     allowedOrigins: ['https://plantpal.example'],
     traceId: () => 'trace-1',
-    accounts: { accounts: new AccountsStore(d1), sync: new D1SyncRepo(d1), auth, now: () => now },
+    accounts: { accounts, sync: new D1SyncRepo(d1), auth, rooms, now: () => now },
   });
   const call = (user: string | null, method: string, path: string, body?: unknown) =>
     app.request(path, {
@@ -137,7 +141,7 @@ async function setup(opts: { capacity?: number } = {}) {
       },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
-  return { d1, call, clock: { set: (t: number) => (now = t) } };
+  return { d1, call, rooms, accounts, clock: { set: (t: number) => (now = t) } };
 }
 
 /** A workspace with an owner, one member per role, a garden, two spaces and a plant in each. */
@@ -545,5 +549,65 @@ describe('accounts and sync API: plant-sitter links', () => {
     expect((await make({ expiresAt: T0 + 31 * DAY })).status).toBe(400);
     expect((await make({ expiresAt: T0 })).status).toBe(400);
     expect((await make({})).status).toBe(201);
+  });
+});
+
+describe('accounts and sync API: live change pings', () => {
+  it('pings the garden’s room after applied changes and sitter care, never after refused ones', async () => {
+    const { rooms, push, op, ids, call } = await seeded();
+    const before = rooms.events.length;
+    const seededPing = rooms.events.filter((e) => e.kind === 'changed');
+    expect(seededPing.at(-1)).toEqual({ kind: 'changed', workspaceId: ids.ws, seq: 5 });
+
+    await push(PEOPLE.viewer, [op('careEvent.create', careOf(ids.ws, ids.garden, ids.basil))]);
+    expect(rooms.events.length).toBe(before);
+
+    await push(PEOPLE.helper, [op('careEvent.create', careOf(ids.ws, ids.garden, ids.basil))]);
+    expect(rooms.events.at(-1)).toEqual({ kind: 'changed', workspaceId: ids.ws, seq: 6 });
+
+    const link = (await (
+      await call(OWNER, 'POST', `/api/v1/workspaces/${ids.ws}/share-links`, {
+        gardenId: ids.garden,
+        zoneIds: [ids.rail],
+        label: 'Asha',
+        startsAt: T0,
+        expiresAt: T0 + DAY,
+      })
+    ).json()) as { token: string };
+    await call(null, 'POST', `/api/v1/share/${link.token}/care`, { specimenId: ids.basil, kind: 'water' });
+    expect(rooms.events.at(-1)).toEqual({ kind: 'changed', workspaceId: ids.ws, seq: 7 });
+  });
+
+  it('closes a removed member’s live connections', async () => {
+    const { rooms, call, ids } = await seeded();
+    await call(OWNER, 'DELETE', `/api/v1/workspaces/${ids.ws}/members/${PEOPLE.viewer}`);
+    expect(rooms.events.at(-1)).toEqual({ kind: 'kick', workspaceId: ids.ws, userId: PEOPLE.viewer });
+  });
+
+  it('lets only members open the live socket, from the app’s own origin', async () => {
+    const { rooms, accounts, ids } = await seeded();
+    const deps = { auth, accounts, rooms, origins: ['https://plantpal.example'] };
+    const ask = (user: string | null, headers: Record<string, string> = {}) =>
+      connectLive(
+        deps,
+        ids.ws,
+        new Request(`https://plantpal.example/api/v1/workspaces/${ids.ws}/live`, {
+          headers: {
+            upgrade: 'websocket',
+            origin: 'https://plantpal.example',
+            ...(user ? { 'x-test-user': user } : {}),
+            ...headers,
+          },
+        }),
+      );
+    expect((await ask(null)).status).toBe(401);
+    expect((await ask(STRANGER)).status).toBe(403);
+    expect((await ask(PEOPLE.viewer, { origin: 'https://evil.example' })).status).toBe(403);
+    expect((await ask(PEOPLE.viewer, { upgrade: '' })).status).toBe(400);
+    const before = rooms.events.length;
+    expect((await ask(PEOPLE.viewer)).status).toBe(204);
+    expect(rooms.events.slice(before)).toEqual([
+      { kind: 'connect', workspaceId: ids.ws, userId: PEOPLE.viewer },
+    ]);
   });
 });

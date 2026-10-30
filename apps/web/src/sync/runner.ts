@@ -75,6 +75,7 @@ export async function syncNow(t: Transport = http): Promise<void> {
     }
     backoff = 0;
     await setStatus({ state: 'idle', lastSyncedAt: Date.now() });
+    void live?.refresh();
   } catch (e) {
     if (e instanceof ApiError && e.status === 401) await setStatus({ state: 'signed-out' });
     else if (accountsUnavailable(e)) await setStatus({ state: 'unavailable' });
@@ -93,6 +94,59 @@ export async function syncNow(t: Transport = http): Promise<void> {
   }
 }
 
+/** ws(s)://host for the API: the app's own origin unless a separate API base is configured. */
+function liveUrl(workspaceId: string): string {
+  const base = String(import.meta.env.VITE_API_BASE_URL ?? '') || location.origin;
+  const u = new URL(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/live`, base);
+  u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+  return u.toString();
+}
+
+/**
+ * Live "changed" pings from each synced garden's room (§14.3 realtime). They carry no data: a ping
+ * just triggers a pull. Sockets reconnect with backoff; polling stays as the fallback.
+ */
+function liveSockets(onChange: () => void) {
+  const sockets = new Map<string, WebSocket>();
+  let stopped = false;
+  const open = (workspaceId: string, attempt = 0) => {
+    if (stopped || sockets.has(workspaceId) || typeof WebSocket === 'undefined') return;
+    let s: WebSocket;
+    try {
+      s = new WebSocket(liveUrl(workspaceId));
+    } catch {
+      return;
+    }
+    sockets.set(workspaceId, s);
+    let keepAlive: ReturnType<typeof setInterval> | undefined;
+    s.onopen = () => {
+      attempt = 0;
+      keepAlive = setInterval(() => s.send('ping'), 30_000);
+    };
+    s.onmessage = (e) => {
+      if (typeof e.data === 'string' && e.data.includes('"changed"')) onChange();
+    };
+    s.onclose = (e) => {
+      clearInterval(keepAlive);
+      sockets.delete(workspaceId);
+      // 4003: access removed. Otherwise come back later; a sync on focus covers the gap.
+      if (stopped || e.code === 4003) return;
+      setTimeout(() => open(workspaceId, attempt + 1), Math.min(MAX_BACKOFF_MS, 2_000 * 2 ** attempt));
+    };
+  };
+  return {
+    async refresh() {
+      for (const w of await syncedWorkspaces()) open(w.id);
+    },
+    stop() {
+      stopped = true;
+      for (const s of sockets.values()) s.close();
+      sockets.clear();
+    },
+  };
+}
+
+let live: ReturnType<typeof liveSockets> | null = null;
 let leading = false;
 const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(CHANNEL);
 
@@ -116,6 +170,7 @@ export function startSync(): () => void {
         clearTimeout(debounce);
         debounce = setTimeout(() => void syncNow(), DEBOUNCE_MS);
       };
+      live = liveSockets(soon);
       const waiting = liveQuery(() => db.outbox.where('state').equals('pending').count()).subscribe({
         next: (n) => {
           if (n > 0) soon();
@@ -137,6 +192,8 @@ export function startSync(): () => void {
       void syncNow();
       release = () => {
         leading = false;
+        live?.stop();
+        live = null;
         waiting.unsubscribe();
         clearInterval(tick);
         clearTimeout(debounce);

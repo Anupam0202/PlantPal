@@ -4,5 +4,5 @@
     "types": ["@cloudflare/workers-types", "node"],
     "lib": ["ES2023"]
   },
-  "include": ["src", "test"]
+  "include": ["src", "test", "scripts"]
 }

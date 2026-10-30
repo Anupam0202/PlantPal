@@ -7,7 +7,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
-    "smoke": "node scripts/smoke.mjs",
+    "smoke": "tsx scripts/smoke.ts",
     "auth:migration": "tsx scripts/auth-migration.ts"
   },
   "dependencies": {
@@ -29,6 +29,7 @@
     "@simplewebauthn/server": "13.3.3",
     "@types/node": "^24.0.0",
     "drizzle-kit": "^0.31.11",
+    "tsx": "4.23.15",
     "wrangler": "^4.153.0"
   }
 }

@@ -31,9 +31,18 @@ migrations_dir = "migrations"
 name = "LIMITER"
 class_name = "Limiter"
 
+# One room per shared garden: live "changed" pings over hibernating WebSockets.
+[[durable_objects.bindings]]
+name = "GARDEN_ROOM"
+class_name = "GardenRoom"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Limiter"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["GardenRoom"]
 
 [observability]
 enabled = true

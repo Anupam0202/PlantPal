@@ -1,19 +1,23 @@
 import { EnvClient, type ProviderMode } from '@plantpal/providers';
 import { PROVIDER_IDS, type ProviderId } from '@plantpal/schemas';
 import { createApp } from './app';
+import { DurableRooms, type GardenRoom } from './garden-room';
 import { DurableRateLimiter, type Limiter } from './limiter-do';
 import { AccountsStore } from './lib/accounts';
 import { createAuth, sessionAuthenticator } from './lib/auth';
-import { D1SyncRepo } from './lib/sync-repo';
-import type { Authenticator } from './routes/accounts';
 import { D1StatusStore } from './lib/status-store';
+import { D1SyncRepo } from './lib/sync-repo';
 import { WorkersFactCache } from './lib/workers-cache';
+import type { Authenticator } from './routes/accounts';
+import { connectLive, LIVE_PATH } from './routes/live';
 
+export { GardenRoom } from './garden-room';
 export { Limiter } from './limiter-do';
 
 export interface Env {
   DB: D1Database;
   LIMITER: DurableObjectNamespace<Limiter>;
+  GARDEN_ROOM: DurableObjectNamespace<GardenRoom>;
   ASSETS: Fetcher;
   PROVIDERS: string;
   ALLOWED_ORIGINS: string;
@@ -28,15 +32,20 @@ export interface Env {
 /** Accounts off: every account route answers 401. */
 const signedOut: Authenticator = { userOf: async () => null };
 
-let cached: { key: string; app: ReturnType<typeof createApp> } | null = null;
+interface Built {
+  key: string;
+  app: ReturnType<typeof createApp>;
+  live: Parameters<typeof connectLive>[0];
+}
+let cached: Built | null = null;
 
 /** The app is cached across requests, so background work must use the live request's context. */
-let live: ExecutionContext | null = null;
+let current: ExecutionContext | null = null;
 
-function appFor(env: Env) {
+function build(env: Env): Built {
   const secret = env.BETTER_AUTH_SECRET ?? '';
   const key = `${env.PROVIDERS}|${env.DISABLED_PROVIDERS ?? ''}|${env.ALLOWED_ORIGINS}|${env.PUBLIC_ORIGIN}|${secret.length >= 32}`;
-  if (cached?.key === key) return cached.app;
+  if (cached?.key === key) return cached;
   const mode: ProviderMode = env.PROVIDERS === 'live' ? 'live' : 'mock';
   const status = new D1StatusStore(env.DB);
   const disabled = (env.DISABLED_PROVIDERS ?? '')
@@ -50,7 +59,7 @@ function appFor(env: Env) {
     disabled,
     onStatus: (e) => {
       const write = status.record(e).catch(() => undefined);
-      live?.waitUntil(write);
+      current?.waitUntil(write);
     },
   });
   const allowedOrigins = env.ALLOWED_ORIGINS.split(',').map((s) => s.trim());
@@ -60,26 +69,35 @@ function appFor(env: Env) {
     secret.length >= 32
       ? () => createAuth({ database: env.DB, secret, publicOrigin: env.PUBLIC_ORIGIN, allowedOrigins })
       : null;
+  const authenticator: Authenticator = auth
+    ? { userOf: (req) => sessionAuthenticator(auth()).userOf(req) }
+    : signedOut;
+  const accounts = new AccountsStore(env.DB);
+  const rooms = new DurableRooms(env.GARDEN_ROOM);
   const app = createApp({
     env: client,
     status,
     limiter: new DurableRateLimiter(env.LIMITER),
     mode,
     allowedOrigins,
-    accounts: {
-      accounts: new AccountsStore(env.DB),
-      sync: new D1SyncRepo(env.DB),
-      auth: auth ? { userOf: (req) => sessionAuthenticator(auth()).userOf(req) } : signedOut,
-    },
+    accounts: { accounts, sync: new D1SyncRepo(env.DB), auth: authenticator, rooms },
     ...(auth ? { authHandler: (req: Request) => auth().handler(req) } : {}),
   });
-  cached = { key, app };
-  return app;
+  cached = {
+    key,
+    app,
+    live: { auth: authenticator, accounts, rooms, origins: [env.PUBLIC_ORIGIN, ...allowedOrigins] },
+  };
+  return cached;
 }
 
 export default {
   fetch(request, env, ctx) {
-    live = ctx;
-    return appFor(env).fetch(request, env, ctx);
+    current = ctx;
+    const built = build(env);
+    // The live socket skips the app router so its upgrade response reaches the browser untouched.
+    const live = LIVE_PATH.exec(new URL(request.url).pathname);
+    if (live) return connectLive(built.live, live[1]!, request);
+    return built.app.fetch(request, env, ctx);
   },
 } satisfies ExportedHandler<Env>;
