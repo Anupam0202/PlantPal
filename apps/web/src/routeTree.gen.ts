@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JoinRouteImport } from './routes/join'
+import { Route as SitRouteImport } from './routes/sit'
 import { Route as TodayRouteImport } from './routes/today'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as CommunityIndexRouteImport } from './routes/community/index'
@@ -35,9 +37,11 @@ import { Route as PlanIndexRouteImport } from './routes/plan/index'
 import { Route as PlanCalendarRouteImport } from './routes/plan/calendar'
 import { Route as PlanSunRouteImport } from './routes/plan/sun'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as SettingsAccountRouteImport } from './routes/settings/account'
 import { Route as SettingsAiRouteImport } from './routes/settings/ai'
 import { Route as SettingsDataRouteImport } from './routes/settings/data'
 import { Route as SettingsMigrateRouteImport } from './routes/settings/migrate'
+import { Route as SettingsSharingRouteImport } from './routes/settings/sharing'
 import { Route as SettingsSourcesRouteImport } from './routes/settings/sources'
 import { Route as SpeciesIndexRouteImport } from './routes/species/index'
 import { Route as SpeciesTaxonKeyRouteImport } from './routes/species/$taxonKey'
@@ -53,6 +57,16 @@ import { Route as SpeciesDraftsDraftIdRouteImport } from './routes/species/draft
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinRoute = JoinRouteImport.update({
+  id: '/join',
+  path: '/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitRoute = SitRouteImport.update({
+  id: '/sit',
+  path: '/sit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TodayRoute = TodayRouteImport.update({
@@ -180,6 +194,11 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsAccountRoute = SettingsAccountRouteImport.update({
+  id: '/settings/account',
+  path: '/settings/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsAiRoute = SettingsAiRouteImport.update({
   id: '/settings/ai',
   path: '/settings/ai',
@@ -193,6 +212,11 @@ const SettingsDataRoute = SettingsDataRouteImport.update({
 const SettingsMigrateRoute = SettingsMigrateRouteImport.update({
   id: '/settings/migrate',
   path: '/settings/migrate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsSharingRoute = SettingsSharingRouteImport.update({
+  id: '/settings/sharing',
+  path: '/settings/sharing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsSourcesRoute = SettingsSourcesRouteImport.update({
@@ -253,6 +277,8 @@ const SpeciesDraftsDraftIdRoute = SpeciesDraftsDraftIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/join': typeof JoinRoute
+  '/sit': typeof SitRoute
   '/today': typeof TodayRoute
   '/welcome': typeof WelcomeRoute
   '/dev/design-system': typeof DevDesignSystemRoute
@@ -273,9 +299,11 @@ export interface FileRoutesByFullPath {
   '/nature/sighting': typeof NatureSightingRoute
   '/plan/calendar': typeof PlanCalendarRoute
   '/plan/sun': typeof PlanSunRoute
+  '/settings/account': typeof SettingsAccountRoute
   '/settings/ai': typeof SettingsAiRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
+  '/settings/sharing': typeof SettingsSharingRoute
   '/settings/sources': typeof SettingsSourcesRoute
   '/species/$taxonKey': typeof SpeciesTaxonKeyRoute
   '/community/': typeof CommunityIndexRoute
@@ -295,6 +323,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/join': typeof JoinRoute
+  '/sit': typeof SitRoute
   '/today': typeof TodayRoute
   '/welcome': typeof WelcomeRoute
   '/dev/design-system': typeof DevDesignSystemRoute
@@ -315,9 +345,11 @@ export interface FileRoutesByTo {
   '/nature/sighting': typeof NatureSightingRoute
   '/plan/calendar': typeof PlanCalendarRoute
   '/plan/sun': typeof PlanSunRoute
+  '/settings/account': typeof SettingsAccountRoute
   '/settings/ai': typeof SettingsAiRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
+  '/settings/sharing': typeof SettingsSharingRoute
   '/settings/sources': typeof SettingsSourcesRoute
   '/species/$taxonKey': typeof SpeciesTaxonKeyRoute
   '/community': typeof CommunityIndexRoute
@@ -338,6 +370,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/join': typeof JoinRoute
+  '/sit': typeof SitRoute
   '/today': typeof TodayRoute
   '/welcome': typeof WelcomeRoute
   '/dev/design-system': typeof DevDesignSystemRoute
@@ -358,9 +392,11 @@ export interface FileRoutesById {
   '/nature/sighting': typeof NatureSightingRoute
   '/plan/calendar': typeof PlanCalendarRoute
   '/plan/sun': typeof PlanSunRoute
+  '/settings/account': typeof SettingsAccountRoute
   '/settings/ai': typeof SettingsAiRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/migrate': typeof SettingsMigrateRoute
+  '/settings/sharing': typeof SettingsSharingRoute
   '/settings/sources': typeof SettingsSourcesRoute
   '/species/$taxonKey': typeof SpeciesTaxonKeyRoute
   '/community/': typeof CommunityIndexRoute
@@ -382,6 +418,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/join'
+    | '/sit'
     | '/today'
     | '/welcome'
     | '/dev/design-system'
@@ -402,9 +440,11 @@ export interface FileRouteTypes {
     | '/nature/sighting'
     | '/plan/calendar'
     | '/plan/sun'
+    | '/settings/account'
     | '/settings/ai'
     | '/settings/data'
     | '/settings/migrate'
+    | '/settings/sharing'
     | '/settings/sources'
     | '/species/$taxonKey'
     | '/community/'
@@ -424,6 +464,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/join'
+    | '/sit'
     | '/today'
     | '/welcome'
     | '/dev/design-system'
@@ -444,9 +486,11 @@ export interface FileRouteTypes {
     | '/nature/sighting'
     | '/plan/calendar'
     | '/plan/sun'
+    | '/settings/account'
     | '/settings/ai'
     | '/settings/data'
     | '/settings/migrate'
+    | '/settings/sharing'
     | '/settings/sources'
     | '/species/$taxonKey'
     | '/community'
@@ -466,6 +510,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/join'
+    | '/sit'
     | '/today'
     | '/welcome'
     | '/dev/design-system'
@@ -486,9 +532,11 @@ export interface FileRouteTypes {
     | '/nature/sighting'
     | '/plan/calendar'
     | '/plan/sun'
+    | '/settings/account'
     | '/settings/ai'
     | '/settings/data'
     | '/settings/migrate'
+    | '/settings/sharing'
     | '/settings/sources'
     | '/species/$taxonKey'
     | '/community/'
@@ -509,6 +557,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  JoinRoute: typeof JoinRoute
+  SitRoute: typeof SitRoute
   TodayRoute: typeof TodayRoute
   WelcomeRoute: typeof WelcomeRoute
   DevDesignSystemRoute: typeof DevDesignSystemRoute
@@ -529,9 +579,11 @@ export interface RootRouteChildren {
   NatureSightingRoute: typeof NatureSightingRoute
   PlanCalendarRoute: typeof PlanCalendarRoute
   PlanSunRoute: typeof PlanSunRoute
+  SettingsAccountRoute: typeof SettingsAccountRoute
   SettingsAiRoute: typeof SettingsAiRoute
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsMigrateRoute: typeof SettingsMigrateRoute
+  SettingsSharingRoute: typeof SettingsSharingRoute
   SettingsSourcesRoute: typeof SettingsSourcesRoute
   SpeciesTaxonKeyRoute: typeof SpeciesTaxonKeyRoute
   CommunityIndexRoute: typeof CommunityIndexRoute
@@ -557,6 +609,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join': {
+      id: '/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof JoinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sit': {
+      id: '/sit'
+      path: '/sit'
+      fullPath: '/sit'
+      preLoaderRoute: typeof SitRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/today': {
@@ -734,6 +800,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/account': {
+      id: '/settings/account'
+      path: '/settings/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof SettingsAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/ai': {
       id: '/settings/ai'
       path: '/settings/ai'
@@ -753,6 +826,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/migrate'
       fullPath: '/settings/migrate'
       preLoaderRoute: typeof SettingsMigrateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/sharing': {
+      id: '/settings/sharing'
+      path: '/settings/sharing'
+      fullPath: '/settings/sharing'
+      preLoaderRoute: typeof SettingsSharingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/sources': {
@@ -837,6 +917,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  JoinRoute: JoinRoute,
+  SitRoute: SitRoute,
   TodayRoute: TodayRoute,
   WelcomeRoute: WelcomeRoute,
   DevDesignSystemRoute: DevDesignSystemRoute,
@@ -857,9 +939,11 @@ const rootRouteChildren: RootRouteChildren = {
   NatureSightingRoute: NatureSightingRoute,
   PlanCalendarRoute: PlanCalendarRoute,
   PlanSunRoute: PlanSunRoute,
+  SettingsAccountRoute: SettingsAccountRoute,
   SettingsAiRoute: SettingsAiRoute,
   SettingsDataRoute: SettingsDataRoute,
   SettingsMigrateRoute: SettingsMigrateRoute,
+  SettingsSharingRoute: SettingsSharingRoute,
   SettingsSourcesRoute: SettingsSourcesRoute,
   SpeciesTaxonKeyRoute: SpeciesTaxonKeyRoute,
   CommunityIndexRoute: CommunityIndexRoute,

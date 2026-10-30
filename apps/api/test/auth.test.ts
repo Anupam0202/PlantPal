@@ -112,6 +112,10 @@ describe('passkey accounts', () => {
     // The account can claim its device workspace.
     const ws = newId();
     expect((await b.call('POST', '/api/v1/workspaces', { id: ws, name: 'Home' })).status).toBe(201);
+    const members = (await (await b.call('GET', `/api/v1/workspaces/${ws}/members`)).json()) as {
+      members: Array<{ name: string | null; role: string }>;
+    };
+    expect(members.members).toEqual([expect.objectContaining({ name: 'Anu', role: 'owner' })]);
 
     expect((await b.call('POST', '/api/auth/sign-out', {})).status).toBe(200);
     expect((await me(b)).status).toBe(401);

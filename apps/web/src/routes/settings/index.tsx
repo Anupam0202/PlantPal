@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Card, PageHeader, Section, SegmentedControl, SelectField, SwitchField } from '@plantpal/ui';
-import { ChevronRight, CloudSun, Database, Monitor, Moon, Sparkles, Sun } from 'lucide-react';
+import { ChevronRight, CloudSun, Database, Monitor, Moon, Sparkles, Sun, UserRound } from 'lucide-react';
 import { Page } from '../../app/Page';
+import { useAccountT } from '../../features/account/messages';
 import { localeNames, useT } from '../../i18n';
 import { usePrefs, type LocalePref, type ThemePref, type UnitsPref } from '../../state/prefs';
 
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/settings/')({
 
 function SettingsPage() {
   const t = useT();
+  const at = useAccountT();
   const prefs = usePrefs();
   return (
     <Page width="narrow">
@@ -93,6 +95,7 @@ function SettingsPage() {
           <div className="flex flex-col gap-2">
             {(
               [
+                ['/settings/account', at.account.title, 'account'],
                 ['/settings/ai', t.settings.ai, 'ai'],
                 ['/settings/data', t.settings.dataLink, 'data'],
                 ['/settings/sources', t.env.sources.title, 'sources'],
@@ -103,7 +106,9 @@ function SettingsPage() {
                 to={to}
                 className="flex items-center gap-3 rounded-lg border border-line bg-surface p-4 shadow-1 transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-focus"
               >
-                {icon === 'ai' ? (
+                {icon === 'account' ? (
+                  <UserRound className="size-5 text-accent-ink" aria-hidden="true" />
+                ) : icon === 'ai' ? (
                   <Sparkles className="size-5 text-accent-ink" aria-hidden="true" />
                 ) : icon === 'data' ? (
                   <Database className="size-5 text-accent-ink" aria-hidden="true" />

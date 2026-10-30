@@ -34,6 +34,9 @@ declare module '@tanstack/react-router' {
   }
 }
 
+// Background sync for shared gardens; loaded after first paint and idle unless a garden syncs.
+void import('./sync/runner').then((m) => m.startSync());
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

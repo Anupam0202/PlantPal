@@ -59,7 +59,12 @@ const Me = z.object({
   user: z.object({ id: z.string(), name: z.string() }),
   workspaces: z.array(WorkspaceRef),
 });
-const MemberOut = z.object({ userId: z.string(), role: z.enum(ROLES), createdAt: z.number() });
+const MemberOut = z.object({
+  userId: z.string(),
+  name: z.string().nullable(),
+  role: z.enum(ROLES),
+  createdAt: z.number(),
+});
 const ShareLinkOut = z.object({
   id: z.string(),
   gardenId: z.string(),

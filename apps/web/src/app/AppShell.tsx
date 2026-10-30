@@ -82,7 +82,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const t = useT();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const onboarding = pathname.startsWith('/welcome');
+  // Onboarding and the plant-sitter page (no account, no garden) show without app navigation.
+  const onboarding = pathname.startsWith('/welcome') || pathname === '/sit';
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

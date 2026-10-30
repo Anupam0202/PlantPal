@@ -117,6 +117,7 @@ async function setup(opts: { capacity?: number } = {}) {
   const d1 = createD1();
   await d1.exec(sql('0001_provider_status.sql'));
   await d1.exec(sql('0002_sync.sql'));
+  await d1.exec(sql('0003_auth.sql'));
   let now = T0;
   const app = createApp({
     env: new EnvClient({ mode: 'mock', cache: new MemoryCache() }),

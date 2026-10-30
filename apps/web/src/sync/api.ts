@@ -57,6 +57,7 @@ export interface Me {
 }
 export interface Member {
   userId: string;
+  name: string | null;
   role: Role;
   createdAt: number;
 }

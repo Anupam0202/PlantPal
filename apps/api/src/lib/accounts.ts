@@ -19,6 +19,8 @@ export async function tokenHash(token: string): Promise<string> {
 
 export interface Member {
   userId: string;
+  /** The name they chose at sign-up; null if the account is gone. */
+  name: string | null;
   role: Role;
   createdAt: number;
 }
@@ -37,7 +39,7 @@ export interface SitterLink {
 /** Workspaces, memberships, invitations and sitter links on D1. Server-authoritative (§14.3). */
 export class AccountsStore {
   private readonly db: DrizzleD1Database;
-  constructor(d1: D1Database) {
+  constructor(private readonly d1: D1Database) {
     this.db = drizzle(d1);
   }
 
@@ -72,10 +74,21 @@ export class AccountsStore {
   }
 
   async members(workspaceId: string): Promise<Member[]> {
-    return this.db
+    const rows = await this.db
       .select({ userId: memberships.userId, role: memberships.role, createdAt: memberships.createdAt })
       .from(memberships)
       .where(eq(memberships.workspaceId, workspaceId));
+    // Display names live in Better Auth's `user` table (migration 0003).
+    const names = new Map<string, string>();
+    if (rows.length) {
+      const marks = rows.map(() => '?').join(', ');
+      const found = await this.d1
+        .prepare(`select id, name from "user" where id in (${marks})`)
+        .bind(...rows.map((r) => r.userId))
+        .all<{ id: string; name: string }>();
+      for (const u of found.results) names.set(u.id, u.name);
+    }
+    return rows.map((r) => ({ ...r, name: names.get(r.userId) ?? null }));
   }
 
   async owners(workspaceId: string): Promise<number> {
