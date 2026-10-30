@@ -26,6 +26,8 @@ export interface AppDeps {
   traceId?: () => string;
   /** Accounts, sync and sharing (§14). Off when absent, so the env gateway runs on its own. */
   accounts?: Omit<AccountsDeps, 'limiter'>;
+  /** Better Auth's handler for `/api/auth/*`. Absent when no auth secret is configured. */
+  authHandler?: (req: Request) => Promise<Response>;
 }
 
 type Vars = { Variables: { traceId: string } };
@@ -162,8 +164,8 @@ export function createApp(deps: AppDeps) {
     }),
   );
 
-  // Per-client token bucket; status stays reachable even when limited.
-  app.use('/api/v1/env/*', async (c, next) => {
+  // Per-client token bucket on provider and sign-in routes; status stays reachable even when limited.
+  const perClient: Parameters<typeof app.use>[1] = async (c, next) => {
     const client = c.req.header('cf-connecting-ip') ?? 'anonymous';
     const r = await deps.limiter.take(`ip:${client}`);
     c.header('RateLimit-Limit', String(r.limit));
@@ -174,7 +176,16 @@ export function createApp(deps: AppDeps) {
         retryAfterSeconds: Math.ceil(r.retryAfterMs / 1000),
       });
     await next();
-  });
+  };
+  app.use('/api/v1/env/*', perClient);
+  app.use('/api/auth/*', perClient);
+
+  // Passkey accounts (Better Auth). Without a configured secret, accounts are off and say so.
+  app.on(['GET', 'POST'], '/api/auth/*', (c) =>
+    deps.authHandler
+      ? deps.authHandler(c.req.raw)
+      : problem(c, 503, 'CONFIGURATION_REQUIRED', 'Accounts are not set up on this server'),
+  );
 
   const send = <T>(c: Parameters<typeof problem>[0], value: T, maxAge: number) => {
     c.header('Cache-Control', `private, max-age=${maxAge}`);

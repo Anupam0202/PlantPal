@@ -10,7 +10,12 @@ execFileSync('pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', 'plantpal
   stdio: 'inherit',
   env,
 });
-const dev = spawn('pnpm', ['exec', 'wrangler', 'dev', '--port', String(port), '--ip', '127.0.0.1'], {
+// A throwaway secret so passkey accounts are on for this run only.
+const secret = [...crypto.getRandomValues(new Uint8Array(24))]
+  .map((b) => b.toString(16).padStart(2, '0'))
+  .join('');
+const args = ['exec', 'wrangler', 'dev', '--port', String(port), '--ip', '127.0.0.1'];
+const dev = spawn('pnpm', [...args, '--var', `BETTER_AUTH_SECRET:${secret}`], {
   env,
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
@@ -77,6 +82,13 @@ check(
 
 const me = await fetch(`${base}/api/v1/me`);
 check(me.status === 401 && (await me.json()).code === 'UNAUTHENTICATED', 'account routes need a session');
+
+const reg = await fetch(`${base}/api/auth/passkey/generate-register-options?context=Smoke`);
+const regBody = await reg.json();
+check(
+  reg.status === 200 && regBody.rp?.id === 'localhost' && typeof regBody.challenge === 'string',
+  'passkey sign-up starts (Better Auth on D1)',
+);
 
 const share = await fetch(`${base}/api/v1/share/${'x'.repeat(43)}`);
 check(

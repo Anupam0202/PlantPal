@@ -13,7 +13,18 @@ export function createD1(): D1Database & { exec(sql: string): Promise<D1ExecResu
         return stmt;
       },
       async all() {
-        return { results: db.prepare(sql).all(...norm()), success: true, meta: {} };
+        // Like D1: writes report how many rows they changed, reads return their rows.
+        const st = db.prepare(sql);
+        if (st.columns().length === 0) {
+          const r = st.run(...norm());
+          return {
+            results: [],
+            success: true,
+            meta: { changes: Number(r.changes), last_row_id: Number(r.lastInsertRowid) },
+          };
+        }
+        const rows = st.all(...norm());
+        return { results: rows, success: true, meta: { changes: rows.length } };
       },
       async run() {
         const r = db.prepare(sql).run(...norm());
@@ -38,11 +49,12 @@ export function createD1(): D1Database & { exec(sql: string): Promise<D1ExecResu
   };
   return {
     prepare,
-    async batch(stmts: Array<{ run: () => Promise<unknown> }>) {
+    // Like D1: one transaction, and each statement's rows come back (reads included).
+    async batch(stmts: Array<{ all: () => Promise<unknown> }>) {
       db.exec('BEGIN');
       try {
         const out = [];
-        for (const s of stmts) out.push(await s.run());
+        for (const s of stmts) out.push(await s.all());
         db.exec('COMMIT');
         return out;
       } catch (e) {

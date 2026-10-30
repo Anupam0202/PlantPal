@@ -7,9 +7,11 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "auth:migration": "tsx scripts/auth-migration.ts"
   },
   "dependencies": {
+    "@better-auth/passkey": "1.7.14",
     "@hono/zod-openapi": "^1.6.3",
     "@plantpal/catalog": "workspace:*",
     "@plantpal/db": "workspace:*",
@@ -17,14 +19,16 @@
     "@plantpal/providers": "workspace:*",
     "@plantpal/schemas": "workspace:*",
     "@plantpal/sync": "workspace:*",
+    "better-auth": "1.7.14",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.14",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261027.1",
+    "@simplewebauthn/server": "13.3.3",
+    "@types/node": "^24.0.0",
     "drizzle-kit": "^0.31.11",
-    "wrangler": "^4.153.0",
-    "@types/node": "^24.0.0"
+    "wrangler": "^4.153.0"
   }
 }

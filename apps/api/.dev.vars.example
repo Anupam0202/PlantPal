@@ -1,0 +1,3 @@
+# Copy to .dev.vars (git-ignored) for `wrangler dev`. In production use `wrangler secret put`.
+# Turns on passkey accounts. Make one with: openssl rand -hex 32
+BETTER_AUTH_SECRET=
