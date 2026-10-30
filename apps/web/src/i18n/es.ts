@@ -103,6 +103,7 @@ export const es: Messages = {
     tabSpaces: 'Espacios',
     tabJournal: 'Diario',
     tabHealth: 'Salud',
+    tabSeeds: 'Semillas',
     tabHarvest: 'Cosecha',
     newHealthCase: 'Nuevo caso de salud',
     speciesIndex: 'Plantas de la A a la Z',
@@ -178,6 +179,7 @@ export const es: Messages = {
     plantsHere: (n: number) => (n === 1 ? '1 planta' : `${n} plantas`),
   },
   plant: {
+    fromSeedLot: (lot: string) => `Cultivada del lote de semillas «${lot}»`,
     add: 'Añadir una planta',
     edit: 'Editar planta',
     name: 'Nombre',
@@ -626,6 +628,7 @@ export const es: Messages = {
       layoutVersions: 'Versiones de diseños',
       natureVisits: 'Visitas de naturaleza',
       pantryItems: 'Despensa',
+      seedLots: 'Lotes de semillas',
     },
   },
   migrate: {

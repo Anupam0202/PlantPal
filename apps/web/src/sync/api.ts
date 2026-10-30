@@ -23,7 +23,7 @@ export class ApiError extends Error {
 export const accountsUnavailable = (e: unknown) =>
   e instanceof ApiError && (e.code === 'CONFIGURATION_REQUIRED' || e.status === 404 || e.status === 405);
 
-async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
+export async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${BASE}${path}`, {

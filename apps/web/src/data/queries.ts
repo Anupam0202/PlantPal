@@ -17,6 +17,7 @@ import type {
   Observation,
   Plan,
   PlanItem,
+  SeedLot,
   Specimen,
   TaskLog,
   Zone,
@@ -413,6 +414,36 @@ export function useGardenCareEvents(gardenId: string | undefined): CareEvent[] |
             (e) => e.deletedAt === null,
           )
         : [],
+    [gardenId],
+  );
+}
+
+export function useSeedLots(gardenId: string | undefined): SeedLot[] | undefined {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? (await db.seedLots.where('gardenId').equals(gardenId).toArray())
+            .filter(alive)
+            .sort((a, b) => b.createdAt - a.createdAt)
+        : undefined,
+    [gardenId],
+  );
+}
+
+export function useSeedLot(id: string | undefined): SeedLot | null | undefined {
+  return useLiveQuery(async () => (id ? ((await db.seedLots.get(id)) ?? null) : undefined), [id]);
+}
+
+/** Every plant and seed lot in a garden, deleted ones included, for the family tree. */
+export function useLineage(gardenId: string | undefined) {
+  return useLiveQuery(
+    async () =>
+      gardenId
+        ? {
+            plants: await db.specimens.where('gardenId').equals(gardenId).toArray(),
+            lots: await db.seedLots.where('gardenId').equals(gardenId).toArray(),
+          }
+        : undefined,
     [gardenId],
   );
 }

@@ -28,6 +28,7 @@ import {
 import { CarePanel } from '../../../features/care/CarePanel';
 import { PlantHealth } from '../../../features/health/PlantHealth';
 import { reportError } from '../../../features/garden/errors';
+import { FamilyTree } from '../../../features/garden/FamilyTree';
 import { useLocalDayLabel } from '../../../features/garden/format';
 import { MediaThumb } from '../../../features/garden/Media';
 import { GardenLoading } from '../../../features/garden/NoGarden';
@@ -175,6 +176,7 @@ function PlantPage() {
             )}
           </Card>
           <CarePanel specimen={specimen} garden={garden} />
+          <FamilyTree specimen={specimen} />
           <PlantHealth specimen={specimen} />
         </div>
         <Section title={t.plant.timeline} headingLevel={2}>

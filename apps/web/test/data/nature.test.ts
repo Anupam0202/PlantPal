@@ -190,7 +190,7 @@ describe('Dexie v7 upgrade', () => {
     v6.close();
     const v7 = createDb(name);
     await v7.open();
-    expect(v7.verno).toBe(7);
+    expect(v7.verno).toBeGreaterThanOrEqual(7);
     expect(await v7.table('layouts').count()).toBe(1);
     expect(await v7.natureVisits.count()).toBe(0);
     expect(await v7.pantryItems.where('state').equals('fresh').count()).toBe(0);

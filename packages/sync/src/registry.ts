@@ -10,6 +10,7 @@ import {
   NatureVisit,
   Observation,
   PantryItem,
+  SeedLot,
   Plan,
   PlanItem,
   Specimen,
@@ -49,6 +50,7 @@ export const ENTITY_NAMES = [
   'layout',
   'natureVisit',
   'pantryItem',
+  'seedLot',
 ] as const;
 export type EntityName = (typeof ENTITY_NAMES)[number];
 
@@ -71,6 +73,7 @@ export const ENTITIES: Record<EntityName, EntitySpec> = {
       { field: 'zoneId', entity: 'zone' },
       { field: 'containerId', entity: 'container' },
       { field: 'parentSpecimenId', entity: 'specimen' },
+      { field: 'seedLotId', entity: 'seedLot' },
     ],
     helper: false,
   },
@@ -152,6 +155,13 @@ export const ENTITIES: Record<EntityName, EntitySpec> = {
     schema: PantryItem,
     kind: 'versioned',
     refs: [g, { field: 'harvestId', entity: 'harvest' }, { field: 'specimenId', entity: 'specimen' }],
+    helper: true,
+  },
+  // Saving seed is like logging a harvest: helpers may do it.
+  seedLot: {
+    schema: SeedLot,
+    kind: 'versioned',
+    refs: [g, { field: 'specimenId', entity: 'specimen' }],
     helper: true,
   },
 };

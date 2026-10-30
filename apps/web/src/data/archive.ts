@@ -27,6 +27,7 @@ import {
   LayoutVersion,
   NatureVisit,
   PantryItem,
+  SeedLot,
 } from '@plantpal/schemas';
 import { localDateOf, toCsv, type CsvColumn } from '@plantpal/domain';
 import { CLIENT_SCHEMA, db, getMeta, setMeta } from './db';
@@ -56,6 +57,7 @@ const TABLES = {
   layoutVersions: LayoutVersion,
   natureVisits: NatureVisit,
   pantryItems: PantryItem,
+  seedLots: SeedLot,
 } as const;
 export type ArchiveTable = keyof typeof TABLES;
 const TABLE_NAMES = Object.keys(TABLES) as ArchiveTable[];

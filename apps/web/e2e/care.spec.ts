@@ -137,6 +137,7 @@ test('no page is wider than a phone screen (mobile browsers would zoom the app o
     '/nature/nearby',
     '/nature/impact',
     '/garden/harvest',
+    '/garden/seeds',
     '/plan/design',
     '/settings',
   ]) {

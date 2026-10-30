@@ -50,6 +50,8 @@ import { Route as GardenHealthCaseIdRouteImport } from './routes/garden/health/$
 import { Route as GardenHealthNewRouteImport } from './routes/garden/health/new'
 import { Route as GardenPlantsSpecimenIdRouteImport } from './routes/garden/plants/$specimenId'
 import { Route as GardenPlantsNewRouteImport } from './routes/garden/plants/new'
+import { Route as GardenSeedsIndexRouteImport } from './routes/garden/seeds/index'
+import { Route as GardenSeedsLotIdRouteImport } from './routes/garden/seeds/$lotId'
 import { Route as PlanDesignIndexRouteImport } from './routes/plan/design/index'
 import { Route as PlanDesignLayoutIdRouteImport } from './routes/plan/design/$layoutId'
 import { Route as SpeciesDraftsDraftIdRouteImport } from './routes/species/drafts.$draftId'
@@ -259,6 +261,16 @@ const GardenPlantsNewRoute = GardenPlantsNewRouteImport.update({
   path: '/garden/plants/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GardenSeedsIndexRoute = GardenSeedsIndexRouteImport.update({
+  id: '/garden/seeds/',
+  path: '/garden/seeds/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GardenSeedsLotIdRoute = GardenSeedsLotIdRouteImport.update({
+  id: '/garden/seeds/$lotId',
+  path: '/garden/seeds/$lotId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanDesignIndexRoute = PlanDesignIndexRouteImport.update({
   id: '/plan/design/',
   path: '/plan/design/',
@@ -316,9 +328,11 @@ export interface FileRoutesByFullPath {
   '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
   '/garden/plants/new': typeof GardenPlantsNewRoute
+  '/garden/seeds/$lotId': typeof GardenSeedsLotIdRoute
   '/plan/design/$layoutId': typeof PlanDesignLayoutIdRoute
   '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
   '/garden/health/': typeof GardenHealthIndexRoute
+  '/garden/seeds/': typeof GardenSeedsIndexRoute
   '/plan/design/': typeof PlanDesignIndexRoute
 }
 export interface FileRoutesByTo {
@@ -362,9 +376,11 @@ export interface FileRoutesByTo {
   '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
   '/garden/plants/new': typeof GardenPlantsNewRoute
+  '/garden/seeds/$lotId': typeof GardenSeedsLotIdRoute
   '/plan/design/$layoutId': typeof PlanDesignLayoutIdRoute
   '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
   '/garden/health': typeof GardenHealthIndexRoute
+  '/garden/seeds': typeof GardenSeedsIndexRoute
   '/plan/design': typeof PlanDesignIndexRoute
 }
 export interface FileRoutesById {
@@ -409,9 +425,11 @@ export interface FileRoutesById {
   '/garden/health/new': typeof GardenHealthNewRoute
   '/garden/plants/$specimenId': typeof GardenPlantsSpecimenIdRoute
   '/garden/plants/new': typeof GardenPlantsNewRoute
+  '/garden/seeds/$lotId': typeof GardenSeedsLotIdRoute
   '/plan/design/$layoutId': typeof PlanDesignLayoutIdRoute
   '/species/drafts/$draftId': typeof SpeciesDraftsDraftIdRoute
   '/garden/health/': typeof GardenHealthIndexRoute
+  '/garden/seeds/': typeof GardenSeedsIndexRoute
   '/plan/design/': typeof PlanDesignIndexRoute
 }
 export interface FileRouteTypes {
@@ -457,9 +475,11 @@ export interface FileRouteTypes {
     | '/garden/health/new'
     | '/garden/plants/$specimenId'
     | '/garden/plants/new'
+    | '/garden/seeds/$lotId'
     | '/plan/design/$layoutId'
     | '/species/drafts/$draftId'
     | '/garden/health/'
+    | '/garden/seeds/'
     | '/plan/design/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -503,9 +523,11 @@ export interface FileRouteTypes {
     | '/garden/health/new'
     | '/garden/plants/$specimenId'
     | '/garden/plants/new'
+    | '/garden/seeds/$lotId'
     | '/plan/design/$layoutId'
     | '/species/drafts/$draftId'
     | '/garden/health'
+    | '/garden/seeds'
     | '/plan/design'
   id:
     | '__root__'
@@ -549,9 +571,11 @@ export interface FileRouteTypes {
     | '/garden/health/new'
     | '/garden/plants/$specimenId'
     | '/garden/plants/new'
+    | '/garden/seeds/$lotId'
     | '/plan/design/$layoutId'
     | '/species/drafts/$draftId'
     | '/garden/health/'
+    | '/garden/seeds/'
     | '/plan/design/'
   fileRoutesById: FileRoutesById
 }
@@ -596,9 +620,11 @@ export interface RootRouteChildren {
   GardenHealthNewRoute: typeof GardenHealthNewRoute
   GardenPlantsSpecimenIdRoute: typeof GardenPlantsSpecimenIdRoute
   GardenPlantsNewRoute: typeof GardenPlantsNewRoute
+  GardenSeedsLotIdRoute: typeof GardenSeedsLotIdRoute
   PlanDesignLayoutIdRoute: typeof PlanDesignLayoutIdRoute
   SpeciesDraftsDraftIdRoute: typeof SpeciesDraftsDraftIdRoute
   GardenHealthIndexRoute: typeof GardenHealthIndexRoute
+  GardenSeedsIndexRoute: typeof GardenSeedsIndexRoute
   PlanDesignIndexRoute: typeof PlanDesignIndexRoute
 }
 
@@ -891,6 +917,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GardenPlantsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/garden/seeds/': {
+      id: '/garden/seeds/'
+      path: '/garden/seeds'
+      fullPath: '/garden/seeds/'
+      preLoaderRoute: typeof GardenSeedsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/garden/seeds/$lotId': {
+      id: '/garden/seeds/$lotId'
+      path: '/garden/seeds/$lotId'
+      fullPath: '/garden/seeds/$lotId'
+      preLoaderRoute: typeof GardenSeedsLotIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/plan/design/': {
       id: '/plan/design/'
       path: '/plan/design'
@@ -956,9 +996,11 @@ const rootRouteChildren: RootRouteChildren = {
   GardenHealthNewRoute: GardenHealthNewRoute,
   GardenPlantsSpecimenIdRoute: GardenPlantsSpecimenIdRoute,
   GardenPlantsNewRoute: GardenPlantsNewRoute,
+  GardenSeedsLotIdRoute: GardenSeedsLotIdRoute,
   PlanDesignLayoutIdRoute: PlanDesignLayoutIdRoute,
   SpeciesDraftsDraftIdRoute: SpeciesDraftsDraftIdRoute,
   GardenHealthIndexRoute: GardenHealthIndexRoute,
+  GardenSeedsIndexRoute: GardenSeedsIndexRoute,
   PlanDesignIndexRoute: PlanDesignIndexRoute,
 }
 export const routeTree = rootRouteImport

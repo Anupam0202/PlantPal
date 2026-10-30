@@ -12,6 +12,7 @@ const TABS = [
   { to: '/garden/journal', key: 'tabJournal' },
   { to: '/garden/health', key: 'tabHealth' },
   { to: '/garden/harvest', key: 'tabHarvest' },
+  { to: '/garden/seeds', key: 'tabSeeds' },
 ] as const;
 
 /** Garden title, switcher and section tabs shared by the garden pages. */

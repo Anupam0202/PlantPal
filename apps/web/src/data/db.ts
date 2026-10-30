@@ -16,6 +16,7 @@ import type {
   OutboxOp,
   PantryItem,
   Plan,
+  SeedLot,
   PlanItem,
   SoilTest,
   Specimen,
@@ -25,7 +26,7 @@ import type {
 } from '@plantpal/schemas';
 
 /** Bumped with every Dexie schema change; sent with outbox ops so the server knows the client shape. */
-export const CLIENT_SCHEMA = 7;
+export const CLIENT_SCHEMA = 8;
 
 export interface MediaBlob {
   id: string;
@@ -73,6 +74,7 @@ export type PlantPalDB = Dexie & {
   layoutVersions: EntityTable<LayoutVersion, 'id'>;
   natureVisits: EntityTable<NatureVisit, 'id'>;
   pantryItems: EntityTable<PantryItem, 'id'>;
+  seedLots: EntityTable<SeedLot, 'id'>;
 };
 
 /** Schema version 1 (M2). Kept verbatim so upgrades are tested from the real previous shape. */
@@ -125,6 +127,8 @@ export function createDb(name = 'plantpal'): PlantPalDB {
     natureVisits: 'id, &opId, gardenId, workspaceId, protocol, startedAt, specimenId',
     pantryItems: 'id, gardenId, workspaceId, harvestId, state',
   });
+  // v8 (M11): seed lots for propagation lineage. Plants gain `seedLotId` through a schema default.
+  db.version(8).stores({ seedLots: 'id, gardenId, workspaceId, specimenId' });
   return db;
 }
 
@@ -153,6 +157,7 @@ export const RECORD_TABLES = [
   'layoutVersions',
   'natureVisits',
   'pantryItems',
+  'seedLots',
 ] as const;
 export type RecordTable = (typeof RECORD_TABLES)[number];
 

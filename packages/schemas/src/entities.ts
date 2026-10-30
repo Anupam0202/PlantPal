@@ -273,6 +273,8 @@ export const Specimen = z.object({
   identityLevel: z.enum(IDENTITY_LEVELS),
   origin: z.enum(ORIGINS),
   parentSpecimenId: Id.nullable(),
+  /** The seed lot this plant was grown from (propagation lineage, §6.13). */
+  seedLotId: Id.nullable().default(null),
   plantedOn: LocalDate.nullable(),
   status: z.enum(SPECIMEN_STATUSES),
   statusReason: ShortText.nullable(),
@@ -846,3 +848,39 @@ export const PantryItem = z.object({
   history: z.array(z.object({ state: z.enum(PANTRY_STATES), at: EpochMs })).max(50),
 });
 export type PantryItem = z.infer<typeof PantryItem>;
+
+// ---------------------------------------------------------------- seed lots and lineage (§6.13)
+
+export const SEED_LOT_ORIGINS = ['saved', 'bought', 'gift', 'swap'] as const;
+export const SEED_LOT_UNITS = ['seeds', 'g', 'packets', 'heads'] as const;
+
+/** A germination test: how many sprouted out of how many sown. */
+export const GerminationTest = z
+  .object({
+    testedOn: LocalDate,
+    sown: z.number().int().positive().max(10_000),
+    sprouted: z.number().int().nonnegative(),
+    days: z.number().int().positive().max(365).nullable(),
+  })
+  .refine((t) => t.sprouted <= t.sown, 'More seeds sprouted than were sown');
+export type GerminationTest = z.infer<typeof GerminationTest>;
+
+/** Seeds kept for sowing: saved from a plant here, bought, gifted or swapped. */
+export const SeedLot = z.object({
+  ...versioned,
+  gardenId: Id,
+  /** The plant the seeds were saved from; null for bought, gifted or swapped seed. */
+  specimenId: Id.nullable(),
+  catalogTaxonId: z.string().max(80).nullable(),
+  name: ShortText.min(1),
+  scientificName: ShortText.nullable(),
+  cultivar: ShortText.nullable(),
+  origin: z.enum(SEED_LOT_ORIGINS),
+  collectedOn: LocalDate.nullable(),
+  quantity: OptionalAmount,
+  unit: z.enum(SEED_LOT_UNITS),
+  storage: ShortText,
+  germinationTests: z.array(GerminationTest).max(50),
+  notes: LongText,
+});
+export type SeedLot = z.infer<typeof SeedLot>;

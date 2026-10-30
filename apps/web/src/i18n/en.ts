@@ -104,6 +104,7 @@ export const en = {
     tabSpaces: 'Spaces',
     tabJournal: 'Journal',
     tabHealth: 'Health',
+    tabSeeds: 'Seeds',
     tabHarvest: 'Harvest',
     newHealthCase: 'New health case',
     speciesIndex: 'Plants A–Z',
@@ -179,6 +180,7 @@ export const en = {
     plantsHere: (n: number) => (n === 1 ? '1 plant' : `${n} plants`),
   },
   plant: {
+    fromSeedLot: (lot: string) => `Grown from seed lot “${lot}”`,
     add: 'Add a plant',
     edit: 'Edit plant',
     name: 'Name',
@@ -623,6 +625,7 @@ export const en = {
       layoutVersions: 'Layout versions',
       natureVisits: 'Nature visits',
       pantryItems: 'Pantry',
+      seedLots: 'Seed lots',
     },
   },
   migrate: {

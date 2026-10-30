@@ -36,6 +36,7 @@ export const TABLE: Record<EntityName, RecordTable> = {
   layout: 'layouts',
   natureVisit: 'natureVisits',
   pantryItem: 'pantryItems',
+  seedLot: 'seedLots',
 };
 
 /** Referenced records first, so every upload's references already exist on the server. */
@@ -43,7 +44,9 @@ export const UPLOAD_ORDER: readonly EntityName[] = [
   'garden',
   'zone',
   'container',
+  // Plants and seed lots point at each other (plant → lot → plant), so they go up together.
   'specimen',
+  'seedLot',
   'careSchedule',
   'careEvent',
   'taskLog',
@@ -245,17 +248,28 @@ export async function resumeAfterReview(ws: string) {
  */
 export async function queueClaim(ws: Workspace, now = Date.now()) {
   await db.transaction('rw', [db.workspaces, db.outbox, db.meta, ...SYNCED_TABLES()], async () => {
+    const lineage = lineageOrder(
+      (await db.specimens.where('workspaceId').equals(ws.id).toArray()) as unknown as Row[],
+      (await db.seedLots.where('workspaceId').equals(ws.id).toArray()) as unknown as Row[],
+    );
     for (const entity of UPLOAD_ORDER) {
+      if (entity === 'seedLot') continue; // queued with the plants, in lineage order
       const table = db.table(TABLE[entity]);
-      let rows = (await table.where('workspaceId').equals(ws.id).toArray()) as Row[];
-      if (entity === 'specimen') rows = parentsFirst(rows);
-      for (const row of rows) {
-        const record = ENTITIES[entity].kind === 'versioned' ? { ...row, version: 1 } : row;
-        if (record !== row) await table.put(record);
+      const rows: Array<{ entity: EntityName; row: Row }> =
+        entity === 'specimen'
+          ? lineage
+          : ((await table.where('workspaceId').equals(ws.id).toArray()) as Row[]).map((row) => ({
+              entity,
+              row,
+            }));
+      for (const { entity: kind, row } of rows) {
+        const t = db.table(TABLE[kind]);
+        const record = ENTITIES[kind].kind === 'versioned' ? { ...row, version: 1 } : row;
+        if (record !== row) await t.put(record);
         await db.outbox.add({
           opId: newId(now),
           workspaceId: ws.id,
-          type: `${entity}.create`,
+          type: `${kind}.create`,
           entityId: row.id,
           payload: record,
           baseVersion: null,
@@ -270,19 +284,33 @@ export async function queueClaim(ws: Workspace, now = Date.now()) {
   });
 }
 
-/** Cuttings and divisions point at their parent plant, which must be uploaded first. */
-function parentsFirst(rows: Row[]): Row[] {
-  const byId = new Map(rows.map((r) => [r.id, r]));
-  const out: Row[] = [];
+/**
+ * Plants and seed lots in an order where every reference is uploaded first: a cutting after its
+ * parent plant, a lot after the plant it was saved from, a seedling after its lot.
+ */
+export function lineageOrder(plants: Row[], lots: Row[]): Array<{ entity: EntityName; row: Row }> {
+  const plant = new Map(plants.map((r) => [r.id, r]));
+  const lot = new Map(lots.map((r) => [r.id, r]));
+  const out: Array<{ entity: EntityName; row: Row }> = [];
   const seen = new Set<string>();
-  const visit = (r: Row) => {
-    if (seen.has(r.id)) return;
-    seen.add(r.id);
-    const parent = typeof r.parentSpecimenId === 'string' ? byId.get(r.parentSpecimenId) : undefined;
-    if (parent) visit(parent);
-    out.push(r);
+  const visit = (entity: 'specimen' | 'seedLot', r: Row) => {
+    const key = `${entity}:${r.id}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    const ref = (m: Map<string, Row>, id: unknown) => (typeof id === 'string' ? m.get(id) : undefined);
+    if (entity === 'specimen') {
+      const parent = ref(plant, r.parentSpecimenId);
+      if (parent) visit('specimen', parent);
+      const from = ref(lot, r.seedLotId);
+      if (from) visit('seedLot', from);
+    } else {
+      const savedFrom = ref(plant, r.specimenId);
+      if (savedFrom) visit('specimen', savedFrom);
+    }
+    out.push({ entity, row: r });
   };
-  rows.forEach(visit);
+  plants.forEach((r) => visit('specimen', r));
+  lots.forEach((r) => visit('seedLot', r));
   return out;
 }
 

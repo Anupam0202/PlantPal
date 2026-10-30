@@ -13,6 +13,9 @@ import {
   NatureVisit as NatureVisitSchema,
   Observation as ObservationSchema,
   PantryItem as PantryItemSchema,
+  SeedLot as SeedLotSchema,
+  type GerminationTest,
+  type SeedLot,
   Plan as PlanSchema,
   PlanItem as PlanItemSchema,
   Specimen as SpecimenSchema,
@@ -350,7 +353,8 @@ export type SpecimenInput = Pick<
   | 'status'
   | 'notes'
 > &
-  Partial<Pick<Specimen, 'catalogTaxonId'>>;
+  Partial<Pick<Specimen, 'catalogTaxonId'>> &
+  Partial<Pick<Specimen, 'seedLotId'>>;
 
 /** Checks that zone, container and parent belong to the same garden (authorisation on every write). */
 async function checkPlacement(gardenId: string, p: Partial<SpecimenInput>): Promise<void> {
@@ -369,6 +373,11 @@ async function checkPlacement(gardenId: string, p: Partial<SpecimenInput>): Prom
     const parent = await db.specimens.get(p.parentSpecimenId);
     if (!parent || parent.deletedAt !== null) throw new RecordNotFoundError('specimen', p.parentSpecimenId);
   }
+  if (p.seedLotId) {
+    const lot = await db.seedLots.get(p.seedLotId);
+    if (!lot || lot.deletedAt !== null || lot.gardenId !== gardenId)
+      throw new RecordNotFoundError('seedLot', p.seedLotId);
+  }
 }
 
 export async function createSpecimen(
@@ -376,7 +385,7 @@ export async function createSpecimen(
   input: SpecimenInput,
   now = Date.now(),
 ): Promise<Specimen> {
-  return writeTx([db.specimens, db.gardens, db.zones, db.containers], async () => {
+  return writeTx([db.specimens, db.gardens, db.zones, db.containers, db.seedLots], async () => {
     const garden = await db.gardens.get(gardenId);
     if (!garden || garden.deletedAt !== null) throw new RecordNotFoundError('garden', gardenId);
     await checkPlacement(gardenId, input);
@@ -407,13 +416,14 @@ export async function updateSpecimen(
   patch: Partial<SpecimenInput & Pick<Specimen, 'coverMediaId' | 'statusReason'>>,
   now = Date.now(),
 ): Promise<Specimen> {
-  return writeTx([db.specimens, db.zones, db.containers], async () => {
+  return writeTx([db.specimens, db.zones, db.containers, db.seedLots], async () => {
     const cur = assertUpdatable(await db.specimens.get(id), 'specimen', id, baseVersion);
     const merged = { ...cur, ...patch };
     await checkPlacement(cur.gardenId, {
       zoneId: merged.zoneId,
       containerId: merged.containerId,
       parentSpecimenId: merged.parentSpecimenId,
+      seedLotId: merged.seedLotId,
     });
     if (merged.parentSpecimenId === id) throw new RecordNotFoundError('specimen', id);
     const next = SpecimenSchema.parse({ ...merged, version: cur.version + 1, updatedAt: now });
@@ -748,6 +758,84 @@ export async function deletePantryItem(id: string, baseVersion: number, now = Da
     const cur = assertUpdatable(await db.pantryItems.get(id), 'pantryItem', id, baseVersion);
     await db.pantryItems.put({ ...cur, deletedAt: now, updatedAt: now, version: cur.version + 1 });
     await enqueue(cur.workspaceId, 'pantryItem.delete', id, null, baseVersion, now);
+  });
+}
+
+// ---------------------------------------------------------------- seed lots (§6.13)
+
+export type SeedLotInput = Pick<
+  SeedLot,
+  | 'gardenId'
+  | 'specimenId'
+  | 'name'
+  | 'scientificName'
+  | 'cultivar'
+  | 'origin'
+  | 'collectedOn'
+  | 'quantity'
+  | 'unit'
+  | 'storage'
+  | 'notes'
+> &
+  Partial<Pick<SeedLot, 'catalogTaxonId'>>;
+
+/** Seeds kept for sowing; saved from a plant here (lineage) or brought in. */
+export async function createSeedLot(input: SeedLotInput, now = Date.now()): Promise<SeedLot> {
+  return writeTx([db.seedLots, db.gardens, db.specimens], async () => {
+    const garden = await db.gardens.get(input.gardenId);
+    if (!garden || garden.deletedAt !== null) throw new RecordNotFoundError('garden', input.gardenId);
+    await checkSpecimenInGarden(garden.id, input.specimenId);
+    const parent = input.specimenId ? await db.specimens.get(input.specimenId) : undefined;
+    const lot = SeedLotSchema.parse({
+      id: newId(now),
+      workspaceId: garden.workspaceId,
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+      deletedAt: null,
+      germinationTests: [],
+      catalogTaxonId: parent?.catalogTaxonId ?? null,
+      ...input,
+      // Saved seed carries its parent's identity unless the person says otherwise.
+      scientificName: input.scientificName ?? parent?.scientificName ?? null,
+    });
+    await db.seedLots.add(lot);
+    await enqueue(garden.workspaceId, 'seedLot.create', lot.id, lot, null, now);
+    return lot;
+  });
+}
+
+export async function updateSeedLot(
+  id: string,
+  baseVersion: number,
+  patch: Partial<Omit<SeedLotInput, 'gardenId'> & Pick<SeedLot, 'germinationTests'>>,
+  now = Date.now(),
+): Promise<SeedLot> {
+  return writeTx([db.seedLots], async () => {
+    const cur = assertUpdatable(await db.seedLots.get(id), 'seedLot', id, baseVersion);
+    const next = SeedLotSchema.parse({ ...cur, ...patch, version: cur.version + 1, updatedAt: now });
+    await db.seedLots.put(next);
+    await enqueue(cur.workspaceId, 'seedLot.update', id, next, baseVersion, now);
+    return next;
+  });
+}
+
+/** Adds a germination test (sown and sprouted counts) to a lot. */
+export async function addGerminationTest(
+  id: string,
+  baseVersion: number,
+  test: GerminationTest,
+  now = Date.now(),
+): Promise<SeedLot> {
+  const cur = await db.seedLots.get(id);
+  return updateSeedLot(id, baseVersion, { germinationTests: [...(cur?.germinationTests ?? []), test] }, now);
+}
+
+export async function deleteSeedLot(id: string, baseVersion: number, now = Date.now()): Promise<void> {
+  await writeTx([db.seedLots], async () => {
+    const cur = assertUpdatable(await db.seedLots.get(id), 'seedLot', id, baseVersion);
+    await db.seedLots.put({ ...cur, deletedAt: now, updatedAt: now, version: cur.version + 1 });
+    await enqueue(cur.workspaceId, 'seedLot.delete', id, null, baseVersion, now);
   });
 }
 

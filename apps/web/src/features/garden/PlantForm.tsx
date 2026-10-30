@@ -39,6 +39,7 @@ export function specimenInputOf(v: PlantFormValue): SpecimenInput {
     status: v.status,
     notes: v.notes,
     ...(v.catalogTaxonId !== undefined ? { catalogTaxonId: v.catalogTaxonId } : {}),
+    ...(v.seedLotId !== undefined ? { seedLotId: v.seedLotId } : {}),
   };
 }
 
@@ -50,6 +51,7 @@ export function PlantForm({
   specimens,
   initial,
   initialZoneId,
+  seedLot,
   submitLabel,
   onSubmit,
   onCancel,
@@ -63,19 +65,21 @@ export function PlantForm({
   specimens: Specimen[];
   initial?: Specimen;
   initialZoneId?: string;
+  /** Growing a new plant from a seed lot: it is linked to the lot (lineage). */
+  seedLot?: { id: string; name: string; scientificName: string | null };
   submitLabel: string;
   onSubmit: (value: PlantFormValue) => Promise<void>;
   onCancel: () => void;
 }) {
   const t = useT();
   const [name, setName] = useState(initial?.displayName ?? '');
-  const [scientific, setScientific] = useState(initial?.scientificName ?? '');
+  const [scientific, setScientific] = useState(initial?.scientificName ?? seedLot?.scientificName ?? '');
   const [cultivar, setCultivar] = useState(initial?.cultivar ?? '');
   const [identity, setIdentity] = useState<Specimen['identityLevel']>(initial?.identityLevel ?? 'unknown');
   const [zoneId, setZoneId] = useState<string>(initial?.zoneId ?? initialZoneId ?? NONE);
   const [containerId, setContainerId] = useState<string>(initial?.containerId ?? NONE);
   const [plantedOn, setPlantedOn] = useState(initial?.plantedOn ?? '');
-  const [origin, setOrigin] = useState<Specimen['origin']>(initial?.origin ?? 'unknown');
+  const [origin, setOrigin] = useState<Specimen['origin']>(initial?.origin ?? (seedLot ? 'seed' : 'unknown'));
   const [parentId, setParentId] = useState<string>(initial?.parentSpecimenId ?? NONE);
   const [status, setStatus] = useState<Specimen['status']>(initial?.status ?? 'active');
   const [notes, setNotes] = useState(initial?.notes ?? '');
@@ -105,6 +109,7 @@ export function PlantForm({
         notes,
         mediaIds,
         catalogTaxonId: taxonId,
+        seedLotId: initial?.seedLotId ?? seedLot?.id ?? null,
       });
     } finally {
       setBusy(false);
@@ -113,6 +118,11 @@ export function PlantForm({
 
   return (
     <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-5" noValidate>
+      {seedLot && (
+        <p className="rounded-md bg-accent-soft p-3 text-body-s text-accent-ink">
+          {t.plant.fromSeedLot(seedLot.name)}
+        </p>
+      )}
       <TextField
         label={t.plant.name}
         value={name}

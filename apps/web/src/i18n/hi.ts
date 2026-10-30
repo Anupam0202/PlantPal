@@ -101,6 +101,7 @@ export const hi: Messages = {
     tabSpaces: 'जगहें',
     tabJournal: 'डायरी',
     tabHealth: 'स्वास्थ्य',
+    tabSeeds: 'बीज',
     tabHarvest: 'फ़सल',
     newHealthCase: 'नया स्वास्थ्य मामला',
     speciesIndex: 'पौधे अ–ज्ञ',
@@ -175,6 +176,7 @@ export const hi: Messages = {
     plantsHere: (n: number) => `${n} पौधे`,
   },
   plant: {
+    fromSeedLot: (lot: string) => `बीज संग्रह “${lot}” से उगाया गया`,
     add: 'पौधा जोड़ें',
     edit: 'पौधा बदलें',
     name: 'नाम',
@@ -619,6 +621,7 @@ export const hi: Messages = {
       layoutVersions: 'लेआउट संस्करण',
       natureVisits: 'प्रकृति अवलोकन',
       pantryItems: 'भंडार',
+      seedLots: 'बीज संग्रह',
     },
   },
   migrate: {
