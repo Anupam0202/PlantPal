@@ -70,6 +70,19 @@ check(
 
 const doc = await (await fetch(`${base}/api/v1/openapi.json`)).json();
 check(doc.openapi === '3.1.0', 'OpenAPI document is served');
+check(
+  Boolean(doc.paths['/api/v1/sync/push'] && doc.paths['/api/v1/share/{token}']),
+  'sync and sharing routes are documented',
+);
+
+const me = await fetch(`${base}/api/v1/me`);
+check(me.status === 401 && (await me.json()).code === 'UNAUTHENTICATED', 'account routes need a session');
+
+const share = await fetch(`${base}/api/v1/share/${'x'.repeat(43)}`);
+check(
+  share.status === 404 && (await share.json()).code === 'NOT_FOUND',
+  'unknown sitter links are not found (D1 sync tables)',
+);
 
 const page = await fetch(`${base}/garden/journal`);
 check(

@@ -2,6 +2,9 @@ import { EnvClient, type ProviderMode } from '@plantpal/providers';
 import { PROVIDER_IDS, type ProviderId } from '@plantpal/schemas';
 import { createApp } from './app';
 import { DurableRateLimiter, type Limiter } from './limiter-do';
+import { AccountsStore } from './lib/accounts';
+import { D1SyncRepo } from './lib/sync-repo';
+import type { Authenticator } from './routes/accounts';
 import { D1StatusStore } from './lib/status-store';
 import { WorkersFactCache } from './lib/workers-cache';
 
@@ -16,6 +19,9 @@ export interface Env {
   CONTACT: string;
   DISABLED_PROVIDERS?: string;
 }
+
+/** No sign-in yet: every account route answers 401 until passkey sessions are wired in. */
+const signedOut: Authenticator = { userOf: async () => null };
 
 let cached: { key: string; app: ReturnType<typeof createApp> } | null = null;
 
@@ -41,6 +47,7 @@ function appFor(env: Env, ctx: ExecutionContext) {
     limiter: new DurableRateLimiter(env.LIMITER),
     mode,
     allowedOrigins: env.ALLOWED_ORIGINS.split(',').map((s) => s.trim()),
+    accounts: { accounts: new AccountsStore(env.DB), sync: new D1SyncRepo(env.DB), auth: signedOut },
   });
   cached = { key, app };
   return app;

@@ -1,4 +1,3 @@
-import type { OpResult } from './protocol';
 import type { EntityName } from './registry';
 import type { Mutation, StoredRecord, SyncRepo } from './server';
 
@@ -14,7 +13,7 @@ export class MemorySyncRepo implements SyncRepo {
     version: number;
     at: number;
   }> = [];
-  idem = new Map<string, { payloadHash: string; result: OpResult }>();
+  idem = new Map<string, Mutation['idempotency']>();
   floors = new Map<string, number>();
   private seq = 0;
   private key = (e: string, id: string) => `${e}:${id}`;
@@ -32,7 +31,13 @@ export class MemorySyncRepo implements SyncRepo {
     return this.idem.get(opId) ?? null;
   }
   async saveIdempotency(e: Mutation['idempotency']) {
-    this.idem.set(e.opId, { payloadHash: e.payloadHash, result: e.result });
+    this.idem.set(e.opId, e);
+  }
+  async appliedBy(actorId: string) {
+    return [...this.idem.values()]
+      .filter((e) => e.actorId === actorId && e.result.status === 'applied')
+      .reverse()
+      .map(({ entity, entityId }) => ({ entity, entityId }));
   }
   async apply(m: Mutation) {
     this.records.set(this.key(m.record.entity, m.record.id), m.record);

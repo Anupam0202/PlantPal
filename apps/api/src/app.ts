@@ -15,6 +15,7 @@ import { ProviderError, type EnvClient } from '@plantpal/providers';
 import { problem } from './lib/problem';
 import type { RateLimiter } from './lib/rate-limit';
 import type { StatusStore } from './lib/status-store';
+import { registerAccountRoutes, type AccountsDeps } from './routes/accounts';
 
 export interface AppDeps {
   env: EnvClient;
@@ -23,6 +24,8 @@ export interface AppDeps {
   mode: 'live' | 'mock';
   allowedOrigins: readonly string[];
   traceId?: () => string;
+  /** Accounts, sync and sharing (§14). Off when absent, so the env gateway runs on its own. */
+  accounts?: Omit<AccountsDeps, 'limiter'>;
 }
 
 type Vars = { Variables: { traceId: string } };
@@ -258,12 +261,14 @@ export function createApp(deps: AppDeps) {
     return c.json({ ok: true, time: new Date().toISOString(), mode: deps.mode, providers }, 200);
   });
 
+  if (deps.accounts) registerAccountRoutes(app, { ...deps.accounts, limiter: deps.limiter });
+
   app.doc31('/api/v1/openapi.json', {
     openapi: '3.1.0',
     info: {
       title: 'PlantPal API',
       version: '1.0.0',
-      description: 'Environmental facts with provenance for PlantPal.',
+      description: 'Environmental facts with provenance, and sync and sharing for PlantPal gardens.',
     },
   });
 

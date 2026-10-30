@@ -26,7 +26,15 @@ export interface StoredRecord {
 export interface Mutation {
   record: StoredRecord;
   change: { op: 'upsert' | 'delete'; at: number };
-  idempotency: { opId: string; actorId: string; payloadHash: string; result: OpResult };
+  idempotency: {
+    opId: string;
+    actorId: string;
+    payloadHash: string;
+    result: OpResult;
+    /** What the op touched: an audit trail of who changed which record. */
+    entity: string;
+    entityId: string;
+  };
 }
 
 /** Storage the sync service needs; D1 in the Worker, memory in tests. */
@@ -43,6 +51,8 @@ export interface SyncRepo {
   ): Promise<
     Array<{ seq: number; entity: EntityName; id: string; op: 'upsert' | 'delete'; version: number }>
   >;
+  /** Records an actor changed (applied ops only), newest first: the plant-sitter summary. */
+  appliedBy(actorId: string): Promise<Array<{ entity: string; entityId: string }>>;
   /** Changes before this seq were pruned; older cursors need a snapshot. */
   changeFloor(workspaceId: string): Promise<number>;
   latestSeq(workspaceId: string): Promise<number>;
@@ -111,7 +121,14 @@ export async function applyOp(repo: SyncRepo, actor: Actor, op: OutboxOp, now: n
     return reject(op.opId, 'FORBIDDEN', 'That record belongs to another workspace');
 
   const finish = async (r: OpResult, write?: { record: StoredRecord; op: 'upsert' | 'delete' }) => {
-    const idem = { opId: op.opId, actorId: actor.id, payloadHash: hash, result: r };
+    const idem = {
+      opId: op.opId,
+      actorId: actor.id,
+      payloadHash: hash,
+      result: r,
+      entity,
+      entityId: op.entityId,
+    };
     if (write)
       await repo.apply({ record: write.record, change: { op: write.op, at: now }, idempotency: idem });
     else await repo.saveIdempotency(idem);
