@@ -30,6 +30,8 @@ describe('prohibited claims', () => {
     ['ये पत्ते खाने योग्य हैं।', 'edibility'],
     ['Spray imidacloprid on the leaves.', 'pesticide'],
     ['Mix 5 ml per litre of water.', 'pesticide'],
+    ['Dissolve 2 g in water and spray.', 'pesticide'],
+    ['Add 10 ml of a bucket of soapy mix.', 'pesticide'],
     ['Use neem oil.', 'pesticide'],
     ['A great air-purifying plant.', 'air-purifying'],
     ['Snake plants clean the air in your room.', 'air-purifying'],
@@ -52,6 +54,7 @@ describe('prohibited claims', () => {
     'It is LIKELY a watering problem.',
     'Hand-pick the caterpillars and check again in two days.',
     'Water about 1 litre when the top 2 cm is dry.',
+    'I suggested logging 500 ml of water for the basil.',
     'Ask a structural engineer whether the slab can bear the load.',
     'We cannot tell if the railing is strong enough.',
   ])('allows %s', (text) => {

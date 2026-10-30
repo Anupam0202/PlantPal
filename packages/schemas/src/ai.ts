@@ -212,3 +212,11 @@ export const SpeciesDraft = z.object({
   cannotDetermine: z.array(z.string().max(120)).max(12),
 });
 export type SpeciesDraft = z.infer<typeof SpeciesDraft>;
+
+/** F8 weekly reflection: warm, specific, never shaming; numbers only from the summary it was given. */
+export const WeeklyReflection = z.object({
+  headline: z.string().min(1).max(140),
+  highlights: z.array(z.string().min(1).max(200)).max(3),
+  nextSteps: z.array(z.string().min(1).max(200)).max(3),
+});
+export type WeeklyReflection = z.infer<typeof WeeklyReflection>;

@@ -18,7 +18,8 @@ export type AiFeature =
   | 'health-triage'
   | 'photo-id'
   | 'species-draft'
-  | 'space-detect';
+  | 'space-detect'
+  | 'weekly-reflection';
 
 /** AI settings stay on this device, in the vault database: never synced or exported. */
 export interface AiSettings {
@@ -35,6 +36,8 @@ export interface AiSettings {
   dailyCap: number | null;
   /** Experimental features, off until the person turns them on (Settings › AI › Labs). */
   labs: { photoPlan: boolean };
+  /** What the Copilot's tools may read, and whether it may search the web; null until first chosen. */
+  copilot: { allowed: AiDataCategory[]; search: boolean } | null;
 }
 
 export interface PendingAction {
@@ -53,6 +56,7 @@ const DEFAULTS: AiSettings = {
   consent: {},
   dailyCap: null,
   labs: { photoPlan: false },
+  copilot: null,
 };
 
 let store: VaultStore | null = null;
@@ -96,6 +100,7 @@ const settingsOf = (s: AiSettings): AiSettings => ({
   consent: s.consent,
   dailyCap: s.dailyCap,
   labs: s.labs,
+  copilot: s.copilot,
 });
 
 export const useAiState = create<AiState>((set, get) => ({

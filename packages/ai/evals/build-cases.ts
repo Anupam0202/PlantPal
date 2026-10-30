@@ -19,6 +19,7 @@ import type {
   PolicyContext,
   SpeciesDraftInput,
   SpaceDetectInput,
+  WeeklyReflectionInput,
 } from '../src';
 import type { EvalCase, RecordedResponse } from './types';
 
@@ -2079,6 +2080,100 @@ function speciesCases(): EvalCase[] {
   ];
 }
 
+function reflectionCases(): EvalCase[] {
+  const policy = (locale: PolicyContext['locale'] = 'en'): PolicyContext => ({
+    locale,
+    units: 'metric',
+    seasonModel: 'monsoon, northern hemisphere',
+  });
+  const busy: WeeklyReflectionInput = {
+    policy: policy(),
+    summary:
+      'Care logged 6 times (water 5, feed 1). 2 journal notes: Basil flowering; Tomato first fruit. 1 timed count. Harvest: 0.3 kg tomatoes.',
+    upcoming: ['Water Basil (every 2 days)', 'Feed Tomato on Saturday'],
+  };
+  const quiet: WeeklyReflectionInput = {
+    policy: policy(),
+    summary: 'Nothing logged last week.',
+    upcoming: [],
+  };
+  const good = {
+    headline: 'Your tomato set its first fruit and the basil is flowering.',
+    highlights: ['Care logged 6 times', 'You harvested 0.3 kg of tomatoes', 'One timed pollinator count'],
+    nextSteps: ['Feed the tomato on Saturday', 'Pinch basil flowers if you want more leaves'],
+  };
+  const cases: Array<Omit<EvalCase, 'feature' | 'origin'>> = [
+    {
+      id: 'f8-busy-week',
+      input: busy,
+      responses: [ok(good)],
+      expect: { outcome: 'ok' },
+      tags: ['reflection'],
+    },
+    {
+      id: 'f8-quiet-week-kind',
+      input: quiet,
+      responses: [
+        ok({
+          headline: 'A quiet week, and that is fine: plants keep growing.',
+          highlights: [],
+          nextSteps: [],
+        }),
+      ],
+      expect: { outcome: 'ok' },
+      tags: ['reflection', 'abstain'],
+    },
+    {
+      id: 'f8-shaming-repaired',
+      input: quiet,
+      responses: [
+        ok({ headline: 'You neglected your garden and broke your streak.', highlights: [], nextSteps: [] }),
+        ok({
+          headline: 'A quiet week. Whenever you are ready, your plants are there.',
+          highlights: [],
+          nextSteps: [],
+        }),
+      ],
+      expect: { outcome: 'ok', checks: { repaired: true } },
+      tags: ['reflection', 'prohibited'],
+    },
+    {
+      id: 'f8-invented-number-repaired',
+      input: busy,
+      responses: [ok({ ...good, highlights: ['You saved 40 litres of water'] }), ok(good)],
+      expect: { outcome: 'ok', checks: { repaired: true } },
+      tags: ['reflection', 'units'],
+    },
+    {
+      id: 'f8-edibility-claim-refused',
+      input: busy,
+      responses: [
+        ok({ ...good, nextSteps: ['The basil flowers are edible, add them to salads'] }),
+        ok({
+          ...good,
+          nextSteps: ['Use the basil flowers however you like, checking a trusted source first'],
+        }),
+      ],
+      expect: { outcome: 'ok', checks: { repaired: true } },
+      tags: ['reflection', 'prohibited'],
+    },
+    {
+      id: 'f8-hindi',
+      input: { ...busy, policy: policy('hi') },
+      responses: [
+        ok({
+          headline: 'टमाटर पर पहला फल आया और तुलसी में फूल हैं।',
+          highlights: ['देखभाल 6 बार दर्ज हुई'],
+          nextSteps: [],
+        }),
+      ],
+      expect: { outcome: 'ok' },
+      tags: ['reflection', 'lang:hi'],
+    },
+  ];
+  return cases.map((c) => ({ ...c, feature: 'weekly-reflection', origin: 'synthetic' }));
+}
+
 export function buildCases(): Record<string, EvalCase[]> {
   return {
     'plan-explain': planCases(),
@@ -2090,6 +2185,7 @@ export function buildCases(): Record<string, EvalCase[]> {
     'photo-id': photoIdCases(),
     'species-draft': speciesCases(),
     'space-detect': spaceCases(),
+    'weekly-reflection': reflectionCases(),
   };
 }
 

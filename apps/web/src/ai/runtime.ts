@@ -16,6 +16,7 @@ import {
   photoIdV1,
   speciesDraftV1,
   spaceDetectV1,
+  weeklyReflectionV1,
   speciesResearchV1,
   type SpeciesResearchInput,
   systemInstruction,
@@ -25,8 +26,16 @@ import {
   type ContextSection,
   type DayUsage,
   type PromptModule,
+  copilotSearchV1,
+  copilotTurn,
+  type ChatContent,
+  type CopilotTurn,
+  type PolicyContext,
+  type StreamStepOptions,
+  type ToolUse,
 } from '@plantpal/ai';
 import type { AiDataCategory, ModelRole } from '@plantpal/schemas';
+import { copilotScope, createExecutor } from './copilotTools';
 import { aiStore, aiVault, useAiState, type AiFeature } from './state';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- one table of differently typed modules
@@ -39,6 +48,7 @@ const MODULES: Record<AiFeatureId, PromptModule<any, any>> = {
   'photo-id': photoIdV1,
   'species-draft': speciesDraftV1,
   'space-detect': spaceDetectV1,
+  'weekly-reflection': weeklyReflectionV1,
 };
 
 const localDay = (d = new Date()) =>
@@ -139,4 +149,49 @@ export async function run<T>(
     signal,
     allowed: new Set(allowed),
   });
+}
+
+function newClient() {
+  const usageMeter = meter();
+  return new GeminiClient({
+    getKey: () => aiVault().get(),
+    roles: () => useAiState.getState().roles,
+    rediscover: async (): Promise<Partial<Record<ModelRole, string>>> => {
+      await recheckModels();
+      return useAiState.getState().roles;
+    },
+    onUsage: (u) => void usageMeter.record(u, localDay()),
+  });
+}
+
+export class NoGardenError extends Error {}
+
+/**
+ * One Garden Copilot turn (F6). Tools read only this device's active garden; proposals wait for the
+ * person; web search sends only the query, as a separate grounded request.
+ */
+export async function copilotSend(
+  input: { history: ChatContent[]; message: string; policy: PolicyContext },
+  handlers: StreamStepOptions & { onTool?: (t: ToolUse) => void },
+): Promise<CopilotTurn> {
+  const state = useAiState.getState();
+  if (!state.enabled) throw new AiError('AI_DISABLED', 'AI is switched off');
+  const scope = await copilotScope();
+  if (!scope) throw new NoGardenError('No garden');
+  const client = newClient();
+  const choice = state.copilot ?? { allowed: [], search: false };
+  const exec = createExecutor(scope, async (query) => {
+    const r = await client.generateGrounded(
+      copilotSearchV1,
+      { query, policy: input.policy },
+      { signal: handlers.signal },
+    );
+    return { text: r.text, sources: r.sources };
+  });
+  return copilotTurn(
+    client,
+    { ...input, allowed: new Set(choice.allowed), allowSearch: choice.search },
+    exec,
+    handlers,
+  );
 }

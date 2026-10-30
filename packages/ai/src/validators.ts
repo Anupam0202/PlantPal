@@ -44,7 +44,9 @@ const RULES: Rule[] = [
   },
   {
     kind: 'pesticide',
-    re: /(?<![\d.,])\d{1,6}(?:[.,]\d{1,3})?\s{0,3}(?:ml|g|tsp|tbsp|teaspoons?|tablespoons?|drops?)\s{0,3}(?:per|\/|in|of)\s{0,3}(?:a\s{1,3})?(?:l|litre|liter|gallon|bucket|water)\b/gi,
+    // A dose mixes an amount into water ("5 ml per litre", "2 g in water"). "500 ml of water" is a
+    // watering amount, not a dose.
+    re: /(?<![\d.,])\d{1,6}(?:[.,]\d{1,3})?\s{0,3}(?:ml|g|tsp|tbsp|teaspoons?|tablespoons?|drops?)\s{0,3}(?:(?:per|\/|in)\s{0,3}(?:a\s{1,3})?(?:l|litre|liter|gallon|bucket|water)|of\s{0,3}(?:a\s{1,3})?(?:gallon|bucket))\b/gi,
     negatable: false,
   },
   // Air purification.

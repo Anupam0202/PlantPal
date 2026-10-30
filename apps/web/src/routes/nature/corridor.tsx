@@ -12,6 +12,8 @@ import { useMapT } from '../../features/maps/messages';
 import { useFormat } from '../../i18n';
 import { accountsUnavailable, call } from '../../sync/api';
 
+const OSM_COPYRIGHT = 'https://www.openstreetmap.org/copyright';
+
 export const Route = createFileRoute('/nature/corridor')({
   component: Corridor,
 });
@@ -172,7 +174,7 @@ function CorridorBody({ gardenKey, lat, lon }: { gardenKey: string; lat: number;
         <p>{m.corridor.privacy}</p>
         <p>
           {g.provenance.attribution} ·{' '}
-          <a href={g.provenance.sourceUrl} className="underline" target="_blank" rel="noreferrer">
+          <a href={OSM_COPYRIGHT} className="underline" target="_blank" rel="noreferrer">
             {g.provenance.licence}
           </a>
         </p>

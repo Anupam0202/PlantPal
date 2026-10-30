@@ -32,7 +32,13 @@ type Mode = 'ok' | 'rate-limited' | 'truncated' | 'not-a-plant';
 
 /** Answers Gemini like the real API would, from what the request actually asked for. */
 export async function mockGemini(page: Page) {
-  const state = { mode: 'ok' as Mode, generateCalls: 0, lastImages: 0 };
+  const state = {
+    mode: 'ok' as Mode,
+    generateCalls: 0,
+    lastImages: 0,
+    signatureEchoed: false,
+    streamUrls: [] as string[],
+  };
   const cors = {
     'access-control-allow-origin': '*',
     'access-control-allow-headers': 'content-type, x-goog-api-key',
@@ -52,6 +58,62 @@ export async function mockGemini(page: Page) {
       });
     if (req.url().includes('/models?'))
       return route.fulfill({ status: 200, headers: cors, body: JSON.stringify({ models: MODELS }) });
+    if (req.url().includes(':streamGenerateContent')) {
+      // Garden Copilot (F6): a scripted tool loop over server-sent events.
+      state.generateCalls++;
+      state.streamUrls.push(req.url());
+      const body = JSON.parse(req.postData() ?? '{}') as {
+        contents: Array<{ role: string; parts: Array<Record<string, unknown>> }>;
+      };
+      if (
+        body.contents.some((c) => c.role === 'model' && c.parts.some((p) => p.thoughtSignature === 'e2e-sig'))
+      )
+        state.signatureEchoed = true;
+      const fr = body.contents.at(-1)?.parts.find((p) => p.functionResponse)?.functionResponse as
+        { name: string; response: { result?: { plants?: Array<{ id: string; name: string }> } } } | undefined;
+      const callChunk = (name: string, args: Record<string, unknown>) => ({
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ functionCall: { name, args }, thoughtSignature: 'e2e-sig' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: { promptTokenCount: 600, candidatesTokenCount: 20 },
+      });
+      const textChunks = (t: string) =>
+        t.split(/(?<= )/).map((w, i, a) => ({
+          candidates: [
+            {
+              content: { role: 'model', parts: [{ text: w }] },
+              ...(i === a.length - 1 ? { finishReason: 'STOP' } : {}),
+            },
+          ],
+        }));
+      let chunks: unknown[];
+      if (!fr) chunks = [callChunk('get_garden_overview', {})];
+      else if (fr.name === 'get_garden_overview') {
+        const plant = fr.response.result?.plants?.[0];
+        chunks = plant
+          ? [
+              callChunk('propose_care_event', {
+                specimenId: plant.id,
+                kind: 'water',
+                amountMl: 500,
+                notes: 'From the Copilot',
+              }),
+            ]
+          : textChunks('You have no plants yet.');
+      } else
+        chunks = textChunks('I suggested logging 500 ml of water. What I don’t know: how dry the soil is.');
+      return route.fulfill({
+        status: 200,
+        headers: { ...cors, 'content-type': 'text/event-stream' },
+        body: chunks.map((c) => `data: ${JSON.stringify(c)}\r\n\r\n`).join(''),
+      });
+    }
     state.generateCalls++;
     if (state.mode === 'rate-limited')
       return route.fulfill({

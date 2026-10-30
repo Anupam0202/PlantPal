@@ -18,6 +18,7 @@ import { getMigrationState } from '../data/legacy/run';
 import { hasLegacyData } from '../data/legacy/storage';
 import { useActiveGarden, useRecordCounts, useSpecimens, useTimeline } from '../data/queries';
 import { CareCockpit } from '../features/care/Cockpit';
+import { WeeklyReflection } from '../features/copilot/WeeklyReflection';
 import { NextSteps } from '../features/garden/NextSteps';
 import { UseSoon } from '../features/garden/UseSoon';
 import { Timeline } from '../features/garden/Timeline';
@@ -129,6 +130,7 @@ function TodayPage() {
             <NowDetails q={forecast} />
           </LivingSky>
         ) : null}
+        <WeeklyReflection garden={garden} />
         <CareCockpit garden={garden} />
         <UseSoon garden={garden} />
         <NextSteps garden={garden} />

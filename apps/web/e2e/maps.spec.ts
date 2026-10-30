@@ -13,10 +13,15 @@ async function gardenInPune(page: Page) {
   await expect(page.getByRole('heading', { level: 1, name: 'Balcony' })).toBeVisible();
 }
 
+interface Sent {
+  url: URL;
+  body: string;
+}
+
 /** Every request the page makes, to prove precise coordinates never leave for the server or Overpass. */
 function recordRequests(page: Page) {
-  const seen: string[] = [];
-  page.on('request', (r) => seen.push(`${r.method()} ${r.url()} ${r.postData() ?? ''}`));
+  const seen: Sent[] = [];
+  page.on('request', (r) => seen.push({ url: new URL(r.url()), body: r.postData() ?? '' }));
   return seen;
 }
 
@@ -54,12 +59,13 @@ test.describe('under the production CSP (Trusted Types)', () => {
     expect(violations).toEqual([]);
 
     // Only the coarse cell reached the server; the browser never called Overpass itself.
-    const green = seen.filter((s) => s.includes('/api/v1/env/green-space'));
+    const green = seen.filter((s) => s.url.pathname === '/api/v1/env/green-space');
     expect(green.length).toBeGreaterThan(0);
-    for (const s of green) expect(s).toMatch(/green-space\?cell=87[0-9a-f]{13} $/);
-    expect(seen.some((s) => s.includes('overpass-api.de'))).toBe(false);
-    const ours = seen.filter((s) => s.includes('/api/'));
-    for (const s of ours) expect(s).not.toMatch(/18\.519|73\.855/);
+    for (const s of green) expect([...s.url.searchParams.keys()]).toEqual(['cell']);
+    for (const s of green) expect(s.url.searchParams.get('cell')).toMatch(/^87[0-9a-f]{13}$/);
+    expect(seen.some((s) => s.url.hostname === 'overpass-api.de')).toBe(false);
+    const ours = seen.filter((s) => s.url.pathname.startsWith('/api/'));
+    for (const s of ours) expect(`${s.url.search} ${s.body}`).not.toMatch(/18\.519|73\.855/);
   });
 });
 

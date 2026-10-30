@@ -18,6 +18,7 @@ import {
   photoIdV1,
   speciesDraftV1,
   spaceDetectV1,
+  weeklyReflectionV1,
   plainExplainV1,
   planExplainV1,
   prohibitedClaims,
@@ -44,6 +45,7 @@ const MODULES: Record<AiFeatureId, PromptModule<any, any>> = {
   'photo-id': photoIdV1,
   'species-draft': speciesDraftV1,
   'space-detect': spaceDetectV1,
+  'weekly-reflection': weeklyReflectionV1,
 };
 
 const REQUIRED_TAGS = [

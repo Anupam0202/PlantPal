@@ -13,6 +13,7 @@ import {
   BookOpen,
   HeartPulse,
   PencilRuler,
+  Sparkles,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useT } from '../i18n';
@@ -134,6 +135,14 @@ export function CommandPalette({
                 >
                   <PencilRuler className="size-5 text-muted" aria-hidden="true" />
                   {t.garden.spaceDesigner}
+                </Command.Item>
+                <Command.Item
+                  value="Open Garden Copilot ask AI assistant chat"
+                  onSelect={() => run(() => void navigate({ to: '/copilot' }))}
+                  className={item}
+                >
+                  <Sparkles className="size-5 text-muted" aria-hidden="true" />
+                  {t.copilot.open}
                 </Command.Item>
                 <Command.Item
                   value={`${t.garden.newGarden} new garden`}

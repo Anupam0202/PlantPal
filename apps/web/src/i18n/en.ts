@@ -527,6 +527,7 @@ export const en = {
     emptyTitle: 'The nature you bring back',
     emptyBody: 'Record visitors, blooms and water saved. Every visit counts, even when you see nothing.',
   },
+  copilot: { open: 'Open Garden Copilot' },
   community: {
     title: 'Community',
     disabledTitle: 'Community is not switched on',

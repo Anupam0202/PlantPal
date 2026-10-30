@@ -528,6 +528,7 @@ export const es: Messages = {
     emptyTitle: 'La naturaleza que devuelves',
     emptyBody: 'Registra visitantes, floraciones y agua ahorrada. Cada visita cuenta, aunque no veas nada.',
   },
+  copilot: { open: 'Abrir el Copiloto del jardín' },
   community: {
     title: 'Comunidad',
     disabledTitle: 'La comunidad no está activada',

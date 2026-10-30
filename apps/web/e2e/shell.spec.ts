@@ -32,6 +32,7 @@ for (const path of [
   '/nature',
   '/community',
   '/admin',
+  '/copilot',
   '/settings',
   '/welcome',
   '/welcome?step=space',
@@ -162,7 +163,7 @@ test.describe('security headers', () => {
         return { own: tryStart('/sw.js'), other: tryStart('https://example.org/w.js') };
       });
       expect(workers).toEqual({ own: 'started', other: 'blocked' });
-      expect(violations.filter((v) => !v.includes('example.org'))).toEqual([]);
+      expect(violations).toEqual([]);
     });
   });
 });

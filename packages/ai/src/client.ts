@@ -195,6 +195,55 @@ interface GroundingChunk {
   web?: { uri?: string; title?: string };
 }
 
+/** A part of a model turn as the API returned it (text, thought, function call, thought signature). */
+export type ModelPart = {
+  text?: string;
+  thought?: boolean;
+  thoughtSignature?: string;
+  functionCall?: { name: string; args?: Record<string, unknown>; id?: string };
+} & Record<string, unknown>;
+
+/** A content block in a multi-turn conversation, kept exactly as sent or received. */
+export interface ChatContent {
+  role: 'user' | 'model';
+  parts: Array<ModelPart | GeminiPart | { functionResponse: Record<string, unknown> }>;
+}
+
+export interface FunctionDeclaration {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+}
+
+export interface StreamStepRequest {
+  feature: string;
+  version: number;
+  role: ModelRole;
+  system: string;
+  contents: ChatContent[];
+  functions: FunctionDeclaration[];
+  /** `NONE` forbids tool calls (used for the last step and for repairs). */
+  toolMode: 'AUTO' | 'NONE';
+  maxOutputTokens: number;
+  temperature: number;
+}
+
+export interface StreamStepOptions {
+  signal?: AbortSignal;
+  /** Visible text as it arrives (thoughts are never passed on). */
+  onText?: (chunk: string) => void;
+  /** A retry is starting: text shown from the failed attempt should be cleared. */
+  onRestart?: () => void;
+  meta?: AiRunMeta;
+}
+
+interface StreamChunk extends GeminiResponse {
+  candidates?: Array<{
+    content?: { parts?: ModelPart[] };
+    finishReason?: string;
+  }>;
+}
+
 export class GeminiClient implements AiClient {
   private readonly f: typeof fetch;
   private readonly sleep: (ms: number) => Promise<void>;
@@ -413,6 +462,168 @@ export class GeminiClient implements AiClient {
     });
     meta.ms = this.now() - started;
     return { text, sources, meta };
+  }
+
+  /** Starts run metadata for a multi-step feature (the Copilot), checking the key and model first. */
+  async begin(feature: string, version: number, role: ModelRole, signal?: AbortSignal) {
+    const key = await this.keyOrThrow(signal);
+    return { key, meta: this.newMeta(feature, version, role) };
+  }
+
+  /**
+   * One streamed model step with function declarations (Copilot, §18.6). Returns the model's parts
+   * exactly as received, including thought signatures, so a tool loop can continue the turn.
+   */
+  async streamStep(
+    req: StreamStepRequest,
+    session: { key: string; meta: AiRunMeta },
+    opts: StreamStepOptions = {},
+  ): Promise<ModelPart[]> {
+    for (const c of req.contents)
+      for (const p of c.parts)
+        if (
+          c.role === 'user' &&
+          'text' in p &&
+          typeof p.text === 'string' &&
+          /AIza[0-9A-Za-z_-]{35}/.test(p.text)
+        )
+          throw new AiError('CONSENT_REQUIRED', 'The text contains an API key. Remove it before sending.', {
+            detail: 'API_KEY_IN_INPUT',
+          });
+    const body = (model: string, useThinking: boolean) => {
+      const thinking = useThinking ? thinkingConfig(model, 'low') : null;
+      return {
+        systemInstruction: { parts: [{ text: req.system }] },
+        contents: req.contents,
+        ...(req.functions.length
+          ? {
+              tools: [{ functionDeclarations: req.functions }],
+              toolConfig: { functionCallingConfig: { mode: req.toolMode } },
+            }
+          : {}),
+        generationConfig: {
+          temperature: req.temperature,
+          maxOutputTokens: req.maxOutputTokens,
+          ...(thinking ? { thinkingConfig: thinking } : {}),
+        },
+      };
+    };
+    let parts: ModelPart[] = [];
+    let first = true;
+    await this.send(
+      req.role,
+      session.meta,
+      opts.signal,
+      async (model, useThinking) => {
+        if (!first) opts.onRestart?.();
+        first = false;
+        parts = await this.postStream(model, session.key, body(model, useThinking), session.meta, opts);
+        return { text: '', json: {} };
+      },
+      { useThinking: true, rediscovered: false },
+    );
+    return parts;
+  }
+
+  /** Server-sent events from `streamGenerateContent`; the key stays in the header. */
+  private async postStream(
+    model: string,
+    key: string,
+    body: unknown,
+    meta: AiRunMeta,
+    opts: StreamStepOptions,
+  ): Promise<ModelPart[]> {
+    const deadline = AbortSignal.timeout(this.o.deadlineMs ?? 60_000);
+    const combined = opts.signal ? AbortSignal.any([opts.signal, deadline]) : deadline;
+    const fail = (): never => {
+      if (opts.signal?.aborted) throw new AiError('CANCELLED', 'Cancelled');
+      if (deadline.aborted) throw new AiError('TIMEOUT', 'The AI request took too long.');
+      throw new AiError('NETWORK', 'Could not reach the Gemini API.');
+    };
+    let res: Response;
+    try {
+      res = await this.f(`${GEMINI_BASE}/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify(body),
+        signal: combined,
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+      });
+    } catch {
+      return fail();
+    }
+    if (!res.ok) {
+      const json = (await res.json().catch(() => null)) as unknown;
+      throw classifyGeminiError(res.status, json, res.headers.get('retry-after'));
+    }
+    const parts: ModelPart[] = [];
+    let finish: string | undefined;
+    let usage: GeminiResponse['usageMetadata'] = {};
+    let blocked: string | undefined;
+    const handle = (raw: string) => {
+      let chunk: StreamChunk & { error?: unknown };
+      try {
+        chunk = JSON.parse(raw) as StreamChunk & { error?: unknown };
+      } catch {
+        return;
+      }
+      if (chunk.error) throw classifyGeminiError(500, chunk, null);
+      if (chunk.promptFeedback?.blockReason) blocked = chunk.promptFeedback.blockReason;
+      if (chunk.usageMetadata) usage = chunk.usageMetadata;
+      const c = chunk.candidates?.[0];
+      if (c?.finishReason) finish = c.finishReason;
+      for (const p of c?.content?.parts ?? []) {
+        parts.push(p);
+        if (typeof p.text === 'string' && !p.thought && p.text) opts.onText?.(p.text);
+      }
+    };
+    try {
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let cut: number;
+        while ((cut = buffer.search(/\r?\n\r?\n/)) >= 0) {
+          const event = buffer.slice(0, cut);
+          buffer = buffer.slice(cut).replace(/^\r?\n\r?\n/, '');
+          const data = event
+            .split(/\r?\n/)
+            .filter((l) => l.startsWith('data:'))
+            .map((l) => l.slice(5).trimStart())
+            .join('\n');
+          if (data) handle(data);
+        }
+      }
+      if (buffer.trim().startsWith('data:')) handle(buffer.trim().slice(5).trimStart());
+    } catch (e) {
+      if (e instanceof AiError) throw e;
+      return fail();
+    }
+    const inputTokens = usage.promptTokenCount ?? 0;
+    const outputTokens = (usage.candidatesTokenCount ?? 0) + (usage.thoughtsTokenCount ?? 0);
+    meta.inputTokens += inputTokens;
+    meta.outputTokens += outputTokens;
+    this.o.onUsage?.({
+      model,
+      feature: meta.feature,
+      inputTokens,
+      outputTokens,
+      at: new Date(this.now()).toISOString(),
+    });
+    // Same finish-reason rules as a single response; a step with only tool calls is a valid answer.
+    const calls = parts.some((p) => p.functionCall);
+    if (blocked || (finish && finish !== 'STOP' && finish !== 'FINISH_REASON_UNSPECIFIED') || !calls)
+      finalText({
+        ...(blocked ? { promptFeedback: { blockReason: blocked } } : {}),
+        candidates: [
+          { content: { parts: parts as Array<{ text?: string; thought?: boolean }> }, finishReason: finish },
+        ],
+      });
+    return parts;
   }
 
   private async post(

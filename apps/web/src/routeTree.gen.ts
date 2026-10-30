@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as SitRouteImport } from './routes/sit'
 import { Route as TodayRouteImport } from './routes/today'
@@ -69,6 +70,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CopilotRoute = CopilotRouteImport.update({
+  id: '/copilot',
+  path: '/copilot',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinRoute = JoinRouteImport.update({
@@ -321,6 +327,7 @@ const SpeciesDraftsDraftIdRoute = SpeciesDraftsDraftIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/copilot': typeof CopilotRoute
   '/join': typeof JoinRoute
   '/sit': typeof SitRoute
   '/today': typeof TodayRoute
@@ -374,6 +381,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/copilot': typeof CopilotRoute
   '/join': typeof JoinRoute
   '/sit': typeof SitRoute
   '/today': typeof TodayRoute
@@ -428,6 +436,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/copilot': typeof CopilotRoute
   '/join': typeof JoinRoute
   '/sit': typeof SitRoute
   '/today': typeof TodayRoute
@@ -483,6 +492,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/copilot'
     | '/join'
     | '/sit'
     | '/today'
@@ -536,6 +546,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/copilot'
     | '/join'
     | '/sit'
     | '/today'
@@ -589,6 +600,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/copilot'
     | '/join'
     | '/sit'
     | '/today'
@@ -643,6 +655,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  CopilotRoute: typeof CopilotRoute
   JoinRoute: typeof JoinRoute
   SitRoute: typeof SitRoute
   TodayRoute: typeof TodayRoute
@@ -708,6 +721,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/copilot': {
+      id: '/copilot'
+      path: '/copilot'
+      fullPath: '/copilot'
+      preLoaderRoute: typeof CopilotRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/join': {
@@ -1059,6 +1079,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  CopilotRoute: CopilotRoute,
   JoinRoute: JoinRoute,
   SitRoute: SitRoute,
   TodayRoute: TodayRoute,

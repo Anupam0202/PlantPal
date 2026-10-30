@@ -7,3 +7,4 @@ export * from './prompt';
 export * from './client';
 export * from './usage';
 export * from './prompts';
+export * from './copilot';
