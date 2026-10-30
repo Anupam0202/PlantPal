@@ -82,7 +82,7 @@ export function sessionAuthenticator(auth: Auth): Authenticator {
   return {
     async userOf(req) {
       const s = await auth.api.getSession({ headers: req.headers });
-      return s ? { id: s.user.id, name: s.user.name } : null;
+      return s ? { id: s.user.id, name: s.user.name, createdAt: new Date(s.user.createdAt).getTime() } : null;
     },
   };
 }

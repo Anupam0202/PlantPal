@@ -16,6 +16,7 @@ import { problem } from './lib/problem';
 import type { RateLimiter } from './lib/rate-limit';
 import type { StatusStore } from './lib/status-store';
 import { registerAccountRoutes, type AccountsDeps } from './routes/accounts';
+import { registerCommunityRoutes, type CommunityDeps } from './routes/community';
 import { registerPushRoutes, type PushDeps } from './routes/push';
 
 export interface AppDeps {
@@ -29,6 +30,8 @@ export interface AppDeps {
   accounts?: Omit<AccountsDeps, 'limiter'>;
   /** Web Push subscriptions and test sends (needs `accounts` for sign-in). */
   push?: Omit<PushDeps, 'auth' | 'limiter'>;
+  /** Community (§20). Status is always answered; the rest only with FEATURE_COMMUNITY on. */
+  community?: Omit<CommunityDeps, 'auth' | 'limiter'>;
   /** Better Auth's handler for `/api/auth/*`. Absent when no auth secret is configured. */
   authHandler?: (req: Request) => Promise<Response>;
 }
@@ -276,6 +279,8 @@ export function createApp(deps: AppDeps) {
   });
 
   if (deps.accounts) registerAccountRoutes(app, { ...deps.accounts, limiter: deps.limiter });
+  if (deps.accounts && deps.community)
+    registerCommunityRoutes(app, { ...deps.community, auth: deps.accounts.auth, limiter: deps.limiter });
   if (deps.accounts && deps.push)
     registerPushRoutes(app, { ...deps.push, auth: deps.accounts.auth, limiter: deps.limiter });
 

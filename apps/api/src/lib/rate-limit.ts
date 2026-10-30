@@ -8,8 +8,14 @@ export interface LimitResult {
 }
 
 /** Token-bucket limiter keyed by client (IP) — in production backed by the `Limiter` Durable Object. */
+export interface Limit {
+  capacity: number;
+  ratePerSecond: number;
+}
+
 export interface RateLimiter {
-  take(key: string): Promise<LimitResult>;
+  /** Takes one token for `key`; `limit` overrides the per-client default for that key. */
+  take(key: string, limit?: Limit): Promise<LimitResult>;
 }
 
 export const CLIENT_LIMIT = { capacity: 120, ratePerSecond: 2 };
@@ -21,10 +27,14 @@ export class MemoryRateLimiter implements RateLimiter {
     private readonly ratePerSecond = CLIENT_LIMIT.ratePerSecond,
     private readonly now: () => number = Date.now,
   ) {}
-  async take(key: string): Promise<LimitResult> {
+  async take(key: string, limit?: Limit): Promise<LimitResult> {
     let b = this.buckets.get(key);
     if (!b) {
-      b = new TokenBucket(this.capacity, this.ratePerSecond, this.now);
+      b = new TokenBucket(
+        limit?.capacity ?? this.capacity,
+        limit?.ratePerSecond ?? this.ratePerSecond,
+        this.now,
+      );
       this.buckets.set(key, b);
     }
     const wait = b.take();
@@ -32,7 +42,7 @@ export class MemoryRateLimiter implements RateLimiter {
       allowed: wait === 0,
       remaining: Math.floor(b.snapshot().tokens),
       retryAfterMs: wait,
-      limit: this.capacity,
+      limit: limit?.capacity ?? this.capacity,
     };
   }
 }

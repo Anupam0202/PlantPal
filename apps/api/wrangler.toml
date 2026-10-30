@@ -23,6 +23,10 @@ PUBLIC_ORIGIN = "http://localhost:8787"
 # Web Push: set VAPID_PUBLIC_KEY here and VAPID_PRIVATE_KEY as a secret
 # (`pnpm --filter @plantpal/api vapid:keys` makes a pair). Push stays off without both.
 VAPID_PUBLIC_KEY = ""
+# Community (§20) is off until the owner approves it, publishes docs/community-policy.md and names a
+# moderator. TURNSTILE_SECRET_KEY (secret) adds a bot check on posting.
+FEATURE_COMMUNITY = "off"
+COMMUNITY_MIN_ACCOUNT_HOURS = "24"
 
 [[d1_databases]]
 binding = "DB"

@@ -25,7 +25,8 @@ import type { RateLimiter } from '../lib/rate-limit';
 
 /** Resolves the signed-in person from the request (Better Auth session in the Worker). */
 export interface Authenticator {
-  userOf(req: Request): Promise<{ id: string; name: string } | null>;
+  /** `createdAt` (epoch ms) lets community rules require a minimum account age. */
+  userOf(req: Request): Promise<{ id: string; name: string; createdAt?: number } | null>;
 }
 
 export interface AccountsDeps {
@@ -314,7 +315,10 @@ export function registerAccountRoutes(app: OpenAPIHono<Vars>, deps: AccountsDeps
   app.openapi(meRoute, async (c) => {
     const u = await userOr401(c);
     if (!u) return unauth(c) as never;
-    return c.json({ user: u, workspaces: await deps.accounts.workspacesOf(u.id) }, 200);
+    return c.json(
+      { user: { id: u.id, name: u.name }, workspaces: await deps.accounts.workspacesOf(u.id) },
+      200,
+    );
   });
 
   app.openapi(createWorkspaceRoute, async (c) => {

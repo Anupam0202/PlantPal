@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers';
 import { TokenBucket } from '@plantpal/providers';
-import { CLIENT_LIMIT, type LimitResult, type RateLimiter } from './lib/rate-limit';
+import { CLIENT_LIMIT, type Limit, type LimitResult, type RateLimiter } from './lib/rate-limit';
 
 /** Global token buckets (one Durable Object per key shard). */
 export class Limiter extends DurableObject {
@@ -20,9 +20,9 @@ export class Limiter extends DurableObject {
 
 export class DurableRateLimiter implements RateLimiter {
   constructor(private readonly ns: DurableObjectNamespace<Limiter>) {}
-  async take(key: string): Promise<LimitResult> {
+  async take(key: string, limit: Limit = CLIENT_LIMIT): Promise<LimitResult> {
     // Shard by key so one hot client cannot slow everyone else down.
     const stub = this.ns.get(this.ns.idFromName(key.slice(0, 64)));
-    return stub.take(key, CLIENT_LIMIT.capacity, CLIENT_LIMIT.ratePerSecond);
+    return stub.take(key, limit.capacity, limit.ratePerSecond);
   }
 }

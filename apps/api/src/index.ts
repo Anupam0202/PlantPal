@@ -5,6 +5,7 @@ import { DurableRooms, type GardenRoom } from './garden-room';
 import { DurableRateLimiter, type Limiter } from './limiter-do';
 import { AccountsStore } from './lib/accounts';
 import { createAuth, sessionAuthenticator } from './lib/auth';
+import { CommunityStore } from './lib/community-store';
 import { PushStore } from './lib/push-store';
 import { D1StatusStore } from './lib/status-store';
 import { D1SyncRepo } from './lib/sync-repo';
@@ -33,6 +34,12 @@ export interface Env {
   VAPID_PRIVATE_KEY?: string;
   /** `mailto:` or `https:` contact sent to push services; defaults to CONTACT. */
   VAPID_SUBJECT?: string;
+  /** "on" turns the community on. Needs owner approval, a policy and a moderator first (§20). */
+  FEATURE_COMMUNITY?: string;
+  /** Hours a new account waits before posting in the community (default 24). */
+  COMMUNITY_MIN_ACCOUNT_HOURS?: string;
+  /** Cloudflare Turnstile secret; when set, posting needs a passed check. */
+  TURNSTILE_SECRET_KEY?: string;
 }
 
 const HORIZON_DAYS = 90;
@@ -60,7 +67,8 @@ function build(env: Env): Built {
           subject: env.VAPID_SUBJECT || env.CONTACT,
         }
       : null;
-  const key = `${env.PROVIDERS}|${env.DISABLED_PROVIDERS ?? ''}|${env.ALLOWED_ORIGINS}|${env.PUBLIC_ORIGIN}|${secret.length >= 32}|${vapid?.publicKey ?? ''}`;
+  const community = env.FEATURE_COMMUNITY === 'on';
+  const key = `${env.PROVIDERS}|${env.DISABLED_PROVIDERS ?? ''}|${env.ALLOWED_ORIGINS}|${env.PUBLIC_ORIGIN}|${secret.length >= 32}|${vapid?.publicKey ?? ''}|${community}|${env.COMMUNITY_MIN_ACCOUNT_HOURS ?? ''}|${Boolean(env.TURNSTILE_SECRET_KEY)}`;
   if (cached?.key === key) return cached;
   const mode: ProviderMode = env.PROVIDERS === 'live' ? 'live' : 'mock';
   const status = new D1StatusStore(env.DB);
@@ -98,6 +106,12 @@ function build(env: Env): Built {
     allowedOrigins,
     accounts: { accounts, sync: new D1SyncRepo(env.DB), auth: authenticator, rooms },
     push: { store: new PushStore(env.DB), vapid },
+    community: {
+      enabled: community,
+      store: new CommunityStore(env.DB),
+      minAccountHours: Number(env.COMMUNITY_MIN_ACCOUNT_HOURS ?? 24),
+      turnstile: env.TURNSTILE_SECRET_KEY ? { secret: env.TURNSTILE_SECRET_KEY } : null,
+    },
     ...(auth ? { authHandler: (req: Request) => auth().handler(req) } : {}),
   });
   cached = {
@@ -117,8 +131,10 @@ export default {
     if (live) return connectLive(built.live, live[1]!, request);
     return built.app.fetch(request, env, ctx);
   },
-  /** Daily: keep 90 days of change history (§14.3 tombstone horizon). */
+  /** Daily: keep 90 days of change history (§14.3 tombstone horizon) and tidy the exchange. */
   scheduled(_event, env, ctx) {
     ctx.waitUntil(new D1SyncRepo(env.DB).prune(Date.now() - HORIZON_DAYS * 86_400_000));
+    // Expired reservations and listings also change lazily when read; this keeps lists tidy.
+    if (env.FEATURE_COMMUNITY === 'on') ctx.waitUntil(new CommunityStore(env.DB).sweep(null, Date.now()));
   },
 } satisfies ExportedHandler<Env>;

@@ -2,6 +2,7 @@
 // Mock providers only: no network calls leave the machine.
 import { execFileSync, spawn } from 'node:child_process';
 import { newId } from '@plantpal/domain';
+import { latLngToCell } from 'h3-js';
 import { b64urlEncode } from '../src/lib/webpush';
 import { SoftPasskey } from '../test/webauthn';
 
@@ -33,6 +34,8 @@ const vars = [
   `BETTER_AUTH_SECRET:${secret}`,
   `VAPID_PUBLIC_KEY:${vapidPublic}`,
   `VAPID_PRIVATE_KEY:${vapidPrivate}`,
+  'FEATURE_COMMUNITY:on',
+  'COMMUNITY_MIN_ACCOUNT_HOURS:0',
 ].flatMap((v) => ['--var', v]);
 const dev = spawn('pnpm', [...args, ...vars], {
   env,
@@ -115,24 +118,39 @@ check(
 );
 
 // ---- A signed-in member, end to end in workerd: passkey sign-up, a garden, live change pings.
-const jar = new Map<string, string>();
-const call = async (method: string, path: string, body?: unknown) => {
-  const res = await fetch(`${base}${path}`, {
-    method,
-    headers: {
-      origin: APP_ORIGIN,
-      ...(jar.size ? { cookie: [...jar].map(([k, v]) => `${k}=${v}`).join('; ') } : {}),
-      ...(body === undefined ? {} : { 'content-type': 'application/json' }),
-    },
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-  });
-  for (const c of res.headers.getSetCookie()) {
-    const [pair] = c.split(';');
-    const i = pair!.indexOf('=');
-    jar.set(pair!.slice(0, i).trim(), pair!.slice(i + 1).trim());
-  }
-  return res;
-};
+/** One browser: its own cookie jar. */
+function session() {
+  const jar = new Map<string, string>();
+  const call = async (method: string, path: string, body?: unknown) => {
+    const res = await fetch(`${base}${path}`, {
+      method,
+      headers: {
+        origin: APP_ORIGIN,
+        ...(jar.size ? { cookie: [...jar].map(([k, v]) => `${k}=${v}`).join('; ') } : {}),
+        ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+    for (const c of res.headers.getSetCookie()) {
+      const [pair] = c.split(';');
+      const i = pair!.indexOf('=');
+      jar.set(pair!.slice(0, i).trim(), pair!.slice(i + 1).trim());
+    }
+    return res;
+  };
+  /** Signs up with a fresh software passkey. */
+  const signUp = async (name: string) => {
+    const options = (await (
+      await call('GET', `/api/auth/passkey/generate-register-options?context=${name}`)
+    ).json()) as Json;
+    return call('POST', '/api/auth/passkey/verify-registration', {
+      response: await new SoftPasskey('localhost', APP_ORIGIN).create(options),
+      createSession: true,
+    });
+  };
+  return { jar, call, signUp };
+}
+const { jar, call } = session();
 
 const key = new SoftPasskey('localhost', APP_ORIGIN);
 const reg = await call('GET', '/api/auth/passkey/generate-register-options?context=Smoke');
@@ -244,6 +262,52 @@ check(
 check(
   (await call('DELETE', '/api/v1/push/subscriptions', { endpoint: subscription.endpoint })).status === 204,
   'a push subscription is removed',
+);
+
+// ---- Community (flag on for this run): the exchange's single-winner reservation on real D1.
+const other = session();
+check((await other.signUp('Neighbour')).status === 200, 'a second person signs up');
+const cell = latLngToCell(18.52, 73.86, 7);
+for (const who of [call, other.call])
+  check(
+    (await who('PUT', '/api/v1/community/profile', { displayName: 'Smoke', cell, country: 'IN' })).status ===
+      200,
+    'a community profile is saved with a coarse cell',
+  );
+const offer = (await (
+  await call('POST', '/api/v1/community/exchange', {
+    kind: 'seeds',
+    title: 'Tulsi seeds',
+    scientificName: null,
+  })
+).json()) as Json;
+check(offer.state === 'listed', 'a listing is offered');
+const both = await Promise.all(
+  [1, 2].map(() => other.call('POST', `/api/v1/community/exchange/${offer.id}/reserve`)),
+);
+check(
+  both
+    .map((r) => r.status)
+    .sort()
+    .join() === '200,409',
+  'two reservations at once: exactly one wins (D1 batch with a conditional update)',
+);
+check(
+  ((await (await call('POST', `/api/v1/community/exchange/${offer.id}/release`)).json()) as Json).listing
+    ?.state === 'listed',
+  'the owner releases it back to listed',
+);
+await other.call('POST', `/api/v1/community/exchange/${offer.id}/reserve`);
+await call('POST', `/api/v1/community/exchange/${offer.id}/confirm`);
+await other.call('POST', `/api/v1/community/exchange/${offer.id}/confirm`);
+const completed = (await (
+  await other.call('POST', `/api/v1/community/exchange/${offer.id}/complete`)
+).json()) as Json;
+check(completed.listing?.state === 'completed', 'both confirm the handoff, then it completes');
+const map = (await (await call('GET', '/api/v1/community/map')).json()) as Json;
+check(
+  Array.isArray(map.cells) && map.cells.length === 0,
+  'the map hides cells with fewer than five contributors',
 );
 
 const page = await fetch(`${base}/garden/journal`);

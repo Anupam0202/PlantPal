@@ -1,5 +1,11 @@
 import { DatabaseSync } from 'node:sqlite';
 
+interface ShimResult {
+  results: unknown[];
+  success: true;
+  meta: { changes: number; last_row_id?: number };
+}
+
 /** Minimal D1Database over Node's built-in SQLite, enough for Drizzle's D1 driver in tests. */
 export function createD1(): D1Database & { exec(sql: string): Promise<D1ExecResult> } {
   const db = new DatabaseSync(':memory:');
@@ -7,24 +13,28 @@ export function createD1(): D1Database & { exec(sql: string): Promise<D1ExecResu
     let params: unknown[] = [];
     const norm = () =>
       params.map((p) => (typeof p === 'boolean' ? (p ? 1 : 0) : p === undefined ? null : p)) as never[];
+    // Like D1: writes report how many rows they changed, reads return their rows.
+    const allSync = (): ShimResult => {
+      const st = db.prepare(sql);
+      if (st.columns().length === 0) {
+        const r = st.run(...norm());
+        return {
+          results: [],
+          success: true,
+          meta: { changes: Number(r.changes), last_row_id: Number(r.lastInsertRowid) },
+        };
+      }
+      const rows = st.all(...norm());
+      return { results: rows, success: true, meta: { changes: rows.length } };
+    };
     const stmt = {
+      __allSync: allSync,
       bind(...p: unknown[]) {
         params = p;
         return stmt;
       },
       async all() {
-        // Like D1: writes report how many rows they changed, reads return their rows.
-        const st = db.prepare(sql);
-        if (st.columns().length === 0) {
-          const r = st.run(...norm());
-          return {
-            results: [],
-            success: true,
-            meta: { changes: Number(r.changes), last_row_id: Number(r.lastInsertRowid) },
-          };
-        }
-        const rows = st.all(...norm());
-        return { results: rows, success: true, meta: { changes: rows.length } };
+        return allSync();
       },
       async run() {
         const r = db.prepare(sql).run(...norm());
@@ -49,12 +59,12 @@ export function createD1(): D1Database & { exec(sql: string): Promise<D1ExecResu
   };
   return {
     prepare,
-    // Like D1: one transaction, and each statement's rows come back (reads included).
-    async batch(stmts: Array<{ all: () => Promise<unknown> }>) {
+    // Like D1: one transaction that nothing else interleaves with (no awaits inside), and each
+    // statement's rows come back (reads included).
+    async batch(stmts: Array<{ __allSync: () => ShimResult }>) {
       db.exec('BEGIN');
       try {
-        const out = [];
-        for (const s of stmts) out.push(await s.all());
+        const out = stmts.map((s) => s.__allSync());
         db.exec('COMMIT');
         return out;
       } catch (e) {
