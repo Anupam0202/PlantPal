@@ -40,20 +40,22 @@ PlantPal is being rebuilt as v4 ("Living Field Guide") milestone by milestone. S
 | M8        | Space designer: plans to scale, checks, sun and shade, growth, versions, exports                       | Done  |
 | M9        | Nature log and timed counts, Bloom Bridge, native and invasive lens, harvest and pantry, impact ledger | Done  |
 | M10       | Optional passkey accounts, sync, shared gardens and roles, plant-sitter links, live updates, Web Push  | Done  |
-| M11–M12   | Community, Garden Copilot, voice, release hardening                                                    | Next  |
+| M11       | Seed library and lineage; community, Seed & Cutting Exchange and moderation (off by default); maps     | Done  |
+| M12       | Garden Copilot, voice, story, learning paths, release hardening                                        | Next  |
 
 The previous single-file app (v3) has been retired; its known problems are tracked in [`docs/traceability.md`](docs/traceability.md).
 
 ## Tech stack
 
-| Area    | Choice                                                                                          |
-| ------- | ----------------------------------------------------------------------------------------------- |
-| Web app | React 19, Vite 8, TanStack Router + Query, Zustand, Tailwind CSS 4, Base UI, Motion             |
-| Offline | Installable PWA (Workbox), IndexedDB via Dexie                                                  |
-| API     | Cloudflare Workers + Hono, D1 (Drizzle), R2, Durable Objects (free tier)                        |
-| AI      | Google Gemini via `@google/genai`, with the user's own key and runtime model discovery          |
-| Data    | Open-Meteo, NASA POWER, GBIF, iNaturalist, Wikipedia/Wikidata, OpenFreeMap — free, no paid tier |
-| Quality | TypeScript (strict), ESLint, Prettier, Vitest, Playwright + axe (WCAG 2.2 AA)                   |
+| Area    | Choice                                                                                                                    |
+| ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Web app | React 19, Vite 8, TanStack Router + Query, Zustand, Tailwind CSS 4, Base UI, Motion                                       |
+| Offline | Installable PWA (Workbox), IndexedDB via Dexie                                                                            |
+| API     | Cloudflare Workers + Hono, D1 (Drizzle), R2, Durable Objects (free tier)                                                  |
+| AI      | Google Gemini via `@google/genai`, with the user's own key and runtime model discovery                                    |
+| Data    | Open-Meteo, NASA POWER, GBIF, iNaturalist, Wikipedia/Wikidata, OpenStreetMap (Overpass), OpenFreeMap — free, no paid tier |
+| Maps    | MapLibre GL with OpenFreeMap tiles and H3 hexagons, loaded only on map pages                                              |
+| Quality | TypeScript (strict), ESLint, Prettier, Vitest, Playwright + axe (WCAG 2.2 AA)                                             |
 
 Pinned versions are recorded in [`docs/adr/0002-versions.md`](docs/adr/0002-versions.md).
 
@@ -85,6 +87,8 @@ pnpm exec wrangler d1 migrations apply plantpal --local && pnpm exec wrangler de
 ```
 
 Open `http://localhost:8787` (passkeys need a domain such as `localhost`, not an IP address). `pnpm --filter @plantpal/api vapid:keys` makes Web Push keys.
+
+The community (feed, events, Seed & Cutting Exchange, moderation) is **off by default**. It may be switched on for a public deployment only after the owner adopts [`docs/community-policy.md`](docs/community-policy.md) and names a moderator; to try it locally see [`docs/demo/M11.md`](docs/demo/M11.md).
 
 ### Useful scripts
 
@@ -122,8 +126,8 @@ tools/        build checks (secret scan, bundle budget, icons)
 ## Privacy and security
 
 - No secrets in the client bundle; CI scans the build output for key patterns.
-- Strict Content Security Policy with Trusted Types.
-- Your location is rounded before it leaves your device for public data providers.
+- Strict Content Security Policy with Trusted Types; the only policy allows same-origin script URLs (service worker and web workers).
+- Your location is rounded before it leaves your device for public data providers. The community and the corridor map get only a hexagon of about 5 km², and the community map hides any hexagon with fewer than five active people.
 - Accounts are optional and use passkeys only: no passwords, no email, and no IP addresses stored with sessions. Invitation and plant-sitter tokens are shown once, kept only as hashes, and travel in the URL fragment so they never reach server logs.
 - Push notifications are end-to-end encrypted to your browser (RFC 8291) and sent only to known browser push services.
 - Report vulnerabilities privately as described in [`SECURITY.md`](SECURITY.md).

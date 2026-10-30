@@ -5,6 +5,7 @@ import {
   ClimateProfile,
   ClimateProjection,
   Forecast,
+  GreenSpace,
   PlaceSearch,
   Problem,
   PROVIDER_IDS,
@@ -59,6 +60,27 @@ describe('environment routes', () => {
     for (const path of ['air', 'elevation', 'solar']) {
       expect((await app.request(`/api/v1/env/${path}?lat=-33.87&lon=151.21`)).status).toBe(200);
     }
+  });
+
+  it('serves mapped green space for one coarse tile, never for coordinates', async () => {
+    const { latLngToCell } = await import('h3-js');
+    const cell = latLngToCell(18.52, 73.86, 7);
+    const { app } = make();
+    const res = await app.request(`/api/v1/env/green-space?cell=${cell}`);
+    expect(res.status).toBe(200);
+    const body = GreenSpace.parse(await res.json());
+    expect(body.tile).toBe(cell);
+    expect(body.provenance).toMatchObject({ provider: 'overpass', lat: null, lon: null, demo: true });
+    // The box covers the tile plus a margin of about 900 m, nothing more.
+    const [w, s, e, n] = body.bbox;
+    expect(w).toBeLessThan(73.86);
+    expect(e).toBeGreaterThan(73.86);
+    expect(s).toBeLessThan(18.52);
+    expect(n).toBeGreaterThan(18.52);
+    expect(e - w).toBeLessThan(0.05);
+    expect(body.areas.length).toBeGreaterThan(0);
+    for (const bad of ['', 'lat=18.52&lon=73.86', `cell=${latLngToCell(18.52, 73.86, 9)}`, 'cell=zzz'])
+      expect((await app.request(`/api/v1/env/green-space?${bad}`)).status).toBe(400);
   });
 
   it('serves a climate profile that states its period and method', async () => {

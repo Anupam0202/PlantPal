@@ -1,5 +1,6 @@
 import { climateDeltas, climateSummary } from '@plantpal/domain';
 import type {
+  GreenSpace,
   NearbyGroup,
   NearbyRecords,
   NearbySpecies,
@@ -37,6 +38,7 @@ import {
   forecastFixture,
   geocodingFixture,
   solarFixture,
+  overpassGreenFixture,
 } from './fixtures';
 import { archiveUrl, CLIMATE_MODELS, climateUrl, parseArchive, parseClimate } from './openMeteo/history';
 import { airUrl, parseAir } from './openMeteo/air';
@@ -47,6 +49,7 @@ import { parseSolarClimatology, solarClimatologyUrl } from './nasaPower/climatol
 import { parseSpeciesMatch, speciesMatchUrl } from './gbif/species';
 import { nearbyUrl, parseNearby, type KINGDOMS } from './gbif/occurrences';
 import { parseSpeciesCounts, speciesCountsUrl } from './inaturalist/speciesCounts';
+import { greenSpaceUrl, parseGreenSpace, type Bbox } from './overpass/greenSpace';
 import { provenance } from './core/provenance';
 import { commonsUrl, parseCommons } from './wikimedia/commons';
 import {
@@ -85,6 +88,8 @@ const RATES: Partial<Record<ProviderId, [number, number]>> = {
   'nasa-power': [0.5, 2],
   'open-meteo-historical': [0.2, 1],
   'open-meteo-climate': [0.2, 1],
+  // Overpass asks for slot-based fair use: at most one query every few seconds from this server.
+  overpass: [0.2, 1],
 };
 
 /** Marks a cached payload (and every fact inside it) as stale. */
@@ -341,6 +346,28 @@ export class EnvClient {
           group,
           radiusKm: r,
           provenance: provenance('inaturalist', { retrievedAt, lat: c.lat, lon: c.lon, demo }),
+        }),
+      signal,
+    );
+  }
+
+  /**
+   * Mapped green space (OpenStreetMap via Overpass) around one coarse tile. Server-side only: browsers
+   * call the Worker, which caches per tile for 90 days. Only the tile's bounding box is sent.
+   */
+  greenSpace(tile: string, bbox: Bbox, signal?: AbortSignal): Promise<GreenSpace> {
+    const box = bbox.map((v) => Math.round(v * 1e4) / 1e4) as Bbox;
+    return this.get(
+      'overpass',
+      'green-space',
+      { tile },
+      greenSpaceUrl(box),
+      () => overpassGreenFixture(box),
+      (json, retrievedAt, demo) =>
+        parseGreenSpace(json, {
+          tile,
+          bbox: box,
+          provenance: provenance('overpass', { retrievedAt, lat: null, lon: null, demo }),
         }),
       signal,
     );

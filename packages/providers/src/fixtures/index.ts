@@ -519,3 +519,47 @@ export function gbifNearbyFixtureFor(kingdom: 'plants' | 'animals' | 'fungi') {
     ],
   };
 }
+
+/**
+ * Overpass `out geom` shape for a bounding box: a park east of the centre, a wood to the north-west
+ * (an open way pair stitched as a multipolygon), a cemetery and a feature that is not green space.
+ * Demo data: it is placed relative to the box, so it fits wherever a test garden is.
+ */
+export function overpassGreenFixture([w, s, e, n]: [number, number, number, number]) {
+  const cx = (w + e) / 2;
+  const cy = (s + n) / 2;
+  const square = (dx: number, dy: number, half: number) => {
+    const pts = [
+      [cx + dx - half, cy + dy - half],
+      [cx + dx + half, cy + dy - half],
+      [cx + dx + half, cy + dy + half],
+      [cx + dx - half, cy + dy + half],
+      [cx + dx - half, cy + dy - half],
+    ];
+    return pts.map(([lon, lat]) => ({ lat: lat!, lon: lon! }));
+  };
+  const wood = square(-0.006, 0.005, 0.0015);
+  return {
+    version: 0.6,
+    generator: 'Overpass API (fixture)',
+    elements: [
+      {
+        type: 'way',
+        id: 101,
+        tags: { leisure: 'park', name: 'Riverside Park' },
+        geometry: square(0.004, 0, 0.0012),
+      },
+      {
+        type: 'relation',
+        id: 202,
+        tags: { type: 'multipolygon', natural: 'wood' },
+        members: [
+          { type: 'way', ref: 1, role: 'outer', geometry: wood.slice(0, 3) },
+          { type: 'way', ref: 2, role: 'outer', geometry: wood.slice(2) },
+        ],
+      },
+      { type: 'way', id: 303, tags: { landuse: 'cemetery' }, geometry: square(0, -0.007, 0.001) },
+      { type: 'way', id: 404, tags: { building: 'yes' }, geometry: square(0.001, 0.001, 0.0002) },
+    ],
+  };
+}

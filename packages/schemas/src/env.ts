@@ -37,6 +37,7 @@ export const PROVIDER_IDS = [
   'wikimedia-commons',
   'wikidata',
   'inaturalist',
+  'overpass',
 ] as const;
 export const ProviderId = z.enum(PROVIDER_IDS);
 export type ProviderId = z.infer<typeof ProviderId>;
@@ -346,3 +347,42 @@ export const NearbyRecords = z.object({
   licences: z.array(z.string()),
 });
 export type NearbyRecords = z.infer<typeof NearbyRecords>;
+
+// ---------------------------------------------------------------- green space (corridor map, §6.16)
+
+export const GREEN_KINDS = [
+  'park',
+  'wood',
+  'meadow',
+  'allotment',
+  'cemetery',
+  'garden',
+  'green-roof',
+] as const;
+export type GreenKind = (typeof GREEN_KINDS)[number];
+
+/** A ring of [lon, lat] pairs, first point repeated last. */
+const Ring = z.array(z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)])).min(4);
+
+/**
+ * Mapped green space from OpenStreetMap around one coarse tile (H3 resolution 7). This is mapped land
+ * cover, not habitat quality, and OpenStreetMap completeness varies by place.
+ */
+export const GreenSpace = z.object({
+  provenance: Provenance,
+  /** The coarse tile asked about; no garden coordinates are sent. */
+  tile: z.string(),
+  bbox: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+  areas: z.array(
+    z.object({
+      id: z.string(),
+      kind: z.enum(GREEN_KINDS),
+      name: z.string().nullable(),
+      /** Outer rings only; holes are ignored (shares are approximate). */
+      rings: z.array(Ring).min(1),
+    }),
+  ),
+  /** Some areas were left out to keep the response small (largest kept first). */
+  truncated: z.boolean(),
+});
+export type GreenSpace = z.infer<typeof GreenSpace>;

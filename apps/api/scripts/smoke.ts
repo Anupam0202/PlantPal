@@ -82,7 +82,7 @@ type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-ex
 
 await waitReady();
 const status = (await (await fetch(`${base}/api/v1/status`)).json()) as Json;
-check(status.ok === true && status.providers.length === 11, '/api/v1/status lists all 11 providers');
+check(status.ok === true && status.providers.length === 12, '/api/v1/status lists all 12 providers');
 
 const fc = await fetch(`${base}/api/v1/env/forecast?lat=18.52&lon=73.86`);
 const fcBody = (await fc.json()) as Json;
@@ -326,6 +326,16 @@ const map = (await (await call('GET', '/api/v1/community/map')).json()) as Json;
 check(
   Array.isArray(map.cells) && map.cells.length === 0,
   'the map hides cells with fewer than five contributors',
+);
+
+const green = (await (await fetch(`${base}/api/v1/env/green-space?cell=${cell}`)).json()) as Json;
+check(
+  green.tile === cell && Array.isArray(green.areas) && green.provenance?.lat === null,
+  'green space is served for a coarse tile (H3 runs in the Worker)',
+);
+check(
+  (await fetch(`${base}/api/v1/env/green-space?lat=18.52&lon=73.86`)).status === 400,
+  'green space refuses coordinates',
 );
 
 const page = await fetch(`${base}/garden/journal`);

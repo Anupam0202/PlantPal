@@ -22,6 +22,7 @@
     "@plantpal/sync": "workspace:*",
     "better-auth": "1.7.14",
     "drizzle-orm": "^0.45.4",
+    "h3-js": "4.2.1",
     "hono": "^4.13.14",
     "zod": "^4.6.7"
   },
@@ -30,7 +31,6 @@
     "@simplewebauthn/server": "13.3.3",
     "@types/node": "^24.0.0",
     "drizzle-kit": "^0.31.11",
-    "h3-js": "4.2.1",
     "http_ece": "1.2.1",
     "tsx": "4.23.15",
     "wrangler": "^4.153.0"

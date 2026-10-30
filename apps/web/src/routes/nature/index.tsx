@@ -14,10 +14,12 @@ import {
   Scale,
   ShieldQuestion,
   Thermometer,
+  Waypoints,
   Wheat,
   type LucideIcon,
 } from 'lucide-react';
 import { useCareT } from '../../features/care/messages';
+import { useMapT } from '../../features/maps/messages';
 import { useNatureT } from '../../features/nature/messages';
 import { useSpeciesT } from '../../features/species/messages';
 import { Page } from '../../app/Page';
@@ -66,6 +68,7 @@ function NatureIndex() {
   const m = useCareT();
   const sm = useSpeciesT();
   const n = useNatureT();
+  const mt = useMapT();
   return (
     <Page>
       <PageHeader title={t.nature.title} />
@@ -131,6 +134,13 @@ function NatureIndex() {
             icon: MapPin,
             title: n.hub.nearby,
             body: n.hub.nearbyBody,
+            tone: 'text-clay',
+          },
+          {
+            to: '/nature/corridor',
+            icon: Waypoints,
+            title: mt.corridor.hub,
+            body: mt.corridor.hubBody,
             tone: 'text-clay',
           },
           {

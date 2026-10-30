@@ -6,12 +6,14 @@ import {
   ClimateProjection,
   Elevation,
   Forecast,
+  GreenSpace,
   PlaceSearch,
   Problem,
   ProviderStatus,
   SolarClimatology,
 } from '@plantpal/schemas';
 import { ProviderError, type EnvClient } from '@plantpal/providers';
+import { CELL_RES, isCell } from './lib/community-rules';
 import { problem } from './lib/problem';
 import type { RateLimiter } from './lib/rate-limit';
 import type { StatusStore } from './lib/status-store';
@@ -99,6 +101,16 @@ const placesRoute = envRoute(
   z.object({ q: z.string().trim().min(2).max(100), lang: z.enum(['en', 'hi', 'es']).default('en') }),
   PlaceSearch,
 );
+const greenSpaceRoute = envRoute(
+  '/api/v1/env/green-space',
+  'Mapped green space around one coarse tile (OpenStreetMap via Overpass, ODbL); no coordinates are sent',
+  z.object({
+    cell: z.string().refine((v) => isCell(v, CELL_RES), 'Expected an H3 resolution-7 cell'),
+  }),
+  GreenSpace,
+);
+/** About 900 m around the tile, so the nearest park just outside it is found too. */
+const GREEN_MARGIN_DEG = 0.008;
 const statusRoute = createRoute({
   method: 'get',
   path: '/api/v1/status',
@@ -250,6 +262,26 @@ export function createApp(deps: AppDeps) {
     const { q, lang } = c.req.valid('query');
     try {
       return send(c, await deps.env.searchPlaces(q, lang, c.req.raw.signal), 3600);
+    } catch (e) {
+      return providerProblem(c, e) as never;
+    }
+  });
+
+  app.openapi(greenSpaceRoute, async (c) => {
+    const { cell } = c.req.valid('query');
+    // Loaded on first use: only this route needs H3 geometry.
+    const { cellToBoundary } = await import('h3-js');
+    const ring = cellToBoundary(cell);
+    const lats = ring.map((p) => p[0]);
+    const lons = ring.map((p) => p[1]);
+    const bbox: [number, number, number, number] = [
+      Math.min(...lons) - GREEN_MARGIN_DEG,
+      Math.min(...lats) - GREEN_MARGIN_DEG,
+      Math.max(...lons) + GREEN_MARGIN_DEG,
+      Math.max(...lats) + GREEN_MARGIN_DEG,
+    ];
+    try {
+      return send(c, await deps.env.greenSpace(cell, bbox, c.req.raw.signal), 7 * 86_400);
     } catch (e) {
       return providerProblem(c, e) as never;
     }

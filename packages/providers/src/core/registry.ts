@@ -130,6 +130,18 @@ export const PROVIDERS: Record<ProviderId, ProviderInfo> = {
     maxStaleMs: 30 * DAY,
     gridDeg: 0.05,
   },
+  overpass: {
+    id: 'overpass',
+    name: 'OpenStreetMap (Overpass API)',
+    licence: 'ODbL 1.0',
+    attribution: '© OpenStreetMap contributors',
+    sourceUrl: 'https://www.openstreetmap.org/copyright',
+    // Overpass can be slow; this runs on the server only and is cached per coarse tile for 90 days.
+    deadlineMs: 25_000,
+    ttlMs: 90 * DAY,
+    maxStaleMs: 180 * DAY,
+    gridDeg: null,
+  },
   wikidata: {
     id: 'wikidata',
     name: 'Wikidata',

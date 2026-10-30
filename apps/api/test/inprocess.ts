@@ -3,6 +3,7 @@ import { EnvClient, MemoryCache } from '@plantpal/providers';
 import { createApp } from '../src/app';
 import { AccountsStore } from '../src/lib/accounts';
 import { createAuth, sessionAuthenticator } from '../src/lib/auth';
+import { AREA_RES, parentCell } from '../src/lib/community-rules';
 import { CommunityStore, type StaffRole } from '../src/lib/community-store';
 import { MemoryRateLimiter } from '../src/lib/rate-limit';
 import { MemoryStatusStore } from '../src/lib/status-store';
@@ -50,6 +51,18 @@ export async function createTestServer(publicOrigin: string, opts: { community?:
       (await sync.liveRecords(workspaceId)).map((r) => ({ entity: r.entity, record: r.record })),
     /** Makes a signed-up person a moderator or admin (normally an admin action). */
     setStaff: async (name: string, role: StaffRole) => store.setStaff(await userId(name), role, Date.now()),
+    /** Test-only growers who each posted once in a cell (to cross the map's privacy threshold). */
+    seedActiveGrowers: async (cell: string, n: number) => {
+      const area = parentCell(cell, AREA_RES);
+      for (let i = 0; i < n; i++) {
+        const userId = `seed-${cell}-${i}`;
+        await store.saveProfile(
+          { userId, displayName: `Grower ${i + 1}`, cell, area, country: null, bio: '' },
+          Date.now(),
+        );
+        await store.createPost({ authorId: userId, area, cell, body: `Test post ${i + 1}` }, Date.now());
+      }
+    },
     /** The community cells stored for profiles: proves only coarse cells reach the server. */
     profileCells: async () =>
       (await d1.prepare('SELECT cell, area FROM community_profiles').all<{ cell: string; area: string }>())

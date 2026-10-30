@@ -8,6 +8,7 @@ export interface TestServer {
   liveRecords(workspaceId: string): Promise<Array<{ entity: string; record: Record<string, unknown> }>>;
   setStaff(name: string, role: 'moderator' | 'admin'): Promise<void>;
   profileCells(): Promise<Array<{ cell: string; area: string }>>;
+  seedActiveGrowers(cell: string, n: number): Promise<void>;
 }
 
 /** The real API in this process (loaded at runtime so the web typecheck stays free of Worker types). */

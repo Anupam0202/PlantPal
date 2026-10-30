@@ -1,3 +1,5 @@
+// First: the Trusted Types policy must exist before anything registers a worker.
+import './lib/trusted-types';
 import '@fontsource-variable/fraunces/full.css';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';

@@ -27,7 +27,8 @@ export function ProfileForm({ profile, onDone }: { profile: CommunityProfile | n
   const [busy, setBusy] = useState(false);
 
   const gardenCell = useQuery({
-    queryKey: ['coarse-cell', lat, lon],
+    // Keyed by garden, never by coordinates (precise positions stay out of caches).
+    queryKey: ['coarse-cell', garden?.id, garden?.version],
     queryFn: () => coarseCell(lat!, lon!),
     enabled: lat !== null && lon !== null,
     staleTime: Infinity,

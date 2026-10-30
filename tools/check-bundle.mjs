@@ -13,7 +13,8 @@ const kb = (n) => `${(n / 1024).toFixed(1)} kB`;
 const INITIAL_BUDGET = 170 * 1024;
 const CHUNK_BUDGET = 120 * 1024;
 const vendorCeilings = [
-  { re: /maplibre/i, max: 260 * 1024 },
+  // MapLibre GL 6 is ~286 kB gzip on its own; it loads only on map pages (ADR-0014).
+  { re: /maplibre/i, max: 300 * 1024 },
   { re: /genai|gemini/i, max: 160 * 1024 },
 ];
 let initialTotal = 0;

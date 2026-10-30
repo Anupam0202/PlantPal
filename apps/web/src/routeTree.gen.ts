@@ -27,6 +27,7 @@ import { Route as NatureIndexRouteImport } from './routes/nature/index'
 import { Route as NatureBirdsRouteImport } from './routes/nature/birds'
 import { Route as NatureBloomRouteImport } from './routes/nature/bloom'
 import { Route as NatureClimateRouteImport } from './routes/nature/climate'
+import { Route as NatureCorridorRouteImport } from './routes/nature/corridor'
 import { Route as NatureCountRouteImport } from './routes/nature/count'
 import { Route as NatureImpactRouteImport } from './routes/nature/impact'
 import { Route as NatureLensRouteImport } from './routes/nature/lens'
@@ -148,6 +149,11 @@ const NatureBloomRoute = NatureBloomRouteImport.update({
 const NatureClimateRoute = NatureClimateRouteImport.update({
   id: '/nature/climate',
   path: '/nature/climate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NatureCorridorRoute = NatureCorridorRouteImport.update({
+  id: '/nature/corridor',
+  path: '/nature/corridor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NatureCountRoute = NatureCountRouteImport.update({
@@ -328,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/nature/birds': typeof NatureBirdsRoute
   '/nature/bloom': typeof NatureBloomRoute
   '/nature/climate': typeof NatureClimateRoute
+  '/nature/corridor': typeof NatureCorridorRoute
   '/nature/count': typeof NatureCountRoute
   '/nature/impact': typeof NatureImpactRoute
   '/nature/lens': typeof NatureLensRoute
@@ -380,6 +387,7 @@ export interface FileRoutesByTo {
   '/nature/birds': typeof NatureBirdsRoute
   '/nature/bloom': typeof NatureBloomRoute
   '/nature/climate': typeof NatureClimateRoute
+  '/nature/corridor': typeof NatureCorridorRoute
   '/nature/count': typeof NatureCountRoute
   '/nature/impact': typeof NatureImpactRoute
   '/nature/lens': typeof NatureLensRoute
@@ -433,6 +441,7 @@ export interface FileRoutesById {
   '/nature/birds': typeof NatureBirdsRoute
   '/nature/bloom': typeof NatureBloomRoute
   '/nature/climate': typeof NatureClimateRoute
+  '/nature/corridor': typeof NatureCorridorRoute
   '/nature/count': typeof NatureCountRoute
   '/nature/impact': typeof NatureImpactRoute
   '/nature/lens': typeof NatureLensRoute
@@ -487,6 +496,7 @@ export interface FileRouteTypes {
     | '/nature/birds'
     | '/nature/bloom'
     | '/nature/climate'
+    | '/nature/corridor'
     | '/nature/count'
     | '/nature/impact'
     | '/nature/lens'
@@ -539,6 +549,7 @@ export interface FileRouteTypes {
     | '/nature/birds'
     | '/nature/bloom'
     | '/nature/climate'
+    | '/nature/corridor'
     | '/nature/count'
     | '/nature/impact'
     | '/nature/lens'
@@ -591,6 +602,7 @@ export interface FileRouteTypes {
     | '/nature/birds'
     | '/nature/bloom'
     | '/nature/climate'
+    | '/nature/corridor'
     | '/nature/count'
     | '/nature/impact'
     | '/nature/lens'
@@ -644,6 +656,7 @@ export interface RootRouteChildren {
   NatureBirdsRoute: typeof NatureBirdsRoute
   NatureBloomRoute: typeof NatureBloomRoute
   NatureClimateRoute: typeof NatureClimateRoute
+  NatureCorridorRoute: typeof NatureCorridorRoute
   NatureCountRoute: typeof NatureCountRoute
   NatureImpactRoute: typeof NatureImpactRoute
   NatureLensRoute: typeof NatureLensRoute
@@ -807,6 +820,13 @@ declare module '@tanstack/react-router' {
       path: '/nature/climate'
       fullPath: '/nature/climate'
       preLoaderRoute: typeof NatureClimateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nature/corridor': {
+      id: '/nature/corridor'
+      path: '/nature/corridor'
+      fullPath: '/nature/corridor'
+      preLoaderRoute: typeof NatureCorridorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/nature/count': {
@@ -1052,6 +1072,7 @@ const rootRouteChildren: RootRouteChildren = {
   NatureBirdsRoute: NatureBirdsRoute,
   NatureBloomRoute: NatureBloomRoute,
   NatureClimateRoute: NatureClimateRoute,
+  NatureCorridorRoute: NatureCorridorRoute,
   NatureCountRoute: NatureCountRoute,
   NatureImpactRoute: NatureImpactRoute,
   NatureLensRoute: NatureLensRoute,

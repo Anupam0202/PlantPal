@@ -72,6 +72,12 @@ export default defineConfig({
     assetsInlineLimit: 0,
     sourcemap: 'hidden',
     chunkSizeWarningLimit: 400,
+    rolldownOptions: {
+      output: {
+        // MapLibre gets its own chunk so its separate budget applies (tools/check-bundle.mjs).
+        advancedChunks: { groups: [{ name: 'maplibre', test: /node_modules[\\/].*maplibre/ }] },
+      },
+    },
   },
   server: { port: 5173, strictPort: false },
   preview: { port: 4173, headers: securityHeaders },

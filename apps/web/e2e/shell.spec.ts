@@ -135,4 +135,34 @@ test.describe('security headers', () => {
     expect(response?.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
     expect(violations).toEqual([]);
   });
+
+  test.describe('with the service worker allowed', () => {
+    test.use({ serviceWorkers: 'allow' });
+
+    test('the service worker registers and same-origin workers start under Trusted Types', async ({
+      page,
+    }) => {
+      const violations: string[] = [];
+      page.on('console', (msg) => {
+        if (/Trusted|Content Security Policy/i.test(msg.text())) violations.push(msg.text());
+      });
+      await page.goto('/today');
+      // Offline support and Web Push need the service worker; Trusted Types once blocked it.
+      const scope = await page.evaluate(async () => (await navigator.serviceWorker.ready).scope);
+      expect(new URL(scope).pathname).toBe('/');
+      const workers = await page.evaluate(() => {
+        const tryStart = (url: string) => {
+          try {
+            new Worker(url).terminate();
+            return 'started';
+          } catch {
+            return 'blocked';
+          }
+        };
+        return { own: tryStart('/sw.js'), other: tryStart('https://example.org/w.js') };
+      });
+      expect(workers).toEqual({ own: 'started', other: 'blocked' });
+      expect(violations.filter((v) => !v.includes('example.org'))).toEqual([]);
+    });
+  });
 });

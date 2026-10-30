@@ -7,6 +7,9 @@ import { connect, ORIGIN, passkeyDevice, server, type TestServer } from './serve
 test.use({ baseURL: ORIGIN });
 test.skip(({ browserName }) => browserName !== 'chromium', 'The virtual authenticator is Chromium-only');
 
+/** What each phone sent to the API: URL and body. */
+const sent = new Map<Page, string[]>();
+
 /** One person's phone: its own browser storage and cookies, a garden in Pune and a passkey. */
 async function person(browser: Browser, srv: TestServer): Promise<Page> {
   const device = await browser.newContext({ baseURL: ORIGIN, serviceWorkers: 'block' });
@@ -14,7 +17,13 @@ async function person(browser: Browser, srv: TestServer): Promise<Page> {
     localStorage.setItem('pp-prefs', JSON.stringify({ units: 'metric', locale: 'en' })),
   );
   const page = await device.newPage();
+  const log: string[] = [];
+  sent.set(page, log);
+  page.on('request', (r) => {
+    if (r.url().includes('/api/')) log.push(`${r.url()} ${r.postData() ?? ''}`);
+  });
   await mockProviders(page);
+  await page.route('https://tiles.openfreemap.org/**', (r) => r.fulfill({ status: 503, body: '' }));
   await connect(page, srv);
   await passkeyDevice(page);
   await createGardenAt(page, 'Pune', 'Pune');
@@ -147,4 +156,26 @@ test('community: profile with a coarse area, posts, a seed swap, reports, modera
   await expect(asha.getByText('Appeal accepted: decision reversed')).toBeVisible();
   await ravi.goto('/community');
   await expect(ravi.getByText('Tulsi is flowering. Free seeds soon!')).toBeVisible();
+
+  // The map shows nothing while fewer than five people are active in a cell (k-anonymity).
+  await ravi.getByRole('tab', { name: 'Map' }).click();
+  await expect(ravi.getByText('Not enough active growers to show the map yet')).toBeVisible();
+  await expectNoA11yViolations(ravi, 'community map (below the privacy threshold)');
+
+  // Four more active growers in Asha's cell make five: now the cell may be shown, with a count only.
+  await srv.seedActiveGrowers(cells[0]!.cell, 3);
+  await ravi.reload();
+  await expect(ravi.getByText('Not enough active growers to show the map yet')).toBeVisible();
+  await srv.seedActiveGrowers(cells[0]!.cell, 4);
+  await ravi.reload();
+  await expect(ravi.getByTestId('community-cells')).toContainText('5 active growers');
+  await expect(ravi.getByRole('region', { name: 'Map of active growers in your area' })).toHaveAttribute(
+    'data-map-ready',
+    'true',
+    { timeout: 20_000 },
+  );
+  await expectNoA11yViolations(ravi, 'community map');
+
+  // Precise garden coordinates never reached the community server from either phone.
+  for (const s of [...sent.get(asha)!, ...sent.get(ravi)!]) expect(s).not.toMatch(/18\.519|73\.855/);
 });

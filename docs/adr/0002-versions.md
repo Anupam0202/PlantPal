@@ -42,6 +42,8 @@ Versions installed and verified in the build sandbox for the v4 upgrade (lockfil
 | `fake-indexeddb`          | 6.2.6    |
 | `fast-check`              | 4.10.2   |
 | `axe-core`                | 4.14.0   |
+| `maplibre-gl`             | 6.14.0   |
+| `h3-js`                   | 4.2.1    |
 
 ## Notes
 
