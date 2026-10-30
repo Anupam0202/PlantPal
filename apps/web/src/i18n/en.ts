@@ -105,6 +105,7 @@ export const en = {
     tabJournal: 'Journal',
     tabHealth: 'Health',
     tabSeeds: 'Seeds',
+    tabLabels: 'Labels',
     tabHarvest: 'Harvest',
     newHealthCase: 'New health case',
     speciesIndex: 'Plants A–Z',

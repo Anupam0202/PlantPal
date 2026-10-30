@@ -2,23 +2,27 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { Card, PageHeader } from '@plantpal/ui';
 import {
   Bird,
+  BookHeart,
   BookOpen,
   Bug,
   ChevronRight,
   Eye,
   Flower2,
+  GraduationCap,
   Leaf,
   ListChecks,
   MapPin,
   NotebookTabs,
   Scale,
   ShieldQuestion,
+  Stamp,
   Thermometer,
   Waypoints,
   Wheat,
   type LucideIcon,
 } from 'lucide-react';
 import { useCareT } from '../../features/care/messages';
+import { useLearnT } from '../../features/learn/messages';
 import { useMapT } from '../../features/maps/messages';
 import { useNatureT } from '../../features/nature/messages';
 import { useSpeciesT } from '../../features/species/messages';
@@ -69,6 +73,7 @@ function NatureIndex() {
   const sm = useSpeciesT();
   const n = useNatureT();
   const mt = useMapT();
+  const lt = useLearnT();
   return (
     <Page>
       <PageHeader title={t.nature.title} />
@@ -137,6 +142,20 @@ function NatureIndex() {
             tone: 'text-clay',
           },
           {
+            to: '/nature/stamps',
+            icon: Stamp,
+            title: lt.stamps.hub,
+            body: lt.stamps.hubBody,
+            tone: 'text-clay',
+          },
+          {
+            to: '/learn',
+            icon: GraduationCap,
+            title: lt.learn.hub,
+            body: lt.learn.hubBody,
+            tone: 'text-clay',
+          },
+          {
             to: '/nature/corridor',
             icon: Waypoints,
             title: mt.corridor.hub,
@@ -161,6 +180,13 @@ function NatureIndex() {
             icon: Wheat,
             title: n.hub.harvest,
             body: n.hub.harvestBody,
+            tone: 'text-ink',
+          },
+          {
+            to: '/nature/story',
+            icon: BookHeart,
+            title: 'Garden Story',
+            body: 'Your year told from your records, to keep or share.',
             tone: 'text-ink',
           },
           {

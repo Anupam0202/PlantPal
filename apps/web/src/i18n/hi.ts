@@ -102,6 +102,7 @@ export const hi: Messages = {
     tabJournal: 'डायरी',
     tabHealth: 'स्वास्थ्य',
     tabSeeds: 'बीज',
+    tabLabels: 'लेबल',
     tabHarvest: 'फ़सल',
     newHealthCase: 'नया स्वास्थ्य मामला',
     speciesIndex: 'पौधे अ–ज्ञ',

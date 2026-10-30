@@ -104,6 +104,7 @@ export const es: Messages = {
     tabJournal: 'Diario',
     tabHealth: 'Salud',
     tabSeeds: 'Semillas',
+    tabLabels: 'Etiquetas',
     tabHarvest: 'Cosecha',
     newHealthCase: 'Nuevo caso de salud',
     speciesIndex: 'Plantas de la A a la Z',
