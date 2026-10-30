@@ -198,7 +198,7 @@ export async function pullOnce(t: Transport, ws: string): Promise<{ changes: num
   for (;;) {
     let page: PullResponse;
     try {
-      page = await t.pull(ws, cursor, 200);
+      page = await t.pull(ws, cursor, 100);
     } catch (e) {
       if (!snapshotNeeded(e)) throw e;
       await applySnapshot(t, ws);

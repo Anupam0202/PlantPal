@@ -88,7 +88,7 @@ export const api = {
     call<{ id: string; name: string; role: Role }>('POST', '/api/v1/workspaces', { id, name }),
 
   push: (ops: OutboxOp[]) => call<PushResponse>('POST', '/api/v1/sync/push', { ops }),
-  pull: (workspace: string, cursor: number, limit = 200) =>
+  pull: (workspace: string, cursor: number, limit = 100) =>
     call<PullResponse>(
       'GET',
       `/api/v1/sync/pull?workspace=${encodeURIComponent(workspace)}&cursor=${cursor}&limit=${limit}`,

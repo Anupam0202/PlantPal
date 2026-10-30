@@ -115,7 +115,7 @@ const pullRoute = createRoute({
     query: z.object({
       workspace: Id,
       cursor: z.coerce.number().int().nonnegative().default(0),
-      limit: z.coerce.number().int().min(1).max(500).default(200),
+      limit: z.coerce.number().int().min(1).max(100).default(100),
     }),
   },
   responses: { 200: json(PullResponse), ...problems(400, 401, 403, 409) },

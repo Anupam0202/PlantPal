@@ -6,7 +6,7 @@ export const ROLES = ['owner', 'gardener', 'helper', 'viewer'] as const;
 export type Role = (typeof ROLES)[number];
 
 export const MAX_PUSH_OPS = 100;
-export const MAX_PULL_LIMIT = 500;
+export const MAX_PULL_LIMIT = 100;
 
 export const PushRequest = z.object({ ops: z.array(OutboxOp).min(1).max(MAX_PUSH_OPS) });
 export type PushRequest = z.infer<typeof PushRequest>;

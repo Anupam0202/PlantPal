@@ -39,7 +39,8 @@ PlantPal is being rebuilt as v4 ("Living Field Guide") milestone by milestone. S
 | M7        | Plant health cases, photo identification, species pages and cited species drafts                       | Done  |
 | M8        | Space designer: plans to scale, checks, sun and shade, growth, versions, exports                       | Done  |
 | M9        | Nature log and timed counts, Bloom Bridge, native and invasive lens, harvest and pantry, impact ledger | Done  |
-| M10–M12   | Optional accounts and sync, shared gardens, community, release hardening                               | Next  |
+| M10       | Optional passkey accounts, sync, shared gardens and roles, plant-sitter links, live updates, Web Push  | Done  |
+| M11–M12   | Community, Garden Copilot, voice, release hardening                                                    | Next  |
 
 The previous single-file app (v3) has been retired; its known problems are tracked in [`docs/traceability.md`](docs/traceability.md).
 
@@ -73,6 +74,17 @@ pnpm dev          # web app on http://localhost:5173
 ```
 
 No `.env` file and no API key are needed to run the app. Weather and place data come from free public services (Open-Meteo, NASA POWER); without internet access use demo data with `VITE_PROVIDERS=mock pnpm dev`. To route requests through the API Worker instead, run `pnpm dev:api` and set `VITE_API_BASE_URL=http://127.0.0.1:8787`. When AI features arrive, you add your Gemini key inside the app under **Settings → AI**; get one free at [Google AI Studio](https://aistudio.google.com/app/apikey).
+
+### Accounts, sync and push (optional)
+
+The app works fully without them. To try accounts locally, run the Worker with a secret (see [`docs/demo/M10.md`](docs/demo/M10.md)):
+
+```sh
+cd apps/api && echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" > .dev.vars
+pnpm exec wrangler d1 migrations apply plantpal --local && pnpm exec wrangler dev
+```
+
+Open `http://localhost:8787` (passkeys need a domain such as `localhost`, not an IP address). `pnpm --filter @plantpal/api vapid:keys` makes Web Push keys.
 
 ### Useful scripts
 
@@ -112,6 +124,8 @@ tools/        build checks (secret scan, bundle budget, icons)
 - No secrets in the client bundle; CI scans the build output for key patterns.
 - Strict Content Security Policy with Trusted Types.
 - Your location is rounded before it leaves your device for public data providers.
+- Accounts are optional and use passkeys only: no passwords, no email, and no IP addresses stored with sessions. Invitation and plant-sitter tokens are shown once, kept only as hashes, and travel in the URL fragment so they never reach server logs.
+- Push notifications are end-to-end encrypted to your browser (RFC 8291) and sent only to known browser push services.
 - Report vulnerabilities privately as described in [`SECURITY.md`](SECURITY.md).
 
 ## Contributing

@@ -611,3 +611,26 @@ describe('accounts and sync API: live change pings', () => {
     ]);
   });
 });
+
+describe('accounts and sync API: history horizon', () => {
+  it('prunes old change history; devices further behind take a snapshot', async () => {
+    const { call, d1, ids, push, op } = await seeded();
+    // The five seed changes are now older than the horizon; one recent change follows.
+    await d1.exec(`UPDATE sync_changes SET at = ${T0 - 100 * DAY}`);
+    await push(PEOPLE.gardener, [op('careEvent.create', careOf(ids.ws, ids.garden, ids.basil))]);
+    expect((await new D1SyncRepo(d1).prune(T0 - 90 * DAY)).workspaces).toBe(1);
+
+    const pull = (cursor: number) =>
+      call(PEOPLE.viewer, 'GET', `/api/v1/sync/pull?workspace=${ids.ws}&cursor=${cursor}`);
+    expect((await pull(2)).status).toBe(409);
+    // A device that had seen every pruned change carries on.
+    const caughtUp = PullResponse.parse(await (await pull(5)).json());
+    expect(caughtUp.changes.map((c) => c.entity)).toEqual(['careEvent']);
+    // Records are untouched: a snapshot still has all of them.
+    const snap = SnapshotResponse.parse(
+      await (await call(PEOPLE.viewer, 'GET', `/api/v1/sync/snapshot?workspace=${ids.ws}`)).json(),
+    );
+    expect(snap.records).toHaveLength(6);
+    expect(await d1.prepare('select count(*) as n from sync_changes').first('n')).toBe(1);
+  });
+});

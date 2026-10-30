@@ -47,5 +47,9 @@ new_sqlite_classes = ["Limiter"]
 tag = "v2"
 new_sqlite_classes = ["GardenRoom"]
 
+# Daily housekeeping: prune sync history older than 90 days (devices further behind take a snapshot).
+[triggers]
+crons = ["23 3 * * *"]
+
 [observability]
 enabled = true

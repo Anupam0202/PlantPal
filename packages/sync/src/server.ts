@@ -266,10 +266,11 @@ export async function pullChanges(
   role: Role | null,
   workspaceId: string,
   cursor: number,
-  limit = 200,
+  limit = 100,
 ): Promise<PullResponse> {
   if (!canRead(role)) throw new SyncAccessError('FORBIDDEN');
-  if (cursor > 0 && cursor < (await repo.changeFloor(workspaceId)))
+  // The floor is one past the newest pruned change: a cursor right below it has missed nothing.
+  if (cursor > 0 && cursor + 1 < (await repo.changeFloor(workspaceId)))
     throw new SyncAccessError('SNAPSHOT_REQUIRED');
   const n = Math.min(Math.max(1, limit), MAX_PULL_LIMIT);
   const rows = await repo.changesSince(workspaceId, cursor, n + 1);

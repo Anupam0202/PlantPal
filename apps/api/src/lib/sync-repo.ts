@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, isNull, max } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, isNull, lt, lte, max, sql } from 'drizzle-orm';
 import { drizzle, type DrizzleD1Database } from 'drizzle-orm/d1';
 import { idempotency, records, syncChanges, workspaces } from '@plantpal/db';
 import type { EntityName, Mutation, OpResult, StoredRecord, SyncRepo } from '@plantpal/sync';
@@ -151,6 +151,31 @@ export class D1SyncRepo implements SyncRepo {
       .from(syncChanges)
       .where(eq(syncChanges.workspaceId, workspaceId));
     return r?.s ?? 0;
+  }
+
+  /**
+   * Tombstone horizon (§14.3): drops change rows and idempotency entries older than `before`.
+   * Each workspace's floor moves past what was dropped; devices behind it fetch a snapshot.
+   * Records themselves (and their tombstones) stay.
+   */
+  async prune(before: number): Promise<{ workspaces: number }> {
+    const floors = await this.db
+      .select({ ws: syncChanges.workspaceId, seq: max(syncChanges.seq) })
+      .from(syncChanges)
+      .where(lt(syncChanges.at, before))
+      .groupBy(syncChanges.workspaceId);
+    for (const f of floors) {
+      const seq = f.seq ?? 0;
+      await this.db.batch([
+        this.db
+          .update(workspaces)
+          .set({ changeFloor: sql`max(${workspaces.changeFloor}, ${seq + 1})` })
+          .where(eq(workspaces.id, f.ws)),
+        this.db.delete(syncChanges).where(and(eq(syncChanges.workspaceId, f.ws), lte(syncChanges.seq, seq))),
+      ]);
+    }
+    await this.db.delete(idempotency).where(lt(idempotency.at, before));
+    return { workspaces: floors.length };
   }
 
   async liveRecords(workspaceId: string) {

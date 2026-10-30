@@ -35,6 +35,8 @@ export interface Env {
   VAPID_SUBJECT?: string;
 }
 
+const HORIZON_DAYS = 90;
+
 /** Accounts off: every account route answers 401. */
 const signedOut: Authenticator = { userOf: async () => null };
 
@@ -114,5 +116,9 @@ export default {
     const live = LIVE_PATH.exec(new URL(request.url).pathname);
     if (live) return connectLive(built.live, live[1]!, request);
     return built.app.fetch(request, env, ctx);
+  },
+  /** Daily: keep 90 days of change history (§14.3 tombstone horizon). */
+  scheduled(_event, env, ctx) {
+    ctx.waitUntil(new D1SyncRepo(env.DB).prune(Date.now() - HORIZON_DAYS * 86_400_000));
   },
 } satisfies ExportedHandler<Env>;
