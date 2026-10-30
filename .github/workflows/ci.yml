@@ -26,6 +26,12 @@ jobs:
       - run: pnpm typecheck
       - name: Catalogue facts have units, evidence and sources
         run: pnpm check:catalog
+      - name: No fabricated or placeholder content (gate 5)
+        run: pnpm check:fabricated
+      - name: Quota envelope within 70% of free limits (gate 10)
+        run: pnpm check:quota
+      - name: Dependency audit (production dependencies)
+        run: pnpm audit --prod --audit-level moderate
       - name: AI eval gate (replayed cases; 0 prohibited claims)
         run: pnpm eval
       - run: pnpm test

@@ -5,3 +5,7 @@ onlyBuiltDependencies:
   - esbuild
   - workerd
   - sharp
+overrides:
+  # better-auth > drizzle-kit > @esbuild-kit pins an esbuild with a dev-server advisory
+  # (GHSA-67mh-4wv8-2f99). PlantPal never runs that dev server; the override keeps the audit clean.
+  '@esbuild-kit/core-utils>esbuild': '^0.25.0'

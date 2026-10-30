@@ -135,9 +135,9 @@ function TodayPage() {
         <UseSoon garden={garden} />
         <NextSteps garden={garden} />
         {coords ? <ForecastStrip q={forecast} /> : <NoLocation />}
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <Card padding="lg">
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-display text-h3 text-ink">{t.today.recent}</h2>
               <Link to="/garden/journal" className={buttonClasses('ghost', 'sm')}>
                 {t.today.seeJournal}

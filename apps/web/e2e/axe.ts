@@ -12,7 +12,11 @@ interface AxeViolation {
 }
 
 /** Runs axe-core WCAG 2.2 A/AA rules on the current page and fails on any violation. */
-export async function expectNoA11yViolations(page: Page, context = 'page') {
+export async function expectNoA11yViolations(
+  page: Page,
+  context = 'page',
+  opts: { disable?: string[] } = {},
+) {
   await page.addScriptTag({ path: axePath });
   // Let finite animations (a toast fading in) finish, so contrast is measured on the settled page.
   // Endless ones (spinners, skeletons) are skipped; the wait is capped.
@@ -25,13 +29,14 @@ export async function expectNoA11yViolations(page: Page, context = 'page') {
       new Promise((r) => setTimeout(r, 2000)),
     ]);
   });
-  const violations = await page.evaluate(async () => {
+  const violations = await page.evaluate(async (disable) => {
     // @ts-expect-error axe is injected at runtime
     const result = await window.axe.run(document, {
       runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] },
+      rules: Object.fromEntries(disable.map((id) => [id, { enabled: false }])),
     });
     return result.violations as AxeViolation[];
-  });
+  }, opts.disable ?? []);
   const summary = violations.map(
     (v) => `${v.id} (${v.impact}): ${v.help} → ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,
   );

@@ -1,6 +1,8 @@
 // First: the Trusted Types policy must exist before anything registers a worker.
 import './lib/trusted-types';
-import '@fontsource-variable/fraunces/full.css';
+// Weight and softness axes only (the design sets SOFT 60; WONK stays at its default 0): about half
+// the size of the full axis set.
+import '@fontsource-variable/fraunces/soft.css';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './styles/app.css';

@@ -5,7 +5,7 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'soft' | 'danger
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm';
 
 const base =
-  'inline-flex select-none items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap ' +
+  'inline-flex select-none items-center justify-center gap-2 rounded-full font-medium text-center ' +
   'transition-[background-color,color,box-shadow,transform] duration-150 ease-[var(--ease-standard)] ' +
   'active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 ' +
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
@@ -20,9 +20,10 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: 'h-9 px-3.5 text-body-s',
-  md: 'h-11 px-5 text-body-s',
-  lg: 'h-12 px-6 text-body',
+  // Minimum heights, so a long label (or 200% text) wraps instead of spilling sideways.
+  sm: 'min-h-9 px-3.5 py-1 text-body-s',
+  md: 'min-h-11 px-5 py-1.5 text-body-s',
+  lg: 'min-h-12 px-6 py-2 text-body',
   icon: 'size-11 p-0',
   'icon-sm': 'size-9 p-0',
 };

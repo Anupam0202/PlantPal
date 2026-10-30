@@ -27,23 +27,63 @@ Most plant apps guess. PlantPal shows its working:
 
 PlantPal is being rebuilt as v4 ("Living Field Guide") milestone by milestone. See [`RUN-STATE.md`](RUN-STATE.md) for the live tracker and [`docs/PlantPal-Master-Prompt-v4.md`](docs/PlantPal-Master-Prompt-v4.md) for the full specification.
 
-| Milestone | What it delivers                                                                                       | State |
-| --------- | ------------------------------------------------------------------------------------------------------ | ----- |
-| M0        | Safety net: licence, community files, CodeQL, Dependabot, decision records                             | Done  |
-| M1        | Monorepo, design system, accessible app shell, PWA, strict CSP, CI                                     | Done  |
-| M2        | Local-first garden data, journal, photos, export/import, migration from v3                             | Done  |
-| M3        | Environmental data with provenance, API Worker, Living Sky, location                                   | Done  |
-| M4        | Plant catalogue, Sun Hours Finder, eligibility engine, Seed onboarding, plans                          | Done  |
-| M5        | Care schedules, Today cockpit, Water-Wise checks, frost and heat alerts, Climate Fit                   | Done  |
-| M6        | AI with your own Gemini key: vault, model discovery, explanations, quick capture                       | Done  |
-| M7        | Plant health cases, photo identification, species pages and cited species drafts                       | Done  |
-| M8        | Space designer: plans to scale, checks, sun and shade, growth, versions, exports                       | Done  |
-| M9        | Nature log and timed counts, Bloom Bridge, native and invasive lens, harvest and pantry, impact ledger | Done  |
-| M10       | Optional passkey accounts, sync, shared gardens and roles, plant-sitter links, live updates, Web Push  | Done  |
-| M11       | Seed library and lineage; community, Seed & Cutting Exchange and moderation (off by default); maps     | Done  |
-| M12       | Garden Copilot, voice, story, learning paths, release hardening                                        | Next  |
+| Milestone | What it delivers                                                                                        | State |
+| --------- | ------------------------------------------------------------------------------------------------------- | ----- |
+| M0        | Safety net: licence, community files, CodeQL, Dependabot, decision records                              | Done  |
+| M1        | Monorepo, design system, accessible app shell, PWA, strict CSP, CI                                      | Done  |
+| M2        | Local-first garden data, journal, photos, export/import, migration from v3                              | Done  |
+| M3        | Environmental data with provenance, API Worker, Living Sky, location                                    | Done  |
+| M4        | Plant catalogue, Sun Hours Finder, eligibility engine, Seed onboarding, plans                           | Done  |
+| M5        | Care schedules, Today cockpit, Water-Wise checks, frost and heat alerts, Climate Fit                    | Done  |
+| M6        | AI with your own Gemini key: vault, model discovery, explanations, quick capture                        | Done  |
+| M7        | Plant health cases, photo identification, species pages and cited species drafts                        | Done  |
+| M8        | Space designer: plans to scale, checks, sun and shade, growth, versions, exports                        | Done  |
+| M9        | Nature log and timed counts, Bloom Bridge, native and invasive lens, harvest and pantry, impact ledger  | Done  |
+| M10       | Optional passkey accounts, sync, shared gardens and roles, plant-sitter links, live updates, Web Push   | Done  |
+| M11       | Seed library and lineage; community, Seed & Cutting Exchange and moderation (off by default); maps      | Done  |
+| M12       | Garden Copilot, weekly reflection, field stamps and lessons, Garden Story, QR labels, release hardening | Done  |
 
 The previous single-file app (v3) has been retired; its known problems are tracked in [`docs/traceability.md`](docs/traceability.md).
+
+The build is **not yet pilot-ready**: see [`docs/release-gates.md`](docs/release-gates.md) for what is open (a manual screen-reader review, mobile load time, and decisions only the owner can make).
+
+## A look inside
+
+Screenshots from the real app, with demo weather data.
+
+<p>
+  <img src="docs/screenshots/today-mobile.png" alt="Today on a phone: the Living Sky with local weather, sunrise and sunset, and the care checks that need attention" width="240" />
+  <img src="docs/screenshots/stamps-mobile.png" alt="Field stamps on a phone: postmark-style stamps earned from garden records, with progress towards the next tier" width="240" />
+</p>
+
+![The Plan page on a desktop: 60 plants that fit the balcony, each with its fit score, reasons and a starter set](docs/screenshots/plan-desktop.png)
+
+![From the last onboarding step to the plan's matches and the Nature hub](docs/screenshots/first-plan.gif)
+
+More: [Garden](docs/screenshots/garden-desktop.png) · [Nature](docs/screenshots/nature-desktop.png)
+
+## How it fits together
+
+```mermaid
+flowchart LR
+  subgraph Device["Your device (works offline)"]
+    UI["React PWA<br/>Today · Garden · Plan · Nature · Community"]
+    DB[("IndexedDB<br/>gardens, plants, care, photos")]
+    Vault[("Key vault<br/>encrypted Gemini key")]
+    SW["Service worker<br/>offline cache, push"]
+    UI <--> DB
+    UI --- Vault
+    UI --- SW
+  end
+  UI -- "rounded location" --> Open["Open data<br/>Open-Meteo, NASA POWER,<br/>GBIF, iNaturalist, Wikimedia"]
+  UI -- "your key, header only" --> Gemini["Google Gemini API"]
+  UI -- "sync, sharing, community<br/>(optional account)" --> Worker["Cloudflare Worker (Hono)"]
+  Worker --> D1[("D1")]
+  Worker --> DO["Durable Objects<br/>rate limiter, garden rooms"]
+  Worker -- "coarse tile only" --> OSM["OpenStreetMap Overpass"]
+```
+
+Decision records are in [`docs/adr/`](docs/adr/); the operations runbooks are in [`docs/runbooks/`](docs/runbooks/).
 
 ## Tech stack
 
@@ -131,6 +171,7 @@ tools/        build checks (secret scan, bundle budget, icons)
 - Accounts are optional and use passkeys only: no passwords, no email, and no IP addresses stored with sessions. Invitation and plant-sitter tokens are shown once, kept only as hashes, and travel in the URL fragment so they never reach server logs.
 - Push notifications are end-to-end encrypted to your browser (RFC 8291) and sent only to known browser push services.
 - Report vulnerabilities privately as described in [`SECURITY.md`](SECURITY.md).
+- What is stored where, and who sees it: [`docs/privacy.md`](docs/privacy.md) (a draft until the owner publishes it).
 
 ## Contributing
 

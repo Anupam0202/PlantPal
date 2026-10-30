@@ -147,7 +147,11 @@ function StampCard({ st, pressed }: { st: Stamp; pressed: boolean }) {
           ? s.notTracked
           : next === undefined
             ? s.done
-            : s.progress(Math.min(st.value, next), next, s.units[st.id])}
+            : s.progress(
+                Math.min(st.value, next),
+                next,
+                next === 1 ? s.units[st.id].replace(/s$/, '') : s.units[st.id],
+              )}
       </p>
     </div>
   );

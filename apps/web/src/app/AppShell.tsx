@@ -182,7 +182,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <div className="flex min-w-0 flex-col">
           {!onboarding && (
-            <header className="safe-top sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-bg/85 px-4 backdrop-blur-md md:hidden">
+            <header className="safe-top sticky top-0 z-30 flex min-h-14 flex-wrap items-center justify-between gap-x-2 border-b border-line bg-bg/85 px-4 backdrop-blur-md md:hidden">
               <HomeLink>
                 <Logo />
               </HomeLink>
