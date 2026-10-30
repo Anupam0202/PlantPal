@@ -244,14 +244,21 @@ describe('push: a synced garden goes up as the client queued it', () => {
       'applied',
     ]);
 
-    // The other device's completion of the same occurrence (different ids).
+    // The other device's completion of the same occurrence (different ids): its task log points
+    // at its own care event, which the server also drops as a duplicate.
+    const theirCare = `01JE${'0'.repeat(22)}`;
     const theirs = mineOps.map((o, i): OutboxOp => {
       const id = `01JE${String(i).repeat(22)}`;
       return {
         ...o,
         opId: `01JF${String(i).repeat(22)}`,
         entityId: id,
-        payload: { ...(o.payload as object), id, opId: `01JG${String(i).repeat(22)}`, careEventId: null },
+        payload: {
+          ...(o.payload as object),
+          id,
+          opId: `01JG${String(i).repeat(22)}`,
+          ...(i === 1 ? { careEventId: theirCare } : {}),
+        },
       };
     });
     const r = await applyPush(repo, owner, 'u2', theirs, NOW + 3);
@@ -266,8 +273,12 @@ describe('push: a synced garden goes up as the client queued it', () => {
       'applied',
       'applied',
     ]);
-    const retry = { ...theirs[1]!, opId: '01JHHHHHHHHHHHHHHHHHHHHHHH' };
-    expect((await applyOp(repo, { id: 'u2', role: 'owner' }, retry, NOW + 6)).status).toBe('applied');
+    const retry = [
+      { ...theirs[0]!, opId: '01JHHHHHHHHHHHHHHHHHHHHHH0' },
+      { ...theirs[1]!, opId: '01JHHHHHHHHHHHHHHHHHHHHHH1' },
+    ];
+    for (const op of retry)
+      expect((await applyOp(repo, { id: 'u2', role: 'owner' }, op, NOW + 6)).status).toBe('applied');
   });
 });
 

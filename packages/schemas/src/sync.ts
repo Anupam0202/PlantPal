@@ -13,5 +13,7 @@ export const OutboxOp = z.object({
   createdAt: EpochMs,
   clientSchema: z.number().int().positive(),
   state: z.enum(['pending', 'rejected']),
+  /** Why the server refused it (kept on this device only; never sent). */
+  error: z.object({ code: z.string().max(40), message: z.string().max(500) }).nullable().optional(),
 });
 export type OutboxOp = z.infer<typeof OutboxOp>;

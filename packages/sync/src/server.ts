@@ -165,6 +165,21 @@ export async function applyOp(repo: SyncRepo, actor: Actor, op: OutboxOp, now: n
   if (record.id !== op.entityId || record.workspaceId !== op.workspaceId)
     return reject(op.opId, 'VALIDATION_FAILED', 'The record id or workspace does not match the operation');
 
+  // A second completion of the same task is a duplicate even when it points at records the first
+  // completion made redundant (its own care event), so de-duplicate before checking references.
+  const key = action === 'create' && !current ? spec.dedupeKey?.(record) : null;
+  if (key) {
+    const winner = await repo.findLiveByDedupeKey(op.workspaceId, entity, key);
+    if (winner)
+      return finish(
+        result(op.opId, 'duplicate', {
+          existingId: winner.id,
+          version: winner.version,
+          message: 'Already done by someone else',
+        }),
+      );
+  }
+
   for (const ref of referencedIds(entity, record)) {
     const target = await repo.getRecord(ref.entity, ref.id);
     if (!target) return reject(op.opId, 'NOT_FOUND', `Referenced ${ref.entity} ${ref.id} is unknown`);
@@ -194,18 +209,6 @@ export async function applyOp(repo: SyncRepo, actor: Actor, op: OutboxOp, now: n
             server: current.record,
             message: 'A different record already has this id',
           });
-    }
-    const key = spec.dedupeKey?.(record);
-    if (key) {
-      const winner = await repo.findLiveByDedupeKey(op.workspaceId, entity, key);
-      if (winner)
-        return finish(
-          result(op.opId, 'duplicate', {
-            existingId: winner.id,
-            version: winner.version,
-            message: 'Already done by someone else',
-          }),
-        );
     }
     if (spec.kind === 'versioned' && version !== 1)
       return reject(op.opId, 'VALIDATION_FAILED', 'A new record starts at version 1');
