@@ -183,7 +183,7 @@ export async function updateGarden(
     const cur = assertUpdatable(await db.gardens.get(id), 'garden', id, baseVersion);
     const next = GardenSchema.parse({ ...cur, ...patch, version: cur.version + 1, updatedAt: now });
     await db.gardens.put(next);
-    await enqueue(cur.workspaceId, 'garden.update', id, patch, baseVersion, now);
+    await enqueue(cur.workspaceId, 'garden.update', id, next, baseVersion, now);
     return next;
   });
 }
@@ -241,7 +241,7 @@ export async function updateZone(
     const cur = assertUpdatable(await db.zones.get(id), 'zone', id, baseVersion);
     const next = ZoneSchema.parse({ ...cur, ...patch, version: cur.version + 1, updatedAt: now });
     await db.zones.put(next);
-    await enqueue(cur.workspaceId, 'zone.update', id, patch, baseVersion, now);
+    await enqueue(cur.workspaceId, 'zone.update', id, next, baseVersion, now);
     return next;
   });
 }
@@ -260,14 +260,7 @@ export async function deleteZone(id: string, baseVersion: number, now = Date.now
     for (const s of await db.specimens.where('zoneId').equals(id).toArray()) {
       const next = { ...s, zoneId: null, containerId: null, updatedAt: now, version: s.version + 1 };
       await db.specimens.put(next);
-      await enqueue(
-        s.workspaceId,
-        'specimen.update',
-        s.id,
-        { zoneId: null, containerId: null },
-        s.version,
-        now,
-      );
+      await enqueue(s.workspaceId, 'specimen.update', s.id, next, s.version, now);
     }
   });
 }
@@ -323,7 +316,7 @@ export async function updateContainer(
       updatedAt: now,
     });
     await db.containers.put(next);
-    await enqueue(cur.workspaceId, 'container.update', id, patch, baseVersion, now);
+    await enqueue(cur.workspaceId, 'container.update', id, next, baseVersion, now);
     return next;
   });
 }
@@ -334,8 +327,9 @@ export async function deleteContainer(id: string, baseVersion: number, now = Dat
     await db.containers.put({ ...cur, deletedAt: now, updatedAt: now, version: cur.version + 1 });
     await enqueue(cur.workspaceId, 'container.delete', id, null, baseVersion, now);
     for (const s of await db.specimens.where('containerId').equals(id).toArray()) {
-      await db.specimens.put({ ...s, containerId: null, updatedAt: now, version: s.version + 1 });
-      await enqueue(s.workspaceId, 'specimen.update', s.id, { containerId: null }, s.version, now);
+      const nextS = { ...s, containerId: null, updatedAt: now, version: s.version + 1 };
+      await db.specimens.put(nextS);
+      await enqueue(s.workspaceId, 'specimen.update', s.id, nextS, s.version, now);
     }
   });
 }
@@ -424,7 +418,7 @@ export async function updateSpecimen(
     if (merged.parentSpecimenId === id) throw new RecordNotFoundError('specimen', id);
     const next = SpecimenSchema.parse({ ...merged, version: cur.version + 1, updatedAt: now });
     await db.specimens.put(next);
-    await enqueue(cur.workspaceId, 'specimen.update', id, patch, baseVersion, now);
+    await enqueue(cur.workspaceId, 'specimen.update', id, next, baseVersion, now);
     return next;
   });
 }
@@ -1114,7 +1108,7 @@ export async function updateSchedule(
       updatedAt: now,
     });
     await db.careSchedules.put(next);
-    await enqueue(cur.workspaceId, 'careSchedule.update', id, patch, baseVersion, now);
+    await enqueue(cur.workspaceId, 'careSchedule.update', id, next, baseVersion, now);
     return next;
   });
 }
@@ -1147,14 +1141,7 @@ export async function markPlanted(
       updatedAt: now,
     });
     await db.specimens.put(next);
-    await enqueue(
-      cur.workspaceId,
-      'specimen.update',
-      cur.id,
-      { status: 'active', plantedOn },
-      baseVersion,
-      now,
-    );
+    await enqueue(cur.workspaceId, 'specimen.update', cur.id, next, baseVersion, now);
     const today = todayIn(garden.timezone, now);
     for (const d of schedules) {
       const { byWeekday, ...rule } = d.rule;
@@ -1288,7 +1275,7 @@ export async function logTask(input: TaskInput, now = Date.now()): Promise<TaskL
             container.workspaceId,
             'container.update',
             container.id,
-            { waterFactor: factor },
+            next,
             container.version,
             now,
           );
@@ -1466,8 +1453,10 @@ export async function closeHealthCase(
     // Follow-up checks that have not happened yet are no longer needed.
     for (const sid of cur.followUpScheduleIds) {
       const s = await db.careSchedules.get(sid);
-      if (s && s.deletedAt === null)
+      if (s && s.deletedAt === null) {
         await db.careSchedules.put({ ...s, deletedAt: now, updatedAt: now, version: s.version + 1 });
+        await enqueue(s.workspaceId, 'careSchedule.delete', s.id, null, s.version, now);
+      }
     }
     await enqueue(cur.workspaceId, 'healthCase.update', caseId, next, baseVersion, now);
     return next;
