@@ -2,6 +2,7 @@
  * Semantic validators (§18.8). They run after the Zod parse and catch what a schema cannot: claims the
  * policy forbids, IDs that were not provided, and text that is not grounded in the input.
  */
+import { apiKeyPattern } from './errors';
 
 export type ClaimKind =
   'edibility' | 'pesticide' | 'air-purifying' | 'certainty' | 'safety-certification' | 'api-key';
@@ -84,7 +85,7 @@ const RULES: Rule[] = [
   },
   { kind: 'safety-certification', re: /संरचनात्मक रूप से सुरक्षित/g, negatable: true },
   // A Gemini key must never be echoed.
-  { kind: 'api-key', re: /AIza[0-9A-Za-z_-]{35}/g, negatable: false },
+  { kind: 'api-key', re: apiKeyPattern(), negatable: false },
 ];
 
 const NEGATION =

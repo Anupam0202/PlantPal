@@ -3,7 +3,7 @@ import { strFromU8, unzipSync } from 'fflate';
 import type { Page } from '@playwright/test';
 import { expectNoA11yViolations } from './axe';
 import { expect, test } from './helpers';
-import { GEMINI, KEY, mockGemini, saveKey, seedPune } from './gemini';
+import { AQ_KEY, GEMINI, KEY, mockGemini, saveKey, seedPune } from './gemini';
 import { mockProviders } from './providers';
 
 /** Everything this origin keeps: web storage, cookies, every IndexedDB database and Cache Storage. */
@@ -139,7 +139,7 @@ test('no key: the action explains, links to Settings › AI and resumes after th
 
   await page.getByRole('textbox', { name: 'API key' }).fill('not-a-key');
   await page.getByRole('button', { name: 'Check and save' }).click();
-  await expect(page.getByText('That does not look like a Gemini API key')).toBeVisible();
+  await expect(page.getByText('That does not look like an API key')).toBeVisible();
   await page.getByRole('textbox', { name: 'API key' }).fill(KEY);
   await page.getByRole('button', { name: 'Check and save' }).click();
   await page.getByRole('button', { name: 'Go back and continue' }).click();
@@ -149,6 +149,28 @@ test('no key: the action explains, links to Settings › AI and resumes after th
   await expectNoA11yViolations(page, 'send preview');
   await preview.getByRole('button', { name: 'Send' }).click();
   await expect(page.getByTestId('plan-explanation')).toBeVisible();
+});
+
+test('a key in the newer AQ. format is checked with Google and saved', async ({ page }) => {
+  await mockProviders(page);
+  await mockGemini(page);
+  await page.goto('/settings/ai');
+  const field = page.getByRole('textbox', { name: 'API key' });
+  // Pasted with stray spaces, as copied from a page: the key itself is what gets checked.
+  await field.fill(`  ${AQ_KEY} `);
+  await page.getByRole('button', { name: 'Check and save' }).click();
+  await expect(page.getByText('Key saved. AI features are ready.').first()).toBeVisible();
+  await expect(page.getByTestId('key-status')).toContainText(`…${AQ_KEY.slice(-4)}`);
+});
+
+test('a key Google does not accept is reported as not accepted, whatever its format', async ({ page }) => {
+  await mockProviders(page);
+  await mockGemini(page);
+  await page.goto('/settings/ai');
+  await page.getByRole('textbox', { name: 'API key' }).fill('AQ' + '.Ab' + 'n0tV4lid'.repeat(6));
+  await page.getByRole('button', { name: 'Check and save' }).click();
+  await expect(page.getByText('That key was not accepted', { exact: false }).first()).toBeVisible();
+  await expect(page.getByText('That does not look like an API key')).toHaveCount(0);
 });
 
 test('rate limits show a countdown and are not retried in a loop (Appendix B)', async ({ page }) => {

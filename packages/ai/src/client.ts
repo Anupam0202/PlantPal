@@ -1,7 +1,7 @@
 import type { AiDataCategory, ModelRole } from '@plantpal/schemas';
 import { z } from 'zod';
 import { GEMINI_BASE } from './discovery';
-import { AiError, classifyGeminiError, redactKeys } from './errors';
+import { AiError, classifyGeminiError, containsApiKey, redactKeys } from './errors';
 import { sharedPolicy, type PolicyContext } from './policy';
 import {
   consentedSections,
@@ -336,7 +336,7 @@ export class GeminiClient implements AiClient {
     if (blockedBy.length > 0) throw new AiError('CONSENT_REQUIRED', `Needs: ${blockedBy.join(', ')}`);
     const parts = partsOf(sections);
     for (const p of parts) {
-      if ('text' in p && /AIza[0-9A-Za-z_-]{35}/.test(p.text))
+      if ('text' in p && (containsApiKey(p.text) || p.text.includes(key)))
         throw new AiError('CONSENT_REQUIRED', 'The text contains an API key. Remove it before sending.', {
           detail: 'API_KEY_IN_INPUT',
         });
@@ -485,7 +485,7 @@ export class GeminiClient implements AiClient {
           c.role === 'user' &&
           'text' in p &&
           typeof p.text === 'string' &&
-          /AIza[0-9A-Za-z_-]{35}/.test(p.text)
+          (containsApiKey(p.text) || p.text.includes(session.key))
         )
           throw new AiError('CONSENT_REQUIRED', 'The text contains an API key. Remove it before sending.', {
             detail: 'API_KEY_IN_INPUT',

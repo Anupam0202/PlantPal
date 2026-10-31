@@ -13,6 +13,7 @@ const en = {
   session: (hint: string) => `Key ending …${hint}, for this session only.`,
   device: (hint: string, date: string) => `Key ending …${hint}, saved encrypted on this device (${date}).`,
   field: 'API key',
+  placeholder: 'Paste your key',
   mode: 'Keep it',
   modeSession: 'This session only',
   modeSessionHint: 'Gone when you close the tab.',
@@ -23,7 +24,8 @@ const en = {
   saved: 'Key saved. AI features are ready.',
   remove: 'Remove key',
   removed: 'Key removed from this device',
-  badFormat: 'That does not look like a Gemini API key (they start with “AIza”).',
+  badFormat:
+    'That does not look like an API key. Paste only the key, with no spaces or quotes. Gemini keys start with “AQ.” or “AIza”.',
   getKey: 'Get a free key in Google AI Studio',
   guidanceTitle: 'Good practice',
   guidance: [
@@ -104,6 +106,7 @@ const hi: AiSettingsMessages = {
   session: (hint) => `…${hint} पर खत्म होने वाली कुंजी, केवल इस सत्र के लिए।`,
   device: (hint, date) => `…${hint} पर खत्म होने वाली कुंजी, इस डिवाइस पर एन्क्रिप्टेड (${date})।`,
   field: 'API कुंजी',
+  placeholder: 'अपनी कुंजी चिपकाएँ',
   mode: 'कहाँ रखें',
   modeSession: 'केवल इस सत्र में',
   modeSessionHint: 'टैब बंद करते ही हट जाएगी।',
@@ -114,7 +117,8 @@ const hi: AiSettingsMessages = {
   saved: 'कुंजी सहेजी गई। AI सुविधाएँ तैयार हैं।',
   remove: 'कुंजी हटाएँ',
   removed: 'कुंजी इस डिवाइस से हटाई गई',
-  badFormat: 'यह Gemini API कुंजी जैसी नहीं लगती (वे “AIza” से शुरू होती हैं)।',
+  badFormat:
+    'यह API कुंजी जैसी नहीं लगती। केवल कुंजी चिपकाएँ, बिना खाली जगह या उद्धरण चिह्नों के। Gemini कुंजियाँ “AQ.” या “AIza” से शुरू होती हैं।',
   getKey: 'Google AI Studio में मुफ़्त कुंजी पाएँ',
   guidanceTitle: 'अच्छे तरीके',
   guidance: [
@@ -193,6 +197,7 @@ const es: AiSettingsMessages = {
   session: (hint) => `Clave terminada en …${hint}, solo para esta sesión.`,
   device: (hint, date) => `Clave terminada en …${hint}, guardada cifrada en este dispositivo (${date}).`,
   field: 'Clave de API',
+  placeholder: 'Pega tu clave',
   mode: 'Guardarla',
   modeSession: 'Solo esta sesión',
   modeSessionHint: 'Se borra al cerrar la pestaña.',
@@ -203,7 +208,8 @@ const es: AiSettingsMessages = {
   saved: 'Clave guardada. Las funciones de IA están listas.',
   remove: 'Quitar clave',
   removed: 'Clave quitada de este dispositivo',
-  badFormat: 'No parece una clave de la API de Gemini (empiezan por “AIza”).',
+  badFormat:
+    'Eso no parece una clave de API. Pega solo la clave, sin espacios ni comillas. Las claves de Gemini empiezan por “AQ.” o “AIza”.',
   getKey: 'Obtén una clave gratuita en Google AI Studio',
   guidanceTitle: 'Buenas prácticas',
   guidance: [

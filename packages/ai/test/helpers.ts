@@ -1,5 +1,7 @@
 /** A syntactically valid, fake Gemini key for tests (never a real one). */
 export const FAKE_KEY = 'AIza' + 'Sy' + 'TEST'.repeat(8) + '0';
+/** A key in the newer `AQ.` format that Google AI Studio issues now. */
+export const FAKE_AQ_KEY = 'AQ' + '.Ab' + 'T3sT'.repeat(12) + 'xyz';
 
 export function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {

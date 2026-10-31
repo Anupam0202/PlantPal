@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-// Fails if a build directory contains anything shaped like a Google API key or other common secrets.
+// Fails if a build directory contains anything shaped like a Google API key (AIza… or AQ.…) or other
+// common secrets.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.argv[2] ?? 'apps/web/dist';
 const patterns = [
   { name: 'Google API key', re: /AIza[0-9A-Za-z_-]{35}/ },
+  { name: 'Google API key (AQ. format)', re: /AQ\.[0-9A-Za-z_-]{30,}/ },
   { name: 'Private key block', re: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },
   {
     name: 'Generic secret assignment',
