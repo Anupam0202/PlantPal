@@ -9,7 +9,7 @@ Authoritative run manifest for the PlantPal v4 upgrade (see `docs/PlantPal-Maste
 | Run id               | v4-upgrade-2026-10-27                                                                                                                     |
 | Mode                 | IMPLEMENT                                                                                                                                 |
 | Base commit          | `423d4a0` (master prompt v4 added on top of `99071d4`, the last legacy app commit)                                                        |
-| Branch               | session branch `claude/exciting-albattani-7ph93y`; milestones are separate commits on this branch (see ADR-0001 §Delivery)                |
+| Branch               | a feature branch merged into `main` through PR #1; each milestone is a separate commit (see ADR-0001 §Delivery)                           |
 | Owner approvals held | None beyond implementing in the repository. **No** public deploy, paid plan, domain, real-user email, or third-party posting is approved. |
 
 ## Environment capabilities (this build sandbox)

@@ -1,6 +1,6 @@
 # PlantPal v4 "Living Field Guide": final report (§25.2)
 
-Date: 2026-10-30 · Branch `claude/exciting-albattani-7ph93y` · Draft PR #1 (not merged). Build status: **not yet `PILOT_READY`**; nothing is deployed.
+Date: 2026-10-30 · Merged into `main` through PR #1. Build status: **not yet `PILOT_READY`**; nothing is deployed.
 
 ## 1. Delivered and verified
 
