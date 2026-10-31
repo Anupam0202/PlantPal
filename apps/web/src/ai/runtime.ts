@@ -1,0 +1,197 @@
+/**
+ * AI runtime, loaded on demand (dynamic import) so the client, prompts and JSON Schema code stay out
+ * of the initial bundle. All calls go from this device to Gemini with the person's own key.
+ */
+import {
+  AiError,
+  altTextV1,
+  captureParseV1,
+  GeminiClient,
+  listModels,
+  overSoftCap,
+  pickModels,
+  plainExplainV1,
+  planExplainV1,
+  healthTriageV1,
+  photoIdV1,
+  speciesDraftV1,
+  spaceDetectV1,
+  weeklyReflectionV1,
+  speciesResearchV1,
+  type SpeciesResearchInput,
+  systemInstruction,
+  UsageMeter,
+  type AiFeatureId,
+  type AiResult,
+  type ContextSection,
+  type DayUsage,
+  type PromptModule,
+  copilotSearchV1,
+  copilotTurn,
+  type ChatContent,
+  type CopilotTurn,
+  type PolicyContext,
+  type StreamStepOptions,
+  type ToolUse,
+} from '@plantpal/ai';
+import type { AiDataCategory, ModelRole } from '@plantpal/schemas';
+import { copilotScope, createExecutor } from './copilotTools';
+import { aiStore, aiVault, useAiState, type AiFeature } from './state';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- one table of differently typed modules
+const MODULES: Record<AiFeatureId, PromptModule<any, any>> = {
+  'plan-explain': planExplainV1,
+  'capture-parse': captureParseV1,
+  'alt-text': altTextV1,
+  'plain-explain': plainExplainV1,
+  'health-triage': healthTriageV1,
+  'photo-id': photoIdV1,
+  'species-draft': speciesDraftV1,
+  'space-detect': spaceDetectV1,
+  'weekly-reflection': weeklyReflectionV1,
+};
+
+const localDay = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+const meter = () => new UsageMeter(aiStore());
+
+/**
+ * F3 runs in two steps: grounded research (only the plant name leaves the device), then structured
+ * extraction of that research. The preview shows what the person sends: the name.
+ */
+export function sectionsOf(feature: AiFeature, input: unknown): ContextSection[] {
+  if (feature === 'species-draft') {
+    const i = input as SpeciesResearchInput;
+    return [{ category: 'plants', title: 'Plant name', required: true, text: speciesResearchV1.prompt(i) }];
+  }
+  return MODULES[feature].sections(input);
+}
+
+export function instructionsOf(feature: AiFeature, input: unknown): string {
+  if (feature === 'species-draft') return speciesResearchV1.task;
+  return systemInstruction(MODULES[feature], input);
+}
+
+export function modelFor(feature: AiFeature): string | null {
+  return useAiState.getState().roles[MODULES[feature].role] ?? null;
+}
+
+/** Lists the key's models and picks one per role, honouring the person's overrides. */
+export async function discover(key: string, overrides = useAiState.getState().overrides) {
+  const models = await listModels(key);
+  const roles = pickModels(models, overrides);
+  const available = models
+    .filter((m) => m.methods.includes('generateContent') && /gemini/i.test(m.name))
+    .map((m) => m.name.replace(/^models\//, ''))
+    .sort();
+  return { roles, available };
+}
+
+export async function recheckModels(): Promise<void> {
+  const key = await aiVault().get();
+  if (!key) throw new AiError('KEY_MISSING', 'No key');
+  const { roles, available } = await discover(key);
+  await useAiState.getState().update({ roles, available, checkedAt: new Date().toISOString() });
+}
+
+export async function capReached(): Promise<number | null> {
+  const cap = useAiState.getState().dailyCap;
+  if (cap === null) return null;
+  const { requests } = await meter().today(localDay());
+  return overSoftCap(requests, cap) ? cap : null;
+}
+
+export async function usage(): Promise<{ today: { requests: number; tokens: number }; days: DayUsage[] }> {
+  const m = meter();
+  return { today: await m.today(localDay()), days: await m.all() };
+}
+
+export async function clearUsage(): Promise<void> {
+  await meter().clear();
+}
+
+export async function run<T>(
+  feature: AiFeature,
+  input: unknown,
+  allowed: readonly AiDataCategory[],
+  signal?: AbortSignal,
+): Promise<AiResult<T>> {
+  const state = useAiState.getState();
+  if (!state.enabled) throw new AiError('AI_DISABLED', 'AI is switched off');
+  const usageMeter = meter();
+  const client = new GeminiClient({
+    getKey: () => aiVault().get(),
+    roles: () => useAiState.getState().roles,
+    rediscover: async (): Promise<Partial<Record<ModelRole, string>>> => {
+      await recheckModels();
+      return useAiState.getState().roles;
+    },
+    onUsage: (u) => void usageMeter.record(u, localDay()),
+  });
+  if (feature === 'species-draft') {
+    const i = input as SpeciesResearchInput;
+    if (!allowed.includes('plants')) throw new AiError('CONSENT_REQUIRED', 'Needs: plants');
+    const research = await client.generateGrounded(speciesResearchV1, i, { signal });
+    const draft = await client.generateStructured(
+      speciesDraftV1,
+      { policy: i.policy, scientificName: i.scientificName, prose: research.text, sources: research.sources },
+      { signal },
+    );
+    const meta = {
+      ...draft.meta,
+      inputTokens: draft.meta.inputTokens + research.meta.inputTokens,
+      outputTokens: draft.meta.outputTokens + research.meta.outputTokens,
+    };
+    return { data: { ...draft.data, sources: research.sources } as T, meta };
+  }
+  return client.generateStructured(MODULES[feature] as PromptModule<unknown, T>, input, {
+    signal,
+    allowed: new Set(allowed),
+  });
+}
+
+function newClient() {
+  const usageMeter = meter();
+  return new GeminiClient({
+    getKey: () => aiVault().get(),
+    roles: () => useAiState.getState().roles,
+    rediscover: async (): Promise<Partial<Record<ModelRole, string>>> => {
+      await recheckModels();
+      return useAiState.getState().roles;
+    },
+    onUsage: (u) => void usageMeter.record(u, localDay()),
+  });
+}
+
+export class NoGardenError extends Error {}
+
+/**
+ * One Garden Copilot turn (F6). Tools read only this device's active garden; proposals wait for the
+ * person; web search sends only the query, as a separate grounded request.
+ */
+export async function copilotSend(
+  input: { history: ChatContent[]; message: string; policy: PolicyContext },
+  handlers: StreamStepOptions & { onTool?: (t: ToolUse) => void },
+): Promise<CopilotTurn> {
+  const state = useAiState.getState();
+  if (!state.enabled) throw new AiError('AI_DISABLED', 'AI is switched off');
+  const scope = await copilotScope();
+  if (!scope) throw new NoGardenError('No garden');
+  const client = newClient();
+  const choice = state.copilot ?? { allowed: [], search: false };
+  const exec = createExecutor(scope, async (query) => {
+    const r = await client.generateGrounded(
+      copilotSearchV1,
+      { query, policy: input.policy },
+      { signal: handlers.signal },
+    );
+    return { text: r.text, sources: r.sources };
+  });
+  return copilotTurn(
+    client,
+    { ...input, allowed: new Set(choice.allowed), allowSearch: choice.search },
+    exec,
+    handlers,
+  );
+}

@@ -1,0 +1,2 @@
+# Never publish source maps or Cloudflare header files as assets.
+*.map

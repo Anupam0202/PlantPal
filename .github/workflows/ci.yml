@@ -1,0 +1,78 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - name: Catalogue facts have units, evidence and sources
+        run: pnpm check:catalog
+      - name: No fabricated or placeholder content (gate 5)
+        run: pnpm check:fabricated
+      - name: Quota envelope within 70% of free limits (gate 10)
+        run: pnpm check:quota
+      - name: Dependency audit (production dependencies)
+        run: pnpm audit --prod --audit-level moderate
+      - name: AI eval gate (replayed cases; 0 prohibited claims)
+        run: pnpm eval
+      - run: pnpm test
+      - run: pnpm build
+      - name: Scan build output for secrets (L01)
+        run: pnpm check:dist
+      - name: Bundle budgets
+        run: pnpm check:bundle
+      - name: Cloudflare headers match vercel.json
+        run: pnpm check:headers
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+          retention-days: 3
+  e2e:
+    name: End-to-end and accessibility
+    runs-on: ubuntu-latest
+    needs: check
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+      - run: pnpm --filter @plantpal/web exec playwright install --with-deps chromium
+      - run: pnpm e2e
+        env:
+          CI: 'true'
+      - name: Worker smoke test (local Workers runtime, mock providers)
+        run: pnpm --filter @plantpal/api smoke
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/test-results
+          retention-days: 7

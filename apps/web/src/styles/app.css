@@ -1,0 +1,141 @@
+@import 'tailwindcss';
+@import '@plantpal/ui/tokens.css';
+
+@source '../../../../packages/ui/src';
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100dvh;
+  }
+  body {
+    overscroll-behavior-y: none;
+  }
+}
+
+/* ---------------------------------------------------------------- Living Sky (decorative; text sits on a solid scrim) */
+.sky {
+  background: linear-gradient(180deg, #5d9bd5 0%, #9cc7ea 60%, #d6ebf7 100%);
+  transition: background 1.2s ease;
+}
+.sky-night {
+  background: linear-gradient(180deg, #0b1a2e 0%, #1c2f4a 60%, #2a3d55 100%);
+}
+.sky-twilight {
+  background: linear-gradient(180deg, #1d2b4f 0%, #4a4a7a 60%, #8a6a8f 100%);
+}
+.sky-dawn {
+  background: linear-gradient(180deg, #3d5a8a 0%, #c98a8a 60%, #f2c38a 100%);
+}
+.sky-dusk {
+  background: linear-gradient(180deg, #2f4878 0%, #b9687a 60%, #f0a46a 100%);
+}
+.sky-golden {
+  background: linear-gradient(180deg, #6f9ccc 0%, #f2d59a 70%, #f6c27a 100%);
+}
+.sky-static {
+  background: linear-gradient(180deg, #7aa7c7 0%, #b8d3c0 100%);
+}
+.sky-cloud {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0));
+  filter: blur(6px);
+  animation: pp-drift 90s linear infinite alternate;
+}
+.sky-drop {
+  position: absolute;
+  top: -10%;
+  width: 1.5px;
+  height: 14px;
+  border-radius: 1px;
+  background: rgb(255 255 255 / 0.55);
+  animation: pp-rain 0.9s linear infinite;
+}
+.sky-paused .sky-drop,
+.sky-paused .sky-cloud {
+  animation-play-state: paused;
+}
+@keyframes pp-drift {
+  from {
+    transform: translateX(-6%);
+  }
+  to {
+    transform: translateX(6%);
+  }
+}
+@keyframes pp-rain {
+  to {
+    transform: translateY(260px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-cloud,
+  .sky-drop {
+    animation: none;
+  }
+}
+[data-motion='reduce'] .sky-cloud,
+[data-motion='reduce'] .sky-drop {
+  animation: none;
+}
+
+/* Space Designer print/PDF export: only the drawing is printed. */
+.print-area {
+  display: none;
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    display: block;
+    position: fixed;
+    inset: 0;
+  }
+  .print-area img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* Field stamps: a stamp press when one is newly earned (instant under reduced motion). */
+@keyframes pp-stamp-press {
+  0% {
+    transform: scale(1.08);
+    opacity: 0;
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-accent) 40%, transparent);
+  }
+  60% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 10px color-mix(in oklab, var(--color-accent) 0%, transparent);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.stamp-press {
+  animation: pp-stamp-press 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Garden Story print/PDF: only the story is printed; photos only when the person chose them. */
+@media print {
+  .print-story,
+  .print-story * {
+    visibility: visible;
+  }
+  .print-story {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+  }
+  .print-story .no-print {
+    display: none;
+  }
+}

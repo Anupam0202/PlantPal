@@ -1,0 +1,21 @@
+name: Feature or milestone
+description: Propose a feature or track a milestone
+labels: [enhancement]
+body:
+  - type: textarea
+    id: job
+    attributes:
+      label: Job to be done
+      description: Who needs this, and what are they trying to achieve?
+    validations:
+      required: true
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks
+      value: '- [ ] '
+  - type: textarea
+    id: honesty
+    attributes:
+      label: Evidence and honesty boundary
+      description: What data supports it? What must the feature never claim?
