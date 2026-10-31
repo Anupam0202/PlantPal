@@ -1,5 +1,5 @@
 /**
- * Shared runtime policy (master prompt Appendix A.1). Part of every system instruction; versioned so
+ * Shared runtime policy (Appendix A.1). Part of every system instruction; versioned so
  * a change triggers an evaluation run.
  */
 export const POLICY_VERSION = 1;

@@ -40,6 +40,6 @@ Daily care must be calm and honest (§6.4–§6.6, §6.15, S5, S7, S18). Fixed w
 
 ## Consequences
 
-- Web Push delivery and quiet hours need server-side subscriptions, which arrive with accounts in M10. Until then, alerts and tasks appear in the app.
+- Web Push delivery and quiet hours need server-side subscriptions, which come with accounts (ADR-0013). Without an account, alerts and tasks appear in the app.
 - Official warning feeds (NWS, MeteoAlarm, GDACS), the Rain Harvest planner screen, batch watering and chill hours are not built yet. The tank simulation exists in the domain with property tests.
 - Köppen classes follow Peel et al. (2007); the Beck et al. (2018) refinements are not applied.

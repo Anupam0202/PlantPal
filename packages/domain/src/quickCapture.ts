@@ -3,7 +3,7 @@ import type { CaptureProposal as AiCaptureProposal, CareKind } from '@plantpal/s
 /**
  * Deterministic Quick Capture parser for short English notes such as "watered tomatoes 2 l" or
  * "harvested 300 g basil". Anything it cannot read becomes a plain note. Results are proposals:
- * nothing is saved until the user confirms (L19).
+ * nothing is saved until the user confirms.
  */
 export type CaptureProposal =
   | {

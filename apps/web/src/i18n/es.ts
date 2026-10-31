@@ -212,7 +212,7 @@ export const es: Messages = {
     since: (d: string) => `Desde ${d}`,
     conflict: 'Esta planta se modificó en otro lugar. La vista se ha actualizado: inténtalo de nuevo.',
     notFound: 'Esta planta no existe o se eliminó.',
-    fromLegacy: 'Traída de PlantPal v3',
+    fromLegacy: 'Traída de datos anteriores de PlantPal',
   },
   labels: {
     status: {
@@ -572,7 +572,7 @@ export const es: Messages = {
     exportCsvHint: 'Plantas, cuidados, notas y cosechas para Excel, Sheets o LibreOffice.',
     exported: 'Descarga iniciada',
     import: 'Importar',
-    importHint: 'Elige una copia de PlantPal (.zip) o una copia de PlantPal v3 (.json).',
+    importHint: 'Elige una copia de PlantPal (.zip) o una copia de datos anteriores de PlantPal (.json).',
     chooseFile: 'Elegir archivo',
     reading: 'Comprobando el archivo…',
     previewTitle: 'Vista previa de la importación',
@@ -599,9 +599,9 @@ export const es: Messages = {
       'too-large': 'Esta copia es demasiado grande para importarla aquí.',
     },
     legacy: 'Datos anteriores de PlantPal',
-    legacyFound: 'Hay datos de PlantPal v3 guardados en este navegador.',
-    legacyNone: 'No hay datos de PlantPal v3 en este navegador.',
-    legacyDone: (d: string) => `Los datos de PlantPal v3 se trajeron el ${d}.`,
+    legacyFound: 'Hay datos anteriores de PlantPal guardados en este navegador.',
+    legacyNone: 'No hay datos anteriores de PlantPal en este navegador.',
+    legacyDone: (d: string) => `Los datos anteriores de PlantPal se trajeron el ${d}.`,
     legacyReview: 'Revisar y traerlos',
     danger: 'Borrar todo en este dispositivo',
     dangerBody:
@@ -694,7 +694,7 @@ export const es: Messages = {
     },
     legacyAchievements: 'Logros anteriores',
     legacyAchievementsBody: (xp: string, level: string, badges: number) =>
-      `De PlantPal v3: ${xp} XP, nivel ${level}, ${badges} insignia(s). Se conservan como registro de solo lectura.`,
+      `De datos anteriores de PlantPal: ${xp} XP, nivel ${level}, ${badges} insignia(s). Se conservan como registro de solo lectura.`,
   },
   welcome: {
     title: 'Cultiva un jardín vivo, estés donde estés.',

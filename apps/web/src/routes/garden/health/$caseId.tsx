@@ -97,7 +97,7 @@ function EntryBody({ e }: { e: HealthCaseEntry }) {
     );
   }
   if (e.kind === 'triage') {
-    // Only validated triage is shown; anything else (e.g. a v3 scan) is summarised as a draft.
+    // Only validated triage is shown; anything else (e.g. a scan from the earlier app) is summarised as a draft.
     const t = HealthTriage.safeParse(e.payload);
     if (!t.success) return <p className="text-body-s text-muted">{m.by.ai}</p>;
     const top = t.data.candidates[0];
@@ -164,7 +164,7 @@ function CasePage() {
     {
       onResult: (r) => {
         if (!hc) return;
-        // Only a validated result reaches here, so nothing partial is ever stored (L05).
+        // Only a validated result reaches here, so nothing partial is ever stored.
         void addCaseEntry(hc.id, hc.version, { kind: 'triage', by: 'ai', payload: r }).catch((e: unknown) =>
           reportError(t, e),
         );

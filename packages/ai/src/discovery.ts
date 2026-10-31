@@ -103,7 +103,7 @@ function familyOf(role: ModelRole): RegExp {
 /**
  * Picks a model per role (§18.3): supports the method → stable before preview (except where only a
  * preview exists, e.g. deep) → a seed id when present → otherwise the newest in the family. A user
- * override wins when the key lists it. Never iterates through a long fallback chain (L03).
+ * override wins when the key lists it. Never iterates through a long fallback chain.
  */
 export function pickModels(
   models: readonly ModelInfo[],

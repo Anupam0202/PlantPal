@@ -3,4 +3,4 @@ pnpm-lock.yaml
 **/.wrangler
 **/routeTree.gen.ts
 **/paraglide
-docs/PlantPal-Master-Prompt-v4.md
+docs/specification.md

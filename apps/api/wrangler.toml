@@ -1,5 +1,5 @@
 # PlantPal API Worker. Nothing here is deployed automatically: deploying needs the owner's
-# Cloudflare account, `wrangler login` and explicit approval (master prompt O3).
+# Cloudflare account, `wrangler login` and explicit approval (specification §2, O2).
 name = "plantpal"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"

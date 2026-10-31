@@ -213,7 +213,7 @@ export const en = {
     since: (d: string) => `Since ${d}`,
     conflict: 'This plant was changed somewhere else. Your view has been refreshed — please try again.',
     notFound: 'This plant does not exist or was deleted.',
-    fromLegacy: 'Brought over from PlantPal v3',
+    fromLegacy: 'Brought over from earlier PlantPal data',
   },
   labels: {
     status: {
@@ -571,7 +571,7 @@ export const en = {
     exportCsvHint: 'Plants, care log, notes and harvests for Excel, Sheets or LibreOffice.',
     exported: 'Download started',
     import: 'Import',
-    importHint: 'Choose a PlantPal backup (.zip) or a PlantPal v3 backup (.json).',
+    importHint: 'Choose a PlantPal backup (.zip) or a backup of earlier PlantPal data (.json).',
     chooseFile: 'Choose file',
     reading: 'Checking file…',
     previewTitle: 'Import preview',
@@ -596,9 +596,9 @@ export const en = {
       'too-large': 'This backup is too large to import here.',
     },
     legacy: 'Older PlantPal data',
-    legacyFound: 'Data from PlantPal v3 is stored in this browser.',
-    legacyNone: 'No PlantPal v3 data found in this browser.',
-    legacyDone: (d: string) => `PlantPal v3 data was brought over on ${d}.`,
+    legacyFound: 'Earlier PlantPal data is stored in this browser.',
+    legacyNone: 'No earlier PlantPal data found in this browser.',
+    legacyDone: (d: string) => `Earlier PlantPal data was brought over on ${d}.`,
     legacyReview: 'Review and bring it over',
     danger: 'Delete everything on this device',
     dangerBody:
@@ -689,9 +689,9 @@ export const en = {
       listings: 'Swap listings',
       achievements: 'Progress and badges',
     },
-    legacyAchievements: 'Legacy achievements',
+    legacyAchievements: 'Earlier achievements',
     legacyAchievementsBody: (xp: string, level: string, badges: number) =>
-      `From PlantPal v3: ${xp} XP, level ${level}, ${badges} badge(s). Kept as a read-only record.`,
+      `From earlier PlantPal data: ${xp} XP, level ${level}, ${badges} badge(s). Kept as a read-only record.`,
   },
   welcome: {
     title: 'Grow a living, breathing garden — wherever you are.',

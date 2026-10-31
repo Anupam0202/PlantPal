@@ -194,7 +194,7 @@ test('Quick Capture: AI proposals are checked before saving; a pasted key is nev
   await expect(page.getByText('Saved', { exact: true })).toBeVisible();
 });
 
-test('the AI switch hides every entry point; a v3 key moves into the vault', async ({ page }) => {
+test('the AI switch hides every entry point; an earlier key moves into the vault', async ({ page }) => {
   await page.addInitScript((key) => {
     if (sessionStorage.getItem('seeded')) return;
     localStorage.setItem('plantpal-user-gemini-api-key', key);
@@ -204,7 +204,7 @@ test('the AI switch hides every entry point; a v3 key moves into the vault', asy
   await mockGemini(page);
   await seedPune(page);
   await page.goto('/settings/ai');
-  await expect(page.getByText('A key from PlantPal v3 is stored unencrypted')).toBeVisible();
+  await expect(page.getByText('A key from earlier PlantPal data is stored unencrypted')).toBeVisible();
   await page.getByRole('button', { name: 'Move into the vault' }).click();
   await expect(page.getByText('Key moved into the vault.')).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('plantpal-user-gemini-api-key'))).toBeNull();

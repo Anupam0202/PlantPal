@@ -21,7 +21,7 @@ type SightingGroup = (typeof SIGHTING_GROUPS)[number];
 /** Official PoMS site, where FIT Counts are submitted through its own app or forms. */
 export const POMS_URL = 'https://ukpoms.org.uk/';
 
-/** Nature Log, Bloom Bridge, Lens, nearby nature, harvest and pantry, Impact Ledger (M9). */
+/** Nature Log, Bloom Bridge, Lens, nearby nature, harvest and pantry, Impact Ledger. */
 const en = {
   hub: {
     count: 'Timed pollinator count',

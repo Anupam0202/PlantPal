@@ -1,6 +1,9 @@
 // Starts the Worker in the local Cloudflare runtime (workerd via `wrangler dev`) and checks the API end to end.
 // Mock providers only: no network calls leave the machine.
 import { execFileSync, spawn } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { newId } from '@plantpal/domain';
 import { latLngToCell } from 'h3-js';
 import { b64urlEncode } from '../src/lib/webpush';
@@ -11,11 +14,14 @@ const base = `http://127.0.0.1:${port}`;
 const env = { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: 'true' };
 // The app origin in wrangler.toml (PUBLIC_ORIGIN): the passkey relying party is "localhost".
 const APP_ORIGIN = 'http://localhost:8787';
+// A fresh local database for every run, so data from earlier runs cannot change the results.
+const persist = mkdtempSync(join(tmpdir(), 'plantpal-smoke-'));
 
-execFileSync('pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', 'plantpal', '--local'], {
-  stdio: 'inherit',
-  env,
-});
+execFileSync(
+  'pnpm',
+  ['exec', 'wrangler', 'd1', 'migrations', 'apply', 'plantpal', '--local', '--persist-to', persist],
+  { stdio: 'inherit', env },
+);
 // A throwaway secret so passkey accounts are on for this run only.
 const secret = [...crypto.getRandomValues(new Uint8Array(24))]
   .map((b) => b.toString(16).padStart(2, '0'))
@@ -29,7 +35,17 @@ const vapidPublic = b64urlEncode(
   new Uint8Array((await crypto.subtle.exportKey('raw', vapidPair.publicKey)) as ArrayBuffer),
 );
 const vapidPrivate = ((await crypto.subtle.exportKey('jwk', vapidPair.privateKey)) as JsonWebKey).d!;
-const args = ['exec', 'wrangler', 'dev', '--port', String(port), '--ip', '127.0.0.1'];
+const args = [
+  'exec',
+  'wrangler',
+  'dev',
+  '--port',
+  String(port),
+  '--ip',
+  '127.0.0.1',
+  '--persist-to',
+  persist,
+];
 const vars = [
   `BETTER_AUTH_SECRET:${secret}`,
   `VAPID_PUBLIC_KEY:${vapidPublic}`,
@@ -52,6 +68,7 @@ const stop = () => {
   } catch {
     /* already stopped */
   }
+  rmSync(persist, { recursive: true, force: true });
 };
 const fail = (msg: string): never => {
   console.error(`smoke: FAIL — ${msg}\n${log.slice(-2000)}`);

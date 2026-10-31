@@ -1,5 +1,5 @@
-name: Feature or milestone
-description: Propose a feature or track a milestone
+name: Feature request
+description: Propose a feature
 labels: [enhancement]
 body:
   - type: textarea

@@ -35,7 +35,7 @@ export function Badge({ tone = 'neutral', icon, className, children, ...rest }: 
   );
 }
 
-/** Evidence grades from the master prompt §8.4: shape + text + colour, never colour alone. */
+/** Evidence grades from the specification §8.4: shape + text + colour, never colour alone. */
 export type EvidenceGrade =
   | 'MEASURED'
   | 'OFFICIAL'
@@ -151,7 +151,7 @@ const likelihoodMeta: Record<Likelihood, { tone: Tone; label: string }> = {
   UNKNOWN: { tone: 'neutral', label: 'Unknown' },
 };
 
-/** Categorical likelihood. Never a percentage (master prompt §6.8). */
+/** Categorical likelihood. Never a percentage (§6.8). */
 export function LikelihoodChip({ value }: { value: Likelihood }) {
   const meta = likelihoodMeta[value];
   return <Badge tone={meta.tone}>{meta.label}</Badge>;

@@ -20,7 +20,7 @@ export function isValidCoords(lat: unknown, lon: unknown): lat is number {
 }
 
 /**
- * Hemisphere-correct coordinate text (L12): `18.52° N, 73.86° E`, `33.87° S, 151.21° E`.
+ * Hemisphere-correct coordinate text: `18.52° N, 73.86° E`, `33.87° S, 151.21° E`.
  * `decimals` defaults to 2 (≈ 1 km), enough to recognise a place without pinpointing a home.
  */
 export function formatCoordinates(lat: number, lon: number, decimals = 2): string {

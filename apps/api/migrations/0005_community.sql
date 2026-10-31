@@ -1,4 +1,4 @@
--- Community (M11, behind FEATURE_COMMUNITY). Public surfaces store only coarse H3 cells
+-- Community (behind FEATURE_COMMUNITY). Public surfaces store only coarse H3 cells
 -- (resolution 7, about 5 km²) and their resolution-5 area; never coordinates (§19).
 
 CREATE TABLE community_profiles (

@@ -35,7 +35,7 @@ describe('EnvClient', () => {
     expect(f).toHaveBeenCalledTimes(1);
   });
 
-  it('L07: never caches failures and retries the source next time', async () => {
+  it('never caches failures and retries the source next time', async () => {
     const f = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(new Response('', { status: 404 }))
@@ -46,7 +46,7 @@ describe('EnvClient', () => {
     expect(events.map((e) => e.ok)).toEqual([false, true]);
   });
 
-  it('L07: serves a stale copy, clearly marked, when the provider fails after the TTL', async () => {
+  it('serves a stale copy, clearly marked, when the provider fails after the TTL', async () => {
     const f = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(ok(fixtures.airFixture()))
@@ -133,7 +133,7 @@ describe('EnvClient', () => {
     expect(p.hardinessZone).not.toBeNull();
   });
 
-  it('climate projection compares each model with its own baseline from two fetches (L08)', async () => {
+  it('climate projection compares each model with its own baseline from two fetches', async () => {
     const f = vi
       .fn<typeof fetch>()
       .mockImplementationOnce(async () =>

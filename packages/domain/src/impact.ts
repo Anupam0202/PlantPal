@@ -66,7 +66,7 @@ const r1 = (v: number) => Math.round(v * 10) / 10;
 /**
  * Impact Ledger v1 (§6.14). Every row says how it was obtained. Logged values are `MEASURED`, counts
  * over records are `DERIVED`, model-based values are `ESTIMATED` with their uncertainty. Carbon is not
- * estimated for herbaceous plants and has no number without a cited allometry (S12, L16).
+ * estimated for herbaceous plants and has no number without a cited allometry (S12).
  */
 export function impactLedger(i: LedgerInput): LedgerRow[] {
   const rows: LedgerRow[] = [];

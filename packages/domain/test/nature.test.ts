@@ -294,7 +294,7 @@ const pantry = (over: Partial<PantryItem>): PantryItem => ({
   ...over,
 });
 
-describe('harvest and pantry (S1, L15)', () => {
+describe('harvest and pantry (S1)', () => {
   it('keeps mass and counts apart and never turns a missing amount into zero grams', () => {
     const t = harvestTotals([
       harvest({ massG: 500 }),
@@ -349,7 +349,7 @@ describe('Impact Ledger v1', () => {
     expect(row('nature-minutes')?.value).toBe(10);
   });
 
-  it('unknown stays unknown and carbon has no number (S12, L16)', () => {
+  it('unknown stays unknown and carbon has no number (S12)', () => {
     expect(row('peat-free-share')?.value).toBeNull();
     expect(row('canopy-area')?.value).toBeNull();
     expect(row('bloom-months')?.value).toBeNull();

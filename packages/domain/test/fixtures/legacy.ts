@@ -1,4 +1,4 @@
-/** A realistic PlantPal v3 localStorage dump with the awkward cases the migration must handle. */
+/** A realistic localStorage dump from the earlier PlantPal app with the awkward cases the migration must handle. */
 
 // 1×1 transparent PNG.
 export const TINY_PNG =

@@ -1,4 +1,4 @@
-# Demo script — M3 (environment gateway and conditions)
+# Guide: Environment and conditions
 
 Without internet access, run the web app in demo mode: `VITE_PROVIDERS=mock pnpm --filter @plantpal/web dev` (every value is labelled "Demo data").
 

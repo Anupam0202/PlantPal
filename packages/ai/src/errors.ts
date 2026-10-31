@@ -2,7 +2,7 @@ import type { AiErrorCode } from '@plantpal/schemas';
 
 /**
  * Typed AI errors (§18.4). Each code has its own copy and recovery in the UI; "no key" is never shown
- * as "quota exceeded" (L02), and quota, auth and billing are never conflated (L03).
+ * as "quota exceeded", and quota, auth and billing are never conflated.
  */
 export class AiError extends Error {
   constructor(

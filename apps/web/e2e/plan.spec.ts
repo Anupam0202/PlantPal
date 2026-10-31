@@ -98,7 +98,7 @@ test('W1 with every provider down: the manual path still saves a plan', async ({
   await expect(page.getByTestId('next-steps')).toContainText('Add your garden’s location');
 });
 
-test('light 0 stays 0: "No direct sun" leaves out sun lovers (L21)', async ({ page }) => {
+test('light 0 stays 0: "No direct sun" leaves out sun lovers', async ({ page }) => {
   await mockProviders(page, { allDown: true });
   await page.goto('/welcome?step=space');
   await page.getByRole('button', { name: 'Courtyard or patio' }).click();

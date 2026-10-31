@@ -74,7 +74,7 @@ function stamp(now: number): string {
   return localDateOf(now, 'UTC');
 }
 
-export const APP_VERSION = '3.0.0-alpha.0';
+export const APP_VERSION = '1.0.0-alpha.0';
 
 // ---------------------------------------------------------------- export
 

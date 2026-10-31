@@ -1,4 +1,4 @@
-# Demo script — M8 (Space Designer)
+# Guide: Space Designer
 
 Demo mode works for everything except Photo-to-Plan (`VITE_PROVIDERS=mock pnpm --filter @plantpal/web dev`). Photo-to-Plan needs a Gemini key in Settings › AI; the Playwright suite mocks Gemini.
 

@@ -26,7 +26,7 @@ export class MemoryCache implements FactCache {
   }
 }
 
-/** Cache key = provider | endpoint | version | sorted params (master prompt §15.4). */
+/** Cache key = provider | endpoint | version | sorted params (§15.4). */
 export function cacheKey(
   provider: string,
   endpoint: string,

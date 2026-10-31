@@ -137,7 +137,7 @@ describe('E3 physical fit', () => {
 });
 
 describe('E4 light', () => {
-  it('light 0 is preserved: full-sun plants are excluded, shade plants are not (L21)', () => {
+  it('light 0 is preserved: full-sun plants are excluded, shade plants are not', () => {
     const dark = ctx({ zone: { sunMonthly: new Array(12).fill(0) } });
     const r = evaluate(T('solanum-lycopersicum-cherry'), dark);
     expect(r.status).toBe('EXCLUDED');

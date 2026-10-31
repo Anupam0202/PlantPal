@@ -7,7 +7,7 @@ export interface Destination {
   icon: LucideIcon;
 }
 
-/** Five destinations replace the legacy 17 equal tabs (master prompt §5.1). */
+/** Five destinations (§5.1). */
 export const destinations: Destination[] = [
   { key: 'today', to: '/today', icon: Sun },
   { key: 'garden', to: '/garden', icon: Sprout },

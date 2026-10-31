@@ -2,7 +2,7 @@
 
 - Status: Accepted (blocked on an owner decision)
 - Date: 2026-10-30
-- Milestone: M12 (§18.5 F7, experimental)
+- Specification: §18.5 F7 (experimental)
 
 ## Context
 

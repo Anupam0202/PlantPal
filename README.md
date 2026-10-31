@@ -2,7 +2,7 @@
 
 # 🌿 PlantPal
 
-### A living field guide for the space you actually have
+### A garden companion for the space you actually have
 
 [![CI](https://github.com/Anupam0202/PlantPal/actions/workflows/ci.yml/badge.svg)](https://github.com/Anupam0202/PlantPal/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Anupam0202/PlantPal/actions/workflows/codeql.yml/badge.svg)](https://github.com/Anupam0202/PlantPal/actions/workflows/codeql.yml)
@@ -23,29 +23,22 @@ Most plant apps guess. PlantPal shows its working:
 - **Bring your own key.** AI features use _your_ Gemini API key. It is encrypted on your device and sent only to Google — never to PlantPal servers. Everything that does not need AI works without a key.
 - **For the environment.** Native and pollinator-friendly choices, invasive-species warnings, water-wise care and an honest impact ledger.
 
-## Status
+## What it does
 
-PlantPal is being rebuilt as v4 ("Living Field Guide") milestone by milestone. See [`RUN-STATE.md`](RUN-STATE.md) for the live tracker and [`docs/PlantPal-Master-Prompt-v4.md`](docs/PlantPal-Master-Prompt-v4.md) for the full specification.
+| Area                       | Highlights                                                                                                                                          |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Today                      | A care cockpit with "check by" watering, frost and heat guidance from your forecast, holiday catch-up and a kind weekly look back                   |
+| Garden                     | Gardens, spaces, containers and plants; journal and photos with location data removed; health cases; photo identification; seed library and lineage |
+| Plan                       | A 90-second first plan, a cited plant catalogue with reasons for every match, the Sun Hours Finder, Climate Fit and a Space Designer drawn to scale |
+| Nature                     | Timed pollinator counts, Bloom Bridge, the Native & Invasive Lens, a green corridor map, harvest and pantry, an honest Impact Ledger                |
+| Learn                      | Field stamps earned from your records (no streaks), six field lessons, your Garden Story and printable plant labels with QR codes                   |
+| AI, with your own key      | An encrypted on-device key vault, model discovery, plan explanations, Quick Capture and a Garden Copilot that only suggests changes you confirm     |
+| Accounts (optional)        | Passkeys, sync across devices, shared gardens with roles, plant-sitter links, live updates and Web Push                                             |
+| Community (off by default) | A moderated feed, events, a Seed & Cutting Exchange and a map of active growers                                                                     |
 
-| Milestone | What it delivers                                                                                        | State |
-| --------- | ------------------------------------------------------------------------------------------------------- | ----- |
-| M0        | Safety net: licence, community files, CodeQL, Dependabot, decision records                              | Done  |
-| M1        | Monorepo, design system, accessible app shell, PWA, strict CSP, CI                                      | Done  |
-| M2        | Local-first garden data, journal, photos, export/import, migration from v3                              | Done  |
-| M3        | Environmental data with provenance, API Worker, Living Sky, location                                    | Done  |
-| M4        | Plant catalogue, Sun Hours Finder, eligibility engine, Seed onboarding, plans                           | Done  |
-| M5        | Care schedules, Today cockpit, Water-Wise checks, frost and heat alerts, Climate Fit                    | Done  |
-| M6        | AI with your own Gemini key: vault, model discovery, explanations, quick capture                        | Done  |
-| M7        | Plant health cases, photo identification, species pages and cited species drafts                        | Done  |
-| M8        | Space designer: plans to scale, checks, sun and shade, growth, versions, exports                        | Done  |
-| M9        | Nature log and timed counts, Bloom Bridge, native and invasive lens, harvest and pantry, impact ledger  | Done  |
-| M10       | Optional passkey accounts, sync, shared gardens and roles, plant-sitter links, live updates, Web Push   | Done  |
-| M11       | Seed library and lineage; community, Seed & Cutting Exchange and moderation (off by default); maps      | Done  |
-| M12       | Garden Copilot, weekly reflection, field stamps and lessons, Garden Story, QR labels, release hardening | Done  |
+Used the earlier PlantPal app in this browser? PlantPal finds that data, shows what it will bring over and saves a backup file first.
 
-The previous single-file app (v3) has been retired; its known problems are tracked in [`docs/traceability.md`](docs/traceability.md).
-
-The build is **not yet pilot-ready**: see [`docs/release-gates.md`](docs/release-gates.md) for what is open (a manual screen-reader review, mobile load time, and decisions only the owner can make).
+The full specification is in [`docs/specification.md`](docs/specification.md), feature status in [`docs/scope-ledger.md`](docs/scope-ledger.md), and short walkthroughs of each area in [`docs/guides/`](docs/guides/). Before a pilot launch, a few items are still open (a manual screen-reader review, mobile load time, and decisions only the owner can make): see [`docs/release-gates.md`](docs/release-gates.md).
 
 ## A look inside
 
@@ -115,11 +108,11 @@ pnpm install
 pnpm dev          # web app on http://localhost:5173
 ```
 
-No `.env` file and no API key are needed to run the app. Weather and place data come from free public services (Open-Meteo, NASA POWER); without internet access use demo data with `VITE_PROVIDERS=mock pnpm dev`. To route requests through the API Worker instead, run `pnpm dev:api` and set `VITE_API_BASE_URL=http://127.0.0.1:8787`. When AI features arrive, you add your Gemini key inside the app under **Settings → AI**; get one free at [Google AI Studio](https://aistudio.google.com/app/apikey).
+No `.env` file and no API key are needed to run the app. Weather and place data come from free public services (Open-Meteo, NASA POWER); without internet access use demo data with `VITE_PROVIDERS=mock pnpm dev`. To route requests through the API Worker instead, run `pnpm dev:api` and set `VITE_API_BASE_URL=http://127.0.0.1:8787`. AI features use your own Gemini key, added inside the app under **Settings → AI**; get one free at [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 ### Accounts, sync and push (optional)
 
-The app works fully without them. To try accounts locally, run the Worker with a secret (see [`docs/demo/M10.md`](docs/demo/M10.md)):
+The app works fully without them. To try accounts locally, run the Worker with a secret (see [`docs/guides/accounts-and-sync.md`](docs/guides/accounts-and-sync.md)):
 
 ```sh
 cd apps/api && echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" > .dev.vars
@@ -128,7 +121,7 @@ pnpm exec wrangler d1 migrations apply plantpal --local && pnpm exec wrangler de
 
 Open `http://localhost:8787` (passkeys need a domain such as `localhost`, not an IP address). `pnpm --filter @plantpal/api vapid:keys` makes Web Push keys.
 
-The community (feed, events, Seed & Cutting Exchange, moderation) is **off by default**. It may be switched on for a public deployment only after the owner adopts [`docs/community-policy.md`](docs/community-policy.md) and names a moderator; to try it locally see [`docs/demo/M11.md`](docs/demo/M11.md).
+The community (feed, events, Seed & Cutting Exchange, moderation) is **off by default**. It may be switched on for a public deployment only after the owner adopts [`docs/community-policy.md`](docs/community-policy.md) and names a moderator; to try it locally see [`docs/guides/community.md`](docs/guides/community.md).
 
 ### Useful scripts
 
@@ -159,7 +152,7 @@ packages/
   catalog/    curated plant catalogue
   db/         database schema
   sync/       offline sync engine
-docs/         specification, decision records, demo scripts
+docs/         specification, decision records, guides, runbooks
 tools/        build checks (secret scan, bundle budget, icons)
 ```
 

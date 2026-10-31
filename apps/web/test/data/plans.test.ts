@@ -112,7 +112,7 @@ describe('saveSeedPlan', () => {
     expect(await db.specimens.count()).toBe(0);
   });
 
-  it('keeps light 0 as 0 (L21)', async () => {
+  it('keeps light 0 as 0', async () => {
     const dark = { ...zone, sun: { ...zone.sun, monthlyHours: new Array(12).fill(0) } };
     const r = await saveSeedPlan({ garden, zones: [dark], plan: meta, items: [] }, NOW);
     expect((await db.zones.get(r.zones[0]!.id))?.sun?.monthlyHours).toEqual(new Array(12).fill(0));
@@ -132,7 +132,7 @@ describe('savePlan', () => {
   });
 });
 
-describe('Dexie upgrade to v3', () => {
+describe('local database upgrade to schema version 3', () => {
   it('opens a v2 database, keeps old rows and adds the plan tables', async () => {
     const name = 'plantpal-upgrade-test';
     await Dexie.delete(name);

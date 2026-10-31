@@ -256,7 +256,7 @@ export class EnvClient {
           circuit.failure();
           this.record(id, false, null, err.code);
         }
-        // Failures are never cached; a still-usable stale copy is better than nothing (L07).
+        // Failures are never cached; a still-usable stale copy is better than nothing.
         if (usableStale && err.code !== 'ABORTED') return usableStale;
         throw err;
       }

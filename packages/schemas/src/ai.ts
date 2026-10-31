@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Structured AI outputs (master prompt Appendix A.2). JSON Schema for `responseJsonSchema` is generated
+ * Structured AI outputs (Appendix A.2). JSON Schema for `responseJsonSchema` is generated
  * from these with `z.toJSONSchema`; every response is parsed with them and then semantically validated.
  */
 

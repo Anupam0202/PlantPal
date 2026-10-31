@@ -36,7 +36,7 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },
       manifest: {
-        name: 'PlantPal — living field guide for small gardens',
+        name: 'PlantPal — garden companion for small spaces',
         short_name: 'PlantPal',
         description:
           'Know what will thrive in your exact space, care for it with confidence, and see the nature you bring back.',

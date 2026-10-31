@@ -14,7 +14,7 @@ const en = {
     done: 'All tiers earned',
     notTracked: 'PlantPal does not keep these records yet.',
     newStamp: (name: string) => `New stamp: ${name}`,
-    legacyTitle: 'From PlantPal v3',
+    legacyTitle: 'From earlier PlantPal data',
     legacyIntro: 'Kept exactly as they were. They are not counted again here.',
     legacyXp: (xp: number, level: number | null) => `${xp} XP${level !== null ? ` · level ${level}` : ''}`,
     names: {

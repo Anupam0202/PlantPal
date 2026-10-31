@@ -106,7 +106,7 @@ test('consent denied: switching off photos sends nothing; rules triage still hel
   await expect(page.getByTestId('triage-rules')).toContainText('Too little water');
 });
 
-test('partial JSON is never stored, and the AI can abstain (L05)', async ({ page }) => {
+test('partial JSON is never stored, and the AI can abstain', async ({ page }) => {
   test.setTimeout(90_000);
   await mockProviders(page);
   const gemini = await mockGemini(page);

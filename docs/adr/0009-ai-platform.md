@@ -5,7 +5,7 @@
 
 ## Context
 
-AI features must run on the person's own Gemini key, on their own device, and must never decide anything that deterministic code can decide (§18). The v3 app stored the key in plain text, conflated "no key" with "quota exceeded", walked a long list of model names on any failure, parsed Markdown, and trusted unvalidated JSON (L02–L05).
+AI features must run on the person's own Gemini key, on their own device, and must never decide anything that deterministic code can decide (§18). The earlier PlantPal app stored the key in plain text, conflated "no key" with "quota exceeded", walked a long list of model names on any failure, parsed Markdown, and trusted unvalidated JSON (L02–L05).
 
 ## Decisions
 
@@ -14,7 +14,7 @@ AI features must run on the person's own Gemini key, on their own device, and mu
    - Retries, deadlines, error mapping and the thinking-setting fallback are ours to test. Cookies and referrer are never sent.
    - The runtime chunk is 8 kB gzip and loads only when an AI feature is used.
 
-   Chat, Live and embeddings join the same interface when Copilot (M12) and Garden Walk arrive. They can use the SDK, lazy-loaded, if it proves worth its size.
+   Chat with tools uses the same interface (Copilot, ADR-0015). Live and embeddings would join it for Garden Walk (ADR-0017); they can use the SDK, lazy-loaded, if it proves worth its size.
 
 2. **Vault** (`packages/ai/src/vault.ts`). The person chooses one of two modes:
    - **Session:** the key is held in memory only.
@@ -22,22 +22,22 @@ AI features must run on the person's own Gemini key, on their own device, and mu
 
    The CryptoKey object and the ciphertext live in their own IndexedDB database, `plantpal-vault`. That database is never exported, synced or backed up. AI settings, remembered consent choices and the usage meter live there too.
 
-   A v3 plaintext key is offered for import into the vault, then deleted. Passkey (WebAuthn PRF) and passphrase protection are deferred; ADR-0001's security pass will revisit them in M12. Settings › AI states the remaining risk: code running in the page could use an unlocked key.
+   A plaintext key from the earlier app is offered for import into the vault, then deleted. Passkey (WebAuthn PRF) and passphrase protection are deferred. Settings › AI states the remaining risk: code running in the page could use an unlocked key.
 
 3. **Discovery** (`discovery.ts`).
    - The paginated model list is requested with the key in a header.
    - One model is picked per role: it must support the method; stable is preferred over preview (except `deep`); seed ids are used when the key lists them; otherwise the newest version in the family. A user override wins if the key lists it.
    - Seeds carry a `verifiedAt` date and are used only when the live list contains them.
-   - On `MODEL_UNAVAILABLE` the client re-discovers **once**. It never walks a list of names (L03).
+   - On `MODEL_UNAVAILABLE` the client re-discovers **once**. It never walks a list of names.
 4. **Error taxonomy** (`errors.ts`). Gemini errors map to typed codes, each with its own copy and recovery in the UI:
    - key invalid; permission denied; region unsupported;
    - rate limited, with a countdown; daily quota; billing required (a free-tier limit of 0);
    - model unavailable; safety blocked; recitation; truncated; schema invalid; no output;
    - network; timeout; cancelled; consent required; AI disabled.
 
-   "No key" is checked before any request (L02). At most 2 attempts are made, and only for network errors, 5xx responses and rate limits of 20 s or less (L03). Fixable errors record a pending action, which resumes when the key or models change.
+   "No key" is checked before any request. At most 2 attempts are made, and only for network errors, 5xx responses and rate limits of 20 s or less. Fixable errors record a pending action, which resumes when the key or models change.
 
-5. **Structured outputs only** (L04, L05).
+5. **Structured outputs only**.
    - Responses use `responseMimeType: application/json` with `responseJsonSchema` generated from the Zod schemas in `packages/schemas/src/ai.ts`. The schema is reduced to the documented subset: `anyOf` instead of `oneOf` or type arrays, single-value `enum` instead of `const`, and no length or pattern limits.
    - Each response is checked by the Zod parse, then by semantic validators:
      - IDs must come from the provided lists, and spans must be quoted from the note;
@@ -50,7 +50,7 @@ AI features must run on the person's own Gemini key, on their own device, and mu
    - Context is built as **sections**. Each section has a data category (`plants`, `space`, `climate`, `journal`, `photos`, `location`) and can be marked required or untrusted. Untrusted text is wrapped as `<user_data>`, and the wrapper cannot be closed early from inside.
    - The send preview renders exactly these sections. The person can switch optional categories off, and their choices are remembered per feature. Text that contains an API key is never sent.
    - Location is a city or region only; photos are re-encoded to at most 1536 px.
-7. **Features in M6.**
+7. **First AI features.**
    - **F1:** explains plan matches. Extra suggestions are shown only when PlantPal's own eligibility engine finds them eligible in this garden; for example, _Lantana camara_ is dropped in India.
    - **F2:** reads a Quick Capture note into proposals (care, notes, harvests, one-off tasks). They go into the same review list as the deterministic reader and are saved only on confirmation.
    - **F12:** suggests alt text for a stored photo; the person edits and confirms it. It also explains the Climate Fit figures in plain words.

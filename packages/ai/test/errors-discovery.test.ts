@@ -26,7 +26,7 @@ const quota = (quotaId: string, extra: object[] = []) => ({
   },
 });
 
-describe('error taxonomy (L02, L03)', () => {
+describe('error taxonomy', () => {
   it('classifies key, permission, billing, quota, rate and model errors distinctly', () => {
     expect(
       classifyGeminiError(400, {

@@ -1,11 +1,11 @@
-# Demo script — M6 (AI with your own Gemini key)
+# Guide: AI with your own Gemini key
 
 You need a Gemini API key from Google AI Studio (https://aistudio.google.com/apikey). For a demo without a key, run the Playwright suite (`pnpm --filter @plantpal/web e2e e2e/ai.spec.ts`), which mocks Gemini.
 
 1. **Add the key.** Settings › AI: paste the key, choose **Remember on this device** or **This session only**, then press **Check and save**.
    - PlantPal lists the models your key can use and picks one per role. Overrides are available.
    - The page shows what the key can do (text, photos, voice, images), today's usage, an optional daily soft cap, remembered send choices, a plain summary of the Gemini API terms, and the security limitation.
-   - A key saved by PlantPal v3 appears as "stored unencrypted", with **Move into the vault** and **Delete it**.
+   - A key saved by the earlier PlantPal app appears as "stored unencrypted", with **Move into the vault** and **Delete it**.
 2. **Explain matches (F1).** Plan › **Explain these matches**. The send preview lists the data categories: plants are needed; the space and household, the climate summary and the area (city only) are optional.
    - **Show exactly what is sent** reveals the text and PlantPal's instructions. Switch **Area** off and it disappears from the text.
    - **Send** shows "Why these plants" with a "Suggested by AI" badge, per-plant reasons, watch-outs and first steps, and "What I don't know".
@@ -29,4 +29,4 @@ Automated evidence:
 - **`pnpm eval`:** 124 replayed cases; all gates pass, with 0 prohibited claims and 0 ungrounded IDs. The cases are synthetic; live evaluation is `NOT_RUN`.
 - **Playwright (`e2e/ai.spec.ts`, both viewports):**
   - `ai/key-never-leaves-device`: the key appears only in the `x-goog-api-key` header of Gemini requests, never in a URL, body or other request, never in localStorage, sessionStorage, cookies, any IndexedDB database or Cache Storage, and never in a full backup;
-  - pending-action resume, rate-limit countdown, Quick Capture proposals, key-in-text blocking, the AI switch, v3 key import, and axe checks.
+  - pending-action resume, rate-limit countdown, Quick Capture proposals, key-in-text blocking, the AI switch, importing a key from the earlier app, and axe checks.

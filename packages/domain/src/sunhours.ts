@@ -3,7 +3,7 @@ import type { LocalDate } from './dates';
 import { sunPosition } from './solar';
 
 /**
- * Sun Hours Finder (master prompt §6.2): direct-sun hours for one spot, from the sun's path and the
+ * Sun Hours Finder (§6.2): direct-sun hours for one spot, from the sun's path and the
  * spot's obstruction horizon. Direct-sun hours are not day length, illuminance, PPFD or DLI (S4).
  */
 

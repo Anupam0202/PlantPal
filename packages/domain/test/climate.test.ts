@@ -65,7 +65,7 @@ describe('normals', () => {
   });
 });
 
-describe('L09: hardiness and frost dates', () => {
+describe('hardiness and frost dates', () => {
   it('uses the mean annual extreme minimum, not the coldest monthly mean', () => {
     const s = series({ from: 1991, to: 2020, meanC: 11, ampC: 7, coldDoy: 20, yearlyMinC: -6 });
     const h = hardiness(s, 1991, 2020);
@@ -106,7 +106,7 @@ describe('L09: hardiness and frost dates', () => {
   });
 });
 
-describe('L09: Köppen–Geiger (Peel et al. 2007)', () => {
+describe('Köppen–Geiger (Peel et al. 2007)', () => {
   it.each([
     [
       'London',
@@ -168,7 +168,7 @@ describe('L09: Köppen–Geiger (Peel et al. 2007)', () => {
   });
 });
 
-describe('L08: climate deltas', () => {
+describe('climate deltas', () => {
   const model = (name: string, warming: number, wetter: number) => {
     const base = series({ from: 1991, to: 2020, meanC: 20, ampC: 5, coldDoy: 15, precipMm: 2 });
     const fut = series({

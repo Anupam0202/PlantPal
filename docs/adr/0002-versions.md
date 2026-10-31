@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-10-27
 
-Versions installed and verified in the build sandbox for the v4 upgrade (lockfile `pnpm-lock.yaml` is authoritative).
+Versions installed and verified when the project was set up (lockfile `pnpm-lock.yaml` is authoritative).
 
 | Package                   | Version  |
 | ------------------------- | -------- |
@@ -49,6 +49,6 @@ Versions installed and verified in the build sandbox for the v4 upgrade (lockfil
 
 - **TypeScript 6.0**, not 7.0: `typescript-eslint` 8.72 supports TypeScript `< 6.1`.
 - **ESLint 9**, not 10: `eslint-plugin-jsx-a11y` 6.10 declares ESLint ≤ 9.
-- **Playwright 1.63** matches the preinstalled Chromium build in the sandbox and CI installs its own browser.
+- **Playwright 1.63** matches the Chromium build used in development; CI installs its own browser.
 - **Base UI** is published as `@base-ui/react` (the old `@base-ui-components/react` name is retired).
 - Node 22 LTS and pnpm 10.28 (`packageManager` field).

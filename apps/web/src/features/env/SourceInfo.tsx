@@ -5,7 +5,7 @@ import { AlertTriangle, Info, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { useFormat, useT } from '../../i18n';
 
-/** Freshness chip for one source: loading, up to date, stale, unavailable (with retry) or demo (L07). */
+/** Freshness chip for one source: loading, up to date, stale, unavailable (with retry) or demo. */
 export function SourceState({
   provenance,
   isPending,

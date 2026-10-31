@@ -36,7 +36,7 @@ jobs:
         run: pnpm eval
       - run: pnpm test
       - run: pnpm build
-      - name: Scan build output for secrets (L01)
+      - name: Scan build output for secrets
         run: pnpm check:dist
       - name: Bundle budgets
         run: pnpm check:bundle

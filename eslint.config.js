@@ -41,7 +41,7 @@ export default tseslint.config(
         'error',
         {
           selector: "JSXAttribute[name.name='dangerouslySetInnerHTML']",
-          message: 'Render text as text. Raw HTML is not allowed (master prompt §19).',
+          message: 'Render text as text. Raw HTML is not allowed (§19).',
         },
       ],
       'no-restricted-properties': [
@@ -69,7 +69,7 @@ export default tseslint.config(
     rules: { 'no-restricted-properties': 'off' },
   },
   {
-    // Browser tests seed v3 data and preferences in localStorage; Playwright fixtures call `use()`.
+    // Browser tests seed earlier PlantPal data and preferences in localStorage; Playwright fixtures call `use()`.
     files: ['apps/web/e2e/**'],
     rules: { 'no-restricted-properties': 'off', 'react-hooks/rules-of-hooks': 'off' },
   },

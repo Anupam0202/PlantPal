@@ -1,4 +1,4 @@
-# Demo script — M5 (care engine and climate)
+# Guide: Care and climate
 
 Use a fresh browser profile, or demo mode (`VITE_PROVIDERS=mock pnpm --filter @plantpal/web dev`).
 
@@ -24,5 +24,5 @@ Automated evidence:
   - water balance property tests (bounded storage, covered pots get no rain, unknown is not zero), recalibration bounds, and tank mass conservation;
   - alert triggers and suppression;
   - season model for seven reference cities, and sowing windows;
-  - care commands, and the Dexie v4 upgrade.
+  - care commands, and the local database upgrade to schema version 4.
 - **Playwright:** the W3 loop with frost guidance, skip and undo, Climate Fit with projections, the calendar, and a phone-width check on every key page.

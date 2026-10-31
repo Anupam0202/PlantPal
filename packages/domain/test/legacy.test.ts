@@ -12,7 +12,7 @@ describe('legacy migration plan (W11)', () => {
   const { records } = plan;
   const codes = (code: string) => plan.problems.filter((p) => p.code === code);
 
-  it('detects v3 data and reports counts per type', () => {
+  it('detects earlier PlantPal data and reports counts per type', () => {
     expect(plan.detected).toBe(true);
     expect(plan.counts.plants).toEqual({ found: 6, migrated: 4, skipped: 2 });
     expect(plan.counts.journal).toEqual({ found: 11, migrated: 10, skipped: 1 });
@@ -194,7 +194,7 @@ describe('legacy migration plan (W11)', () => {
     expect(records.drafts.map((d) => d.kind).sort()).toEqual(['community-pin', 'exchange-listing']);
   });
 
-  it('snapshots legacy achievements read-only and keeps the theme', () => {
+  it('snapshots earlier achievements read-only and keeps the theme', () => {
     expect(plan.achievements).toEqual({
       xp: 640,
       level: 3,
@@ -219,7 +219,7 @@ describe('legacy migration plan (W11)', () => {
     expect(p.detected).toBe(false);
   });
 
-  it('detects nothing when there is no v3 data', () => {
+  it('detects nothing when there is no earlier PlantPal data', () => {
     const p = planLegacyMigration({ 'pp-prefs': '{}' }, ctx);
     expect(p.detected).toBe(false);
     expect(Object.values(p.records).flat()).toHaveLength(0);

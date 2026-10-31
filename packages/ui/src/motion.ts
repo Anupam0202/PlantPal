@@ -1,4 +1,4 @@
-/** Motion tokens (master prompt §9.2). Durations are seconds for Motion; CSS uses the --ease-* tokens. */
+/** Motion tokens (§9.2). Durations are seconds for Motion; CSS uses the --ease-* tokens. */
 export const duration = { instant: 0.08, quick: 0.15, base: 0.22, gentle: 0.32, scenic: 0.6 } as const;
 
 export const ease = {

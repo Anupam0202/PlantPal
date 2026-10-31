@@ -31,7 +31,7 @@ export function archiveUrl(lat: number, lon: number, startYear = 1991, endYear =
   return `${ARCHIVE_ENDPOINT}?${q.toString()}`;
 }
 
-/** The Climate API covers 1950–2050 and has no scenario parameter (L08); other years are refused here. */
+/** The Climate API covers 1950–2050 and has no scenario parameter; other years are refused here. */
 export function climateUrl(
   lat: number,
   lon: number,

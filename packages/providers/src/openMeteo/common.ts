@@ -18,7 +18,7 @@ export function localToEpoch(local: string, offsetSeconds: number): number {
 }
 
 /**
- * The value at the hour nearest to `now` that actually has data (L11) — never simply the last element,
+ * The value at the hour nearest to `now` that actually has data — never simply the last element,
  * and never a missing value turned into zero.
  */
 export function nearestValid(

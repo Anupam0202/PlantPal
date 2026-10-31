@@ -1,4 +1,4 @@
--- Accounts, sharing and sync (M10, ADR-0013). Mirrors packages/db/src/schema.ts.
+-- Accounts, sharing and sync (ADR-0013). Mirrors packages/db/src/schema.ts.
 CREATE TABLE IF NOT EXISTS workspaces (
   id TEXT PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,

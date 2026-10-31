@@ -27,7 +27,7 @@ export function provenance(
   };
 }
 
-/** A finite number or `null` — never a default of 0 (S2, L11). */
+/** A finite number or `null` — never a default of 0 (S2). */
 export function num(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }

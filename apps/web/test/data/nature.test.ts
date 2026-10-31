@@ -164,7 +164,7 @@ describe('harvest and pantry', () => {
   });
 });
 
-describe('Dexie v7 upgrade', () => {
+describe('local database upgrade to schema version 7', () => {
   it('adds the nature and pantry tables without touching v6 data', async () => {
     const name = 'pp-upgrade-v7';
     await Dexie.delete(name);

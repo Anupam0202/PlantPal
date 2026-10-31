@@ -21,7 +21,7 @@ import { usePrefs } from '../state/prefs';
 import { useCapture } from '../state/capture';
 import { destinations } from './nav';
 
-/** ⌘K / Ctrl+K palette: navigation and quick commands (master prompt §5.3). */
+/** ⌘K / Ctrl+K palette: navigation and quick commands (§5.3). */
 export function CommandPalette({
   open,
   onOpenChange,

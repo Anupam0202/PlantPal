@@ -5,7 +5,7 @@
 
 ## Context
 
-M9 covers several features:
+This decision covers several features:
 
 - the Nature Log, with timed counts and phenology checks (§6.10, W7);
 - the Bloom Bridge (§6.9);
@@ -20,7 +20,7 @@ The science rules decide most of the design:
 - **S2:** missing is not zero, and "checked and absent" is not "not checked".
 - **S8:** records reflect effort, and only compatible visits are compared.
 - **S9:** unknown status is unknown.
-- **S12 and L16:** no carbon numbers without a cited method.
+- **S12:** no carbon numbers without a cited method.
 - **S16:** PlantPal does not guess food safety.
 
 ## Decisions
@@ -66,12 +66,12 @@ The science rules decide most of the design:
    - Planned plants are included, so an invasive is flagged before it is planted.
    - The words "not invasive" never appear.
 6. **Nature nearby.**
-   - iNaturalist species counts come from research-grade observations, grouped by `iconic_taxa` (Insecta, Aves, Plantae). Numeric taxon ids could not be verified from this sandbox, so they are not hard-coded. Insects are labelled "including pollinators".
+   - iNaturalist species counts come from research-grade observations, grouped by `iconic_taxa` (Insecta, Aves, Plantae). Numeric taxon ids could not be verified during development, so they are not hard-coded. Insects are labelled "including pollinators".
    - GBIF occurrence counts come from CC0 and CC BY records only. Records and species are kept apart.
    - Only a point rounded to about 5 km and a radius of 1–5 km leave the device.
    - Both providers are called from the browser like the other open APIs, cached in IndexedDB, and labelled when the data is demo data.
 7. **Harvest and pantry.**
-   - Harvests are entered as a weight (g, kg, oz or lb, stored as grams) or as a count with its own label. Totals stay per dimension, so "0.45 kg · 3 bunches" never becomes one number (L15).
+   - Harvests are entered as a weight (g, kg, oz or lb, stored as grams) or as a count with its own label. Totals stay per dimension, so "0.45 kg · 3 bunches" never becomes one number.
    - A harvest can go straight to the pantry (`PantryItem`, versioned).
    - Pantry states are fresh, stored, preserved, given, composted and wasted. Given, composted and wasted are final.
    - Use-by dates are only the person's own (S16). Today shows a "Use soon" notice two days ahead.
@@ -96,10 +96,10 @@ The science rules decide most of the design:
 
 ## Deferred
 
-- **Exchange listings, reservations and handoffs (W8 after the pantry):** need accounts and the community flag (M10–M11).
-- **Seed lots and the propagation family tree:** M11, with the exchange.
+- **Exchange listings, reservations and handoffs (W8 after the pantry):** need accounts and the community flag (ADR-0013, ADR-0014).
+- **Seed lots and the propagation family tree:** with the exchange (ADR-0014).
 - **AI recipes and storage guidance:** need user-confirmed edible identities and sourced storage data (S16).
 - **Avoided-emissions ranges for composting:** need a cited factor set (for example US EPA WARM) reviewed before any number is shown.
-- **Garden Story** (M12), group ledgers (with accounts), optional iNaturalist upload (COND), on-device bird sound ID (EXP).
+- **Garden Story** (ADR-0016), group ledgers (with accounts), optional iNaturalist upload (COND), on-device bird sound ID (EXP).
 - **Larval-host and bird-food rings on the wheel:** the catalogue has no sourced data for them yet.
 - **iNaturalist flowering-annotation histograms:** the annotation term ids need verifying.
