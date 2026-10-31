@@ -3,6 +3,8 @@ import { expect } from './helpers';
 
 /** A key-shaped test value built at runtime (no key-like literal is committed). */
 export const KEY = 'AIza' + 'Sy' + 'E2E'.repeat(11);
+/** A key in the newer `AQ.` format that Google AI Studio issues now. */
+export const AQ_KEY = 'AQ' + '.Ab' + 'E2e9'.repeat(13);
 export const GEMINI = 'https://generativelanguage.googleapis.com/';
 
 const MODELS = [
@@ -48,7 +50,8 @@ export async function mockGemini(page: Page) {
   await page.route(`${GEMINI}**`, async (route) => {
     const req = route.request();
     if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (req.headers()['x-goog-api-key'] !== KEY)
+    const sent = req.headers()['x-goog-api-key'];
+    if (sent !== KEY && sent !== AQ_KEY)
       return route.fulfill({
         status: 400,
         headers: cors,

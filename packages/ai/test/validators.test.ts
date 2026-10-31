@@ -13,10 +13,16 @@ import {
   UsageMeter,
   userData,
 } from '../src';
+import { FAKE_AQ_KEY, FAKE_KEY } from './helpers';
 
 const kinds = (t: string) => prohibitedClaims(t).map((h) => h.kind);
 
 describe('prohibited claims', () => {
+  it('flags an echoed API key in either format', () => {
+    expect(kinds(`Your key is ${FAKE_KEY}`)).toContain('api-key');
+    expect(kinds(`Your key is ${FAKE_AQ_KEY}`)).toContain('api-key');
+  });
+
   it.each([
     ['These berries are edible.', 'edibility'],
     ['Yes, it is safe to eat.', 'edibility'],

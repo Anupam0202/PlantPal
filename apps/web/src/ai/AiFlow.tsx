@@ -1,4 +1,4 @@
-import { renderSection, type ContextSection } from '@plantpal/ai';
+import { containsApiKey, renderSection, type ContextSection } from '@plantpal/ai';
 import type { AiDataCategory } from '@plantpal/schemas';
 import { Badge, Button, buttonClasses, Card, CheckboxField, Notice, Skeleton } from '@plantpal/ui';
 import { Link } from '@tanstack/react-router';
@@ -23,7 +23,6 @@ const NO_RETRY = new Set([
   'SAFETY_BLOCKED',
   'RECITATION',
 ]);
-const KEY_RE = /AIza[0-9A-Za-z_-]{35}/;
 
 function useCountdown(ms: number | null): number {
   const [left, setLeft] = useState(() => (ms ? Math.ceil(ms / 1000) : 0));
@@ -146,7 +145,7 @@ export default function AiFlowPanel({ ai, fallback }: { ai: AiAction<unknown>; f
     ai.sections.filter((s) => s.required && s.category !== 'request').map((s) => s.category),
   );
   const missing = [...required].filter((c) => !ai.allowed.includes(c as AiDataCategory)) as AiDataCategory[];
-  const keyInText = ai.sections.some((s) => s.text && KEY_RE.test(s.text));
+  const keyInText = ai.sections.some((s) => s.text && containsApiKey(s.text));
   const toggle = (c: AiDataCategory, on: boolean) =>
     ai.setAllowed(on ? [...ai.allowed, c] : ai.allowed.filter((x) => x !== c));
 

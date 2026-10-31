@@ -94,13 +94,32 @@ export function classifyGeminiError(
   return new AiError('SCHEMA_INVALID', msg, { status, detail: e.status });
 }
 
-const KEY_RE = /AIza[0-9A-Za-z_-]{35}/g;
+/**
+ * Shapes of Google API keys: the older `AIza…` keys and the `AQ.…` keys Google AI Studio issues now.
+ * Used only to keep keys out of prompts, logs and builds. Whether a key works is decided by Google.
+ */
+const KEY_SOURCE = String.raw`AIza[0-9A-Za-z_-]{35}|AQ\.[0-9A-Za-z_-]{30,}`;
+
+/** A new global pattern that matches key-shaped strings. */
+export function apiKeyPattern(): RegExp {
+  return new RegExp(KEY_SOURCE, 'g');
+}
+
+/** True when the text contains anything shaped like a Google API key. */
+export function containsApiKey(text: string): boolean {
+  return new RegExp(KEY_SOURCE).test(text);
+}
 
 /** Removes anything shaped like a Google API key from text (defence in depth for logs and reports). */
 export function redactKeys(text: string): string {
-  return text.replace(KEY_RE, 'AIza…[redacted]');
+  return text.replace(apiKeyPattern(), (k) => `${k.startsWith('AQ.') ? 'AQ.' : 'AIza'}…[redacted]`);
 }
 
+/**
+ * A light check before asking Google: one token of a plausible length, with no spaces or quotes.
+ * It assumes no prefix, because Google changes key formats (`AIza…`, now `AQ.…`); the real check is
+ * asking Google which models the key can use.
+ */
 export function looksLikeGeminiKey(value: string): boolean {
-  return /^AIza[0-9A-Za-z_-]{35}$/.test(value.trim());
+  return /^[0-9A-Za-z._-]{20,512}$/.test(value.trim());
 }

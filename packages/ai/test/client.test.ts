@@ -8,7 +8,7 @@ import {
   type PlanExplainInput,
   type UsageRecord,
 } from '../src';
-import { FAKE_KEY, geminiText, jsonResponse, replayFetch } from './helpers';
+import { FAKE_AQ_KEY, FAKE_KEY, geminiText, jsonResponse, replayFetch } from './helpers';
 
 const policy = { locale: 'en', units: 'metric', seasonModel: 'monsoon' } as const;
 
@@ -341,6 +341,33 @@ describe('GeminiClient.generateStructured', () => {
     };
     const err = await c.generateStructured(captureParseV1, input).catch((e: AiError) => e);
     expect(err).toBeInstanceOf(AiError);
+    expect((err as AiError).opts.detail).toBe('API_KEY_IN_INPUT');
+    expect(calls).toHaveLength(0);
+  });
+
+  it('refuses a note that contains a key in the newer AQ. format', async () => {
+    const { c, calls } = client([]);
+    const input: CaptureParseInput = {
+      policy,
+      text: `key ${FAKE_AQ_KEY}`,
+      today: '2026-10-29',
+      specimens: [],
+    };
+    const err = await c.generateStructured(captureParseV1, input).catch((e: AiError) => e);
+    expect((err as AiError).opts.detail).toBe('API_KEY_IN_INPUT');
+    expect(calls).toHaveLength(0);
+  });
+
+  it('refuses a note that contains the saved key, whatever its format', async () => {
+    const unusual = 'zz' + '9Q'.repeat(15);
+    const { c, calls } = client([], { getKey: async () => unusual });
+    const input: CaptureParseInput = {
+      policy,
+      text: `paste: ${unusual}`,
+      today: '2026-10-29',
+      specimens: [],
+    };
+    const err = await c.generateStructured(captureParseV1, input).catch((e: AiError) => e);
     expect((err as AiError).opts.detail).toBe('API_KEY_IN_INPUT');
     expect(calls).toHaveLength(0);
   });

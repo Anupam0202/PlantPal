@@ -4,12 +4,13 @@ import {
   AiError,
   capabilitiesOf,
   classifyGeminiError,
+  containsApiKey,
   listModels,
   looksLikeGeminiKey,
   pickModels,
   redactKeys,
 } from '../src';
-import { FAKE_KEY, jsonResponse, replayFetch } from './helpers';
+import { FAKE_AQ_KEY, FAKE_KEY, jsonResponse, replayFetch } from './helpers';
 
 const quota = (quotaId: string, extra: object[] = []) => ({
   error: {
@@ -84,10 +85,24 @@ describe('error taxonomy', () => {
     expect(new AiError('SAFETY_BLOCKED', '').fixableInSettings).toBe(false);
   });
 
-  it('redacts anything shaped like a key', () => {
+  it('redacts anything shaped like a key, in either format', () => {
     expect(redactKeys(`oops ${FAKE_KEY} leaked`)).toBe('oops AIza…[redacted] leaked');
+    expect(redactKeys(`oops ${FAKE_AQ_KEY} leaked`)).toBe('oops AQ.…[redacted] leaked');
+    expect(containsApiKey(`key: ${FAKE_AQ_KEY}`)).toBe(true);
+    expect(containsApiKey('Plant AQ. near the wall, then water.')).toBe(false);
+  });
+
+  it('accepts any plausible key before asking Google, whatever its prefix', () => {
     expect(looksLikeGeminiKey(FAKE_KEY)).toBe(true);
+    expect(looksLikeGeminiKey(FAKE_AQ_KEY)).toBe(true);
+    // A future format Google has not announced yet still goes to Google for the real check.
+    expect(looksLikeGeminiKey('XY.' + 'k3y'.repeat(12))).toBe(true);
+    expect(looksLikeGeminiKey(`  ${FAKE_AQ_KEY}\n`)).toBe(true);
+    // Obvious paste mistakes are caught here.
     expect(looksLikeGeminiKey('sk-123')).toBe(false);
+    expect(looksLikeGeminiKey(`"${FAKE_AQ_KEY}"`)).toBe(false);
+    expect(looksLikeGeminiKey(`GEMINI_API_KEY ${FAKE_AQ_KEY}`)).toBe(false);
+    expect(looksLikeGeminiKey('')).toBe(false);
   });
 });
 

@@ -199,9 +199,9 @@ function AiSettingsPage() {
                   setError(null);
                 }}
                 autoComplete="off"
-                placeholder="AIza…"
+                placeholder={t.placeholder}
                 error={error ?? undefined}
-                maxLength={60}
+                maxLength={512}
               />
               <div className="flex flex-col gap-2">
                 <span className="text-body-s font-medium text-ink">{t.mode}</span>
