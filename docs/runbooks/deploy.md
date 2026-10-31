@@ -1,6 +1,6 @@
 # Deploy
 
-The Worker (`apps/api`) serves the built web app and the API from one origin. Vercel builds previews of the web app from every push (static, direct provider mode, no accounts).
+The Worker (`apps/api`) serves the built web app and the API from one origin. The owner's Vercel project builds a preview of the web app from every push and publishes `main` to its production address (static, direct provider mode, no accounts or server features).
 
 ## One-time setup (owner)
 

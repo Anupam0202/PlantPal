@@ -1,6 +1,6 @@
 # PlantPal v4 "Living Field Guide": final report (§25.2)
 
-Date: 2026-10-30 · Merged into `main` through PR #1. Build status: **not yet `PILOT_READY`**; nothing is deployed.
+Date: 2026-10-30 · Merged into `main` through PR #1. Build status: **not yet `PILOT_READY`**. The owner's Vercel project publishes the web app from `main` (static, direct provider mode, no accounts or server features); the Worker API is not deployed.
 
 ## 1. Delivered and verified
 
