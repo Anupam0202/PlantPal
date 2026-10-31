@@ -150,7 +150,7 @@ describe('layouts', () => {
   });
 });
 
-describe('Dexie v6 upgrade', () => {
+describe('local database upgrade to schema version 6', () => {
   it('adds layout tables without touching v5 data', async () => {
     const name = 'pp-upgrade-v6';
     await Dexie.delete(name);

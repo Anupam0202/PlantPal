@@ -1405,7 +1405,7 @@ function errorCases(): EvalCase[] {
   ];
 }
 
-// ── M7: F4 health triage, F5 photo ID, F3 species drafts ────────────────────────────────────────
+// ── F4 health triage, F5 photo ID, F3 species drafts ────────────────────────────────────────
 
 const healthIn = (over: Partial<HealthTriageInput> = {}): HealthTriageInput => ({
   policy: pol('temperate'),

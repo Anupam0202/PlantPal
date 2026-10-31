@@ -4,7 +4,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useT } from '../i18n';
 import { useDrafts } from '../state/drafts';
 
-/** Shows "update ready" and never reloads while a draft is dirty (master prompt §14.5). */
+/** Shows "update ready" and never reloads while a draft is dirty (§14.5). */
 export function UpdatePrompt() {
   const t = useT();
   const dirty = useDrafts((s) => s.dirtyCount > 0);

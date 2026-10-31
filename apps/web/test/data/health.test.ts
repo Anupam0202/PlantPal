@@ -125,7 +125,7 @@ describe('health cases', () => {
     await expect(addCaseEntry(hc.id, 1, { kind: 'note', by: 'user' })).rejects.toThrow();
   });
 
-  it('legacy health cases (v3 scans) still parse with the new optional fields', async () => {
+  it('health cases imported from the earlier app still parse with the new optional fields', async () => {
     const legacy = {
       id: '01JB0000000000000000000000',
       workspaceId: '01JB0000000000000000000001',
@@ -193,25 +193,25 @@ describe('species drafts (F3 curator queue)', () => {
   });
 });
 
-describe('Dexie v5 upgrade', () => {
-  it('adds the species drafts table without touching v4 data', async () => {
+describe('local database upgrade to schema version 5', () => {
+  it('adds the species drafts table without touching schema version 4 data', async () => {
     const name = 'pp-upgrade-v5';
     await Dexie.delete(name);
-    const v4 = new Dexie(name);
+    const older = new Dexie(name);
     const { STORES_V1 } = await import('../../src/data/db');
-    v4.version(1).stores(STORES_V1);
-    v4.version(2).stores({ facts: 'key, expiresAt' });
-    v4.version(3).stores({
+    older.version(1).stores(STORES_V1);
+    older.version(2).stores({ facts: 'key, expiresAt' });
+    older.version(3).stores({
       plans: 'id, gardenId, workspaceId',
       planItems: 'id, planId, gardenId, workspaceId, taxonId',
     });
-    v4.version(4).stores({
+    older.version(4).stores({
       careSchedules: 'id, gardenId, specimenId, workspaceId',
       taskLogs: 'id, &opId, gardenId, specimenId, occurrenceKey, at, workspaceId',
     });
-    await v4.open();
-    await v4.table('meta').put({ key: 'x', value: 1 });
-    v4.close();
+    await older.open();
+    await older.table('meta').put({ key: 'x', value: 1 });
+    older.close();
     const v5 = createDb(name);
     await v5.open();
     expect(v5.verno).toBeGreaterThanOrEqual(5);

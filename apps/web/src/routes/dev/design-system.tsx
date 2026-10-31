@@ -73,7 +73,7 @@ function Gallery() {
     <Page width="wide">
       <PageHeader
         eyebrow="Design system"
-        title="Living Field Guide"
+        title="Design system"
         description="Every component in light, dark and high-contrast themes via Settings."
       />
       <div className="mt-8 grid gap-8 lg:grid-cols-2">

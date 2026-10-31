@@ -49,7 +49,7 @@ export const Route = createFileRoute('/settings/migrate')({
 
 const SEVERITY_TONE = { info: 'info', warning: 'warning', error: 'danger' } as const;
 
-/** Which category a v3 storage key belongs to, for labelling problems. */
+/** Which category an earlier-app storage key belongs to, for labelling problems. */
 const CATEGORY_BY_KEY: Record<string, LegacyCategory> = {
   [LEGACY_KEYS.gardens]: 'gardens',
   [LEGACY_KEYS.zones]: 'zones',
@@ -105,7 +105,7 @@ function MigratePage() {
         const backup = buildLegacyBackup(raw, new Date().toISOString());
         downloadBlob(
           new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }),
-          `plantpal-v3-backup-${backup.exportedAt.slice(0, 10)}.json`,
+          `plantpal-earlier-data-backup-${backup.exportedAt.slice(0, 10)}.json`,
         );
         await markBackupTaken();
       }

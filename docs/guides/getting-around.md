@@ -1,4 +1,4 @@
-# Demo script — M1 (monorepo and design foundations)
+# Guide: Getting around the app
 
 1. `pnpm install && pnpm --filter @plantpal/web build && pnpm --filter @plantpal/web preview`
 2. Open `/` → redirects to **Today**. On a phone-sized window the bottom navigation shows five destinations; on desktop a navigation rail appears (labels at ≥ 1280 px).

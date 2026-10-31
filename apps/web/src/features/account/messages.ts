@@ -1,7 +1,7 @@
 import type { Role } from '@plantpal/sync';
 import { usePrefs, type LocalePref } from '../../state/prefs';
 
-/** Accounts, sync, sharing and plant-sitter links (M10). */
+/** Accounts, sync, sharing and plant-sitter links. */
 const en = {
   account: {
     title: 'Account & sync',

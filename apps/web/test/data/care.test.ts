@@ -181,9 +181,9 @@ describe('task log', () => {
   });
 });
 
-describe('Dexie upgrade to v4', () => {
-  it('opens a v3 database and adds the care tables', async () => {
-    const name = 'plantpal-upgrade-v4';
+describe('local database upgrade to schema version 4', () => {
+  it('opens a schema version 3 database and adds the care tables', async () => {
+    const name = 'plantpal-upgrade-schema-4';
     await Dexie.delete(name);
     const old = new Dexie(name);
     old.version(1).stores(STORES_V1);

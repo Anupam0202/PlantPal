@@ -1,4 +1,4 @@
--- Web Push subscriptions (M10). One row per browser. Endpoints are capability URLs: kept private,
+-- Web Push subscriptions. One row per browser. Endpoints are capability URLs: kept private,
 -- never logged, and only ever called with an encrypted payload.
 CREATE TABLE push_subscriptions (
   id TEXT PRIMARY KEY,

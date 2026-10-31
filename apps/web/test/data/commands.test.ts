@@ -213,7 +213,7 @@ describe('local garden commands', () => {
     expect((await db.containers.get(c.id))?.deletedAt).toBe(NOW + 1);
   });
 
-  it('L14: archiving a plant never blocks adding the same plant again, and counts stay honest', async () => {
+  it('archiving a plant never blocks adding the same plant again, and counts stay honest', async () => {
     const g = await createGarden(gardenInput, NOW);
     const first = await createSpecimen(g.id, plant(), NOW);
     await setSpecimenStatus(first.id, 1, 'archived', 'Finished for the season', NOW + 1);

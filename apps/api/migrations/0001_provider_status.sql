@@ -1,4 +1,4 @@
--- Provider health and kill switches (master prompt §15.1).
+-- Provider health and kill switches (§15.1).
 CREATE TABLE IF NOT EXISTS provider_status (
   provider TEXT PRIMARY KEY NOT NULL,
   enabled INTEGER DEFAULT 1 NOT NULL CHECK (enabled IN (0, 1)),

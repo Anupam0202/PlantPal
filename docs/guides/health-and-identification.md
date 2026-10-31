@@ -1,4 +1,4 @@
-# Demo script — M7 (health and identification)
+# Guide: Health and identification
 
 Demo mode works for everything except AI (`VITE_PROVIDERS=mock pnpm --filter @plantpal/web dev`). The AI steps need a Gemini key in Settings › AI; the Playwright suite mocks Gemini.
 
@@ -41,7 +41,7 @@ Automated evidence:
   - F4, F5 and F3 validators: abstention, percentages, chemical steps, binomial names, citations outside the grounding set, edibility;
   - grounded research request and sources;
   - GBIF match, Commons licence filter, HTML stripping and Wikidata names;
-  - health case and species draft commands, legacy cases parsing with new defaults, and the Dexie v5 upgrade.
+  - health case and species draft commands, cases from the earlier app parsing with new defaults, and the local database upgrade to schema version 5.
 - **`pnpm eval`:** 160 cases, including 19 F4, 10 F5 and 7 F3 cases (partial JSON, abstention, consent denied, injection in notes). All gates pass.
 - **Playwright (both viewports):**
   - W5 health case end to end, including that no GPS data reaches Gemini;

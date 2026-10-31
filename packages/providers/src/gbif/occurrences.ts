@@ -24,7 +24,7 @@ export interface NearbySummary {
 }
 
 /**
- * Occurrence search within a true radius (`geoDistance`), not a lat/lon rectangle (L10), with records,
+ * Occurrence search within a true radius (`geoDistance`), not a lat/lon rectangle, with records,
  * distinct taxa and licences kept apart.
  */
 export function nearbyUrl(

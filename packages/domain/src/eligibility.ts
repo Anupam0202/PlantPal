@@ -11,7 +11,7 @@ import { GOALS, type INDOOR_LIGHT } from '@plantpal/schemas';
 import { growingMonths } from './sunhours';
 
 /**
- * Recommendation and eligibility engine (master prompt §17). Hard rules E1–E7 decide status; the soft
+ * Recommendation and eligibility engine (§17). Hard rules E1–E7 decide status; the soft
  * score only ranks eligible plants and can never override a hard rule. Results are deterministic.
  */
 
@@ -35,7 +35,7 @@ export interface ZoneFacts {
   /** Plants grow in containers (roots less protected from cold). */
   containers: boolean;
   rooftop: boolean;
-  /** Direct-sun hours on the 21st of each month, January first. Null when unknown — never 0 by default (L21). */
+  /** Direct-sun hours on the 21st of each month, January first. Null when unknown — never 0 by default. */
   sunMonthly: number[] | null;
   indoorLight: IndoorLightLevel | null;
   areaM2: number | null;
@@ -44,7 +44,7 @@ export interface ZoneFacts {
 }
 
 export interface ClimateFacts {
-  /** Mean annual extreme minimum temperature, °C (L09). */
+  /** Mean annual extreme minimum temperature, °C. */
   extremeMinC: number | null;
   /** Where the value came from: measured series or the user's answers to the manual questions. */
   basis: 'measured' | 'manual' | null;
@@ -287,7 +287,7 @@ function e4(t: Taxon, ctx: EligibilityContext, out: Finding[]): { lo: number; hi
     const season = trait(t, 'sowSeason') ?? 'any';
     const months = isPerennial(t) ? growingMonths('any', ctx.lat ?? 0) : growingMonths(season, ctx.lat ?? 0);
     const values = months.map((m) => z.sunMonthly?.[m] ?? 0);
-    // Preserve 0: Math.min/max of real numbers, never a truthy default (L21).
+    // Preserve 0: Math.min/max of real numbers, never a truthy default.
     const lo = Math.min(...values);
     const hi = Math.max(...values);
     if (hi < sun.min)

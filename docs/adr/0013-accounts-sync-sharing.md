@@ -1,12 +1,12 @@
-# ADR-0013: Accounts, sync, sharing, realtime and Web Push (M10)
+# ADR-0013: Accounts, sync, sharing, realtime and Web Push
 
 - Status: Accepted
 - Date: 2026-10-30
-- Milestone: M10 (§6.11, §14, §21)
+- Specification: §6.11, §14, §21
 
 ## Context
 
-PlantPal is local-first: everything works without an account (ADR-0005). M10 adds optional accounts so a person can back up their gardens, use them on several devices, share them with a household (owner, gardener, helper, viewer) and hand them to a plant-sitter for a trip. The constraints:
+PlantPal is local-first: everything works without an account (ADR-0005). PlantPal offers optional accounts so a person can back up their gardens, use them on several devices, share them with a household (owner, gardener, helper, viewer) and hand them to a plant-sitter for a trip. The constraints:
 
 - Free tier (Workers, D1, Durable Objects).
 - No passwords, and no email unless the owner configures it.
@@ -98,7 +98,7 @@ What it does:
 - **Subscriptions are accepted only for known browser push services** (FCM, Mozilla, Apple, Windows), so the server never calls arbitrary URLs (SSRF). Gone subscriptions (404/410) are deleted on the next send.
 - **Opt-in per device.** Permission is asked only on a tap. iPhone and iPad get the Home Screen hint (iOS 16.4+).
 - **Off until configured.** Push stays off until `VAPID_PUBLIC_KEY` (var) and `VAPID_PRIVATE_KEY` (secret) exist; `pnpm --filter @plantpal/api vapid:keys` makes a pair.
-- **Only the test notification ships in M10.** The care-due digest and invitation notices come with the scheduled digest work.
+- **Only the test notification ships so far.** The care-due digest and invitation notices come with the scheduled digest work.
 
 ## Verification
 

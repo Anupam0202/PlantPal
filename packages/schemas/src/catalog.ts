@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Evidence } from './primitives';
 
 /**
- * Catalogue facts (master prompt §17.4). Every trait assertion carries a unit (when numeric), an
+ * Catalogue facts (§17.4). Every trait assertion carries a unit (when numeric), an
  * evidence grade and a source; `tools/validate-catalog` fails the build otherwise.
  */
 export const Source = z.object({
@@ -128,7 +128,7 @@ export const ToxicityAssertion = z.object({
 export type ToxicityAssertion = z.infer<typeof ToxicityAssertion>;
 
 export const Taxon = z.object({
-  /** Stable slug, never derived from AI output (L30). */
+  /** Stable slug, never derived from AI output. */
   id: z.string().regex(/^[a-z0-9-]+$/),
   scientificName: z.string().min(3),
   family: z.string().min(3),

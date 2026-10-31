@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Evidence } from './primitives';
 
 /**
- * A provider value with provenance (master prompt §13.3). `value: null` means unknown — never zero (S2).
+ * A provider value with provenance (§13.3). `value: null` means unknown — never zero (S2).
  * Times are ISO 8601 strings; `phenomenonTime` is when the value applies, `retrievedAt` when we fetched it.
  */
 export const Fact = <T extends z.ZodType>(value: T) =>
@@ -80,7 +80,7 @@ export const Forecast = z.object({
     windGustsKmh: NumberFact,
     windDirectionDeg: NumberFact,
     isDay: z.boolean().nullable(),
-    /** Hourly-only variables, taken at the nearest valid hour (L11). */
+    /** Hourly-only variables, taken at the nearest valid hour. */
     uvIndex: NumberFact,
     soilTemperature6cmC: NumberFact,
     soilMoisture3to9cm: NumberFact,
@@ -256,7 +256,7 @@ export type ClimateProfile = z.infer<typeof ClimateProfile>;
 const Range3 = z.object({ min: z.number(), median: z.number(), max: z.number() }).nullable();
 
 /**
- * Climate model change for a place (§6.15, L08): each model against its own baseline, as a multi-model
+ * Climate model change for a place (§6.15): each model against its own baseline, as a multi-model
  * range. HighResMIP runs follow one forcing pathway; no scenario is selectable or named.
  */
 export const ClimateProjection = z.object({

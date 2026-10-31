@@ -32,7 +32,7 @@ describe('Open-Meteo historical contract', () => {
   });
 });
 
-describe('L08: Open-Meteo climate contract', () => {
+describe('Open-Meteo climate contract', () => {
   it('never requests years outside 1950–2050 and sends no scenario', () => {
     expect(() => climateUrl(51.5, -0.1, 2071, 2090)).toThrow(RangeError);
     const u = new URL(climateUrl(51.5, -0.1));
@@ -53,7 +53,7 @@ describe('L08: Open-Meteo climate contract', () => {
   });
 });
 
-describe('L10: GBIF nearby occurrences contract', () => {
+describe('GBIF nearby occurrences contract', () => {
   it('uses a true radius and open licences, not a rectangle', () => {
     const u = new URL(nearbyUrl(18.5, 73.85, 5, 'plants'));
     expect(u.searchParams.get('geoDistance')).toBe('18.5,73.85,5km');

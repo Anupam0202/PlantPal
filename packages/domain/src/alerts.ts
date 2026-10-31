@@ -2,7 +2,7 @@ import { Temporal } from 'temporal-polyfill';
 import type { LocalDate } from './dates';
 
 /**
- * Heat Shield and Frost Guard (master prompt §6.5). These are **gardening guidance, not safety
+ * Heat Shield and Frost Guard (§6.5). These are **gardening guidance, not safety
  * warnings**. They are compared with the garden's own climatology and each plant's tolerance, look 24–72
  * hours ahead, and never trigger from stale forecasts.
  */

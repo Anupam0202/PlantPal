@@ -2,7 +2,7 @@ import { Temporal } from 'temporal-polyfill';
 import type { LocalDate } from './dates';
 
 /**
- * Care schedules and occurrences (master prompt §6.6). A schedule rule, the identity of each occurrence
+ * Care schedules and occurrences (§6.6). A schedule rule, the identity of each occurrence
  * (`schedule + version + specimen + garden-local date`) and the append-only history of what was done
  * are kept apart. Dates are garden-local; times are resolved in the garden's IANA time zone.
  */

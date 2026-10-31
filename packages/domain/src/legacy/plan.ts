@@ -33,7 +33,7 @@ import { isValidTimeZone, localDateOf, parseLooseDate } from '../dates';
 import { classifyUnit, convert, qty } from '../quantity';
 import { compassToDegrees, type Compass8 } from '../geometry';
 
-/** localStorage keys written by PlantPal v3. */
+/** localStorage keys written by the earlier PlantPal app. */
 export const LEGACY_KEYS = {
   plants: 'plantpal-garden-plants',
   journal: 'plantpal-garden-journal',
@@ -115,7 +115,7 @@ export interface LegacyMigrationPlan {
   problems: LegacyProblem[];
   hasPlaintextKey: boolean;
   records: LegacyRecords;
-  /** Photos stored inline in v3 (data: URLs) that the app decodes, re-encodes and stores. */
+  /** Photos stored inline by the earlier app (data: URLs) that the app decodes, re-encodes and stores. */
   mediaToDecode: Array<{ mediaId: string; dataUrl: string }>;
   achievements: LegacyAchievements | null;
   theme: 'light' | 'dark' | null;
@@ -184,7 +184,7 @@ const SOIL_METHOD: Record<string, SoilTest['method']> = {
 };
 
 /**
- * Builds a migration plan from raw v3 localStorage values. Pure and deterministic: the same input
+ * Builds a migration plan from the earlier app's raw localStorage values. Pure and deterministic: the same input
  * always yields the same record ids, so applying a plan twice (or resuming an interrupted run)
  * never duplicates anything.
  */
@@ -206,8 +206,8 @@ export function planLegacyMigration(
     .sort();
   const known = new Set<string>(Object.values(LEGACY_KEYS));
   for (const k of keys) {
-    if (!known.has(k) && !k.startsWith('plantpal-v4-')) {
-      problem('info', 'unknown-key', k, null, 'Kept in the backup file; PlantPal v4 does not use it.');
+    if (!known.has(k)) {
+      problem('info', 'unknown-key', k, null, 'Kept in the backup file; PlantPal does not use it.');
     }
   }
 
@@ -615,7 +615,7 @@ export function planLegacyMigration(
         parentSpecimenId: null,
         plantedOn: plantedOnByPlant.get(legacyId) ?? null,
         status: status === 'dormant' ? 'dormant' : status === 'removed' ? 'archived' : 'active',
-        statusReason: status === 'removed' ? 'Removed in PlantPal v3' : null,
+        statusReason: status === 'removed' ? 'Removed in the earlier PlantPal app' : null,
         holding: false,
         coverMediaId: null,
         notes: location ? `Location: ${location}` : '',

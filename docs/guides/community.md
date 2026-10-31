@@ -1,6 +1,6 @@
-# Demo script: M11 (community, Seed & Cutting Exchange, seed lots, maps)
+# Guide: Community, Seed & Cutting Exchange, seed lots and maps
 
-The community is **off by default**. To see it locally, run the Worker as in the M10 demo, apply all migrations, and switch the flag on for your machine only:
+The community is **off by default**. To see it locally, run the Worker as in the [accounts and sync guide](accounts-and-sync.md), apply all migrations, and switch the flag on for your machine only:
 
 ```sh
 pnpm --filter @plantpal/web build

@@ -1,8 +1,8 @@
-# ADR-0016: Field stamps, field lessons, Garden Story and plant labels (M12)
+# ADR-0016: Field stamps, field lessons, Garden Story and plant labels
 
 - Status: Accepted
 - Date: 2026-10-30
-- Milestone: M12 (§6.14, §6.17, §6.20, Appendix D)
+- Specification: §6.14, §6.17, §6.20, Appendix D
 
 ## Decisions
 
@@ -12,7 +12,7 @@
 - No streaks anywhere: Steady Hands counts distinct weeks, not consecutive ones.
 - Anti-gaming rules from Appendix D: planted dates in the future do not count; rainwater is capped at 500 L per day; timed counts count only at full length; phenology needs 12 distinct dates across 3 months; harvest uses weighed mass only.
 - Stamps whose records PlantPal does not keep yet (Soil Builder, Host Haven, Good Neighbour, Heat Shield, Trusted Sitter, Open Science) say so instead of showing progress.
-- A newly earned stamp plays a stamp press once (instant under reduced motion). Legacy v3 XP and badges are shown read-only in their own section and never mixed in.
+- A newly earned stamp plays a stamp press once (instant under reduced motion). XP and badges from the earlier PlantPal app are shown read-only in their own section and never mixed in.
 
 ### 2. Field lessons
 

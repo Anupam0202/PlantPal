@@ -14,7 +14,7 @@ const zone = {
 };
 
 describe('plan engine glue', () => {
-  it('keeps 0 hours as 0 and missing sun as unknown (L21)', () => {
+  it('keeps 0 hours as 0 and missing sun as unknown', () => {
     expect(zoneFactsOf(zone).sunMonthly).toBeNull();
     const dark = zoneFactsOf({
       ...zone,

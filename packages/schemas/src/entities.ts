@@ -154,7 +154,7 @@ export const ZoneSun = z.object({
   quick: z
     .object({ summerHours: z.number().min(0).max(24), winterHours: z.number().min(0).max(24) })
     .nullable(),
-  /** Direct-sun hours on the 21st of each month, January first. 0 is a real value (L21). */
+  /** Direct-sun hours on the 21st of each month, January first. 0 is a real value. */
   monthlyHours: z.array(z.number().min(0).max(24)).length(12),
   year: z.number().int(),
   computedAt: EpochMs,
@@ -266,7 +266,7 @@ export const Specimen = z.object({
   displayName: ShortText.min(1).max(120),
   scientificName: ShortText.nullable(),
   cultivar: ShortText.nullable(),
-  /** GBIF backbone key once the name is matched (M4). */
+  /** GBIF backbone key once the name is matched. */
   taxonKey: z.string().max(40).nullable(),
   /** PlantPal catalogue taxon this plant was planned from, if any. */
   catalogTaxonId: z.string().max(80).nullable().default(null),
@@ -318,7 +318,7 @@ export const CareEvent = z.object({
   /** Whole millilitres. `null` means the amount was not recorded. */
   amountMl: z.number().int().nonnegative().nullable(),
   waterSource: z.enum(WATER_SOURCES).nullable(),
-  /** Set when the event resolves a scheduled task (M5); duplicates are detected by this key. */
+  /** Set when the event resolves a scheduled task; duplicates are detected by this key. */
   occurrenceKey: z.string().max(120).nullable(),
   notes: LongText,
   mediaIds: z.array(Id).max(20),
@@ -642,7 +642,7 @@ export const Draft = z.object({
 });
 export type Draft = z.infer<typeof Draft>;
 
-/** Read-only snapshot of v3 gamification, shown as "Legacy achievements". Never recomputed. */
+/** Read-only snapshot of the earlier app's gamification, shown as "Earlier achievements". Never recomputed. */
 export const LegacyAchievements = z.object({
   xp: z.number().nullable(),
   level: z.number().nullable(),

@@ -77,7 +77,7 @@ export type PlantPalDB = Dexie & {
   seedLots: EntityTable<SeedLot, 'id'>;
 };
 
-/** Schema version 1 (M2). Kept verbatim so upgrades are tested from the real previous shape. */
+/** Schema version 1. Kept verbatim so upgrades are tested from the real previous shape. */
 export const STORES_V1 = {
   workspaces: 'id',
   gardens: 'id, workspaceId',
@@ -101,33 +101,33 @@ export const STORES_V1 = {
 export function createDb(name = 'plantpal'): PlantPalDB {
   const db = new Dexie(name) as PlantPalDB;
   db.version(1).stores(STORES_V1);
-  // v2 (M3): cache of provider facts, evictable under storage pressure.
+  // Schema version 2: cache of provider facts, evictable under storage pressure.
   db.version(2).stores({ facts: 'key, expiresAt' });
-  // v3 (M4): plans and their item snapshots. Older garden, zone and specimen rows gain new fields
+  // Schema version 3: plans and their item snapshots. Older garden, zone and specimen rows gain new fields
   // through schema defaults when they are next written, so no data migration is needed.
   db.version(3).stores({
     plans: 'id, gardenId, workspaceId',
     planItems: 'id, planId, gardenId, workspaceId, taxonId',
   });
-  // v4 (M5): care schedules and the append-only task history.
+  // Schema version 4: care schedules and the append-only task history.
   db.version(4).stores({
     careSchedules: 'id, gardenId, specimenId, workspaceId',
     taskLogs: 'id, &opId, gardenId, specimenId, occurrenceKey, at, workspaceId',
   });
-  // v5 (M7): species drafted on this device (cited AI drafts awaiting review). Health cases gain
+  // Schema version 5: species drafted on this device (cited AI drafts awaiting review). Health cases gain
   // optional fields through schema defaults, so they need no data migration.
   db.version(5).stores({ speciesDrafts: 'id, workspaceId, scientificName' });
-  // v6 (M8): Space Designer layouts and their saved versions.
+  // Schema version 6: Space Designer layouts and their saved versions.
   db.version(6).stores({
     layouts: 'id, gardenId, zoneId, workspaceId',
     layoutVersions: 'id, layoutId, workspaceId, [layoutId+version]',
   });
-  // v7 (M9): nature visits (timed counts, sightings, phenology checks) and the pantry.
+  // Schema version 7: nature visits (timed counts, sightings, phenology checks) and the pantry.
   db.version(7).stores({
     natureVisits: 'id, &opId, gardenId, workspaceId, protocol, startedAt, specimenId',
     pantryItems: 'id, gardenId, workspaceId, harvestId, state',
   });
-  // v8 (M11): seed lots for propagation lineage. Plants gain `seedLotId` through a schema default.
+  // Schema version 8: seed lots for propagation lineage. Plants gain `seedLotId` through a schema default.
   db.version(8).stores({ seedLots: 'id, gardenId, workspaceId, specimenId' });
   return db;
 }

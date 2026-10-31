@@ -2,7 +2,9 @@ import { readFile } from 'node:fs/promises';
 import { FAKE_KEY, legacyFixture } from '../../../packages/domain/test/fixtures/legacy';
 import { addPlant, createGarden, expect, test } from './helpers';
 
-test('v3 data is previewed, backed up without the API key, migrated and verified (W11)', async ({ page }) => {
+test('earlier PlantPal data is previewed, backed up without the API key, migrated and verified (W11)', async ({
+  page,
+}) => {
   await page.addInitScript((data) => {
     if (sessionStorage.getItem('seeded')) return;
     for (const [k, v] of Object.entries(data)) localStorage.setItem(k, v);
@@ -38,7 +40,7 @@ test('v3 data is previewed, backed up without the API key, migrated and verified
   await expect(page.getByRole('link', { name: /Tomato/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /Basil/ })).toBeVisible();
   await page.getByRole('link', { name: /Tomato/ }).click();
-  await expect(page.getByText('Brought over from PlantPal v3')).toBeVisible();
+  await expect(page.getByText('Brought over from earlier PlantPal data')).toBeVisible();
   await expect(page.getByText('1.5 L')).toBeVisible();
   await expect(page.locator('main img').first()).toBeVisible();
 

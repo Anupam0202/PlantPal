@@ -18,7 +18,7 @@ export function parseElevation(
   const r = Raw.safeParse(json);
   if (!r.success)
     throw new ProviderError('BAD_RESPONSE', 'open-meteo-elevation', 'Unexpected elevation shape');
-  // Missing or NaN stays unknown — never 0 m (L11).
+  // Missing or NaN stays unknown — never 0 m.
   const value = num(r.data.elevation[0]);
   return {
     provenance: provenance('open-meteo-elevation', {

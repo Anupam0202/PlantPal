@@ -1,4 +1,4 @@
-# Authorization matrix (M10–M11)
+# Authorization matrix
 
 Roles come only from server-side membership (`memberships.role`), never from the client. Every request authenticates, loads the membership for the target workspace, checks the role, and checks that **every referenced id** (zone, container, plant, schedule, harvest, care event…) belongs to the same workspace. Tests are in `apps/api/test/accounts.test.ts` (endpoints) and `apps/web/test/sync/server.test.ts` (per-operation rules).
 
@@ -45,7 +45,7 @@ Roles come only from server-side membership (`memberships.role`), never from the
 | `GET /api/v1/workspaces/{id}/live` (WebSocket)                     | ✓                 | ✗                 | 401        | ✗                   |
 | `POST/DELETE /api/v1/push/subscriptions`, `POST /api/v1/push/test` | own browsers only | own browsers only | 401        | —                   |
 
-## Community (M11, `FEATURE_COMMUNITY`, off by default)
+## Community (`FEATURE_COMMUNITY`, off by default)
 
 Staff roles come only from the server-side `community_staff` table (granted by an admin). Every route except `status` is absent when the flag is off. Tests: `apps/api/test/community.test.ts`, `apps/web/e2e/community.spec.ts`.
 

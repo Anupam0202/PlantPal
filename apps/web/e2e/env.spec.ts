@@ -39,7 +39,7 @@ test('location search sets place, time zone and hemisphere, and Today shows loca
   for (const u of weatherCalls) expect(u).not.toMatch(/18\.519|73\.855/);
 });
 
-test('L06/L07: one failing source shows its own state and can be retried without blocking the rest', async ({
+test('one failing source shows its own state and can be retried without blocking the rest', async ({
   page,
 }) => {
   const { state } = await mockProviders(page, { airDown: true });
@@ -56,7 +56,7 @@ test('L06/L07: one failing source shows its own state and can be retried without
   await expect(air.getByText('Moderate')).toBeVisible();
 });
 
-test('L12: southern-hemisphere places are formatted and treated correctly', async ({ page }) => {
+test('southern-hemisphere places are formatted and treated correctly', async ({ page }) => {
   await mockProviders(page);
   await createGardenAt(page, 'Syd', 'Sydney');
   await expect(page.getByText('33.87° S, 151.21° E')).toBeVisible();

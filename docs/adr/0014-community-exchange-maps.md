@@ -1,12 +1,12 @@
-# ADR-0014: Community, Seed & Cutting Exchange, seed lots and maps (M11)
+# ADR-0014: Community, Seed & Cutting Exchange, seed lots and maps
 
 - Status: Accepted (feature off by default; launch is a separate owner decision)
 - Date: 2026-10-30
-- Milestone: M11 (§6.13, §6.16, §19, §20)
+- Specification: §6.13, §6.16, §19, §20
 
 ## Context
 
-M11 adds the parts of PlantPal that involve other people: a community feed, events, a Seed & Cutting Exchange, moderation, a hex map of active growers, plus seed lots with propagation lineage and a corridor map of green space around the garden. The constraints:
+This covers the parts of PlantPal that involve other people: a community feed, events, a Seed & Cutting Exchange, moderation, a hex map of active growers, plus seed lots with propagation lineage and a corridor map of green space around the garden. The constraints:
 
 - **Off by default.** `FEATURE_COMMUNITY` stays off until the owner approves it, `docs/community-policy.md` is adopted and at least one moderator is named (§20 launch condition).
 - **Location privacy (§19).** Precise coordinates never leave the device. Public surfaces use H3 resolution 7 (about 5 km²) or coarser, and cells with fewer than five active contributors are hidden.
@@ -54,7 +54,7 @@ M11 adds the parts of PlantPal that involve other people: a community feed, even
 
 ### 6. Trusted Types: a narrow default policy
 
-The production CSP requires Trusted Types for scripts. Without a policy the browser refused every string script URL, which silently blocked the service worker (offline support, Web Push) and all web workers (the designer's sun heatmap, MapLibre). This was found while adding MapLibre and was a production bug since M1.
+The production CSP requires Trusted Types for scripts. Without a policy the browser refused every string script URL, which silently blocked the service worker (offline support, Web Push) and all web workers (the designer's sun heatmap, MapLibre). This was found while adding MapLibre; it had affected production builds from the start.
 
 - `src/lib/trusted-types.ts` runs first in `main.tsx` and creates a `default` policy with only `createScriptURL`, which accepts same-origin http(s) URLs and throws for anything else (other origins, `data:`, `blob:`, `javascript:`).
 - HTML and script-text sinks stay blocked because the policy defines nothing for them.

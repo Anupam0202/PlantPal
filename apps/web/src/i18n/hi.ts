@@ -209,7 +209,7 @@ export const hi: Messages = {
     since: (d: string) => `${d} से`,
     conflict: 'यह पौधा कहीं और बदला गया था। दृश्य ताज़ा कर दिया गया है — कृपया फिर से कोशिश करें।',
     notFound: 'यह पौधा मौजूद नहीं है या हटा दिया गया।',
-    fromLegacy: 'PlantPal v3 से लाया गया',
+    fromLegacy: 'पुराने PlantPal डेटा से लाया गया',
   },
   labels: {
     status: {
@@ -567,7 +567,7 @@ export const hi: Messages = {
     exportCsvHint: 'Excel, Sheets या LibreOffice के लिए पौधे, देखभाल, नोट्स और फ़सल।',
     exported: 'डाउनलोड शुरू हुआ',
     import: 'आयात',
-    importHint: 'PlantPal बैकअप (.zip) या PlantPal v3 बैकअप (.json) चुनें।',
+    importHint: 'PlantPal बैकअप (.zip) या पुराने PlantPal डेटा का बैकअप (.json) चुनें।',
     chooseFile: 'फ़ाइल चुनें',
     reading: 'फ़ाइल जाँची जा रही है…',
     previewTitle: 'आयात का पूर्वावलोकन',
@@ -592,9 +592,9 @@ export const hi: Messages = {
       'too-large': 'यह बैकअप यहाँ आयात करने के लिए बहुत बड़ा है।',
     },
     legacy: 'पुराना PlantPal डेटा',
-    legacyFound: 'इस ब्राउज़र में PlantPal v3 का डेटा है।',
-    legacyNone: 'इस ब्राउज़र में PlantPal v3 का कोई डेटा नहीं मिला।',
-    legacyDone: (d: string) => `PlantPal v3 का डेटा ${d} को लाया गया।`,
+    legacyFound: 'इस ब्राउज़र में पुराना PlantPal डेटा है।',
+    legacyNone: 'इस ब्राउज़र में पुराना PlantPal डेटा नहीं मिला।',
+    legacyDone: (d: string) => `पुराना PlantPal डेटा ${d} को लाया गया।`,
     legacyReview: 'देखें और ले आएँ',
     danger: 'इस डिवाइस पर सब कुछ मिटाएँ',
     dangerBody:
@@ -688,7 +688,7 @@ export const hi: Messages = {
     },
     legacyAchievements: 'पुरानी उपलब्धियाँ',
     legacyAchievementsBody: (xp: string, level: string, badges: number) =>
-      `PlantPal v3 से: ${xp} XP, स्तर ${level}, ${badges} बैज। केवल पढ़ने योग्य रिकॉर्ड के रूप में रखा गया।`,
+      `पुराने PlantPal डेटा से: ${xp} XP, स्तर ${level}, ${badges} बैज। केवल पढ़ने योग्य रिकॉर्ड के रूप में रखा गया।`,
   },
   welcome: {
     title: 'जहाँ भी हों, एक जीवंत बगीचा उगाइए।',

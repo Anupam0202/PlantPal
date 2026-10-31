@@ -44,7 +44,7 @@ describe('Open-Meteo forecast contract', () => {
     expect(f.daily.date).toHaveLength(7);
   });
 
-  it('L11: uses the nearest valid hour for hourly-only values, never the last element or zero', () => {
+  it('uses the nearest valid hour for hourly-only values, never the last element or zero', () => {
     const raw = fixtures.forecastFixture({ nullSoilAfterHour: 13 });
     const f = parseForecast(raw, { ...ctx, now: at('2026-10-28T14:15:00+05:30') });
     // Hours 13+ are missing, so the nearest valid soil value is 12:00 (within 3 h), not the last element.
@@ -90,7 +90,7 @@ describe('Open-Meteo air quality contract', () => {
 });
 
 describe('elevation, geocoding and NASA POWER contracts', () => {
-  it('L11: a missing elevation is unknown, not 0 m', () => {
+  it('a missing elevation is unknown, not 0 m', () => {
     expect(parseElevation(fixtures.elevationFixture(559), ctx).elevationM.value).toBe(559);
     const e = parseElevation(fixtures.elevationFixture(null), ctx);
     expect(e.elevationM.value).toBeNull();

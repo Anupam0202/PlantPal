@@ -4,8 +4,8 @@ Thanks for helping people grow healthier, wilder urban spaces.
 
 ## Ground rules
 
-- Read `docs/PlantPal-Master-Prompt-v4.md` (the product and engineering contract) and `docs/scope-ledger.md` (what is in scope and its status).
-- Science first: every number needs a unit, a method, a time and a source. Unknown stays unknown; zero stays zero. See the science rules (S1–S18) in the master prompt.
+- Read `docs/specification.md` (the product and engineering specification) and `docs/scope-ledger.md` (what is in scope and its status).
+- Science first: every number needs a unit, a method, a time and a source. Unknown stays unknown; zero stays zero. See the science rules (S1–S18) in the specification.
 - No fabricated data in the product: no fake neighbours, ratings, counts or placeholder images.
 - Accessibility is part of "done": keyboard, screen reader, reduced motion and 200% zoom.
 

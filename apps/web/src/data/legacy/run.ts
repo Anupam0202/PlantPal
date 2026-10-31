@@ -149,7 +149,7 @@ export async function runLegacyMigration(
   }
 }
 
-/** Decodes inline v3 photos, re-encodes them (dropping EXIF/GPS) and stores them. Failures are flagged, not fatal. */
+/** Decodes inline photos from the earlier app, re-encodes them (dropping EXIF/GPS) and stores them. Failures are flagged, not fatal. */
 async function recoverPhotos(
   plan: LegacyMigrationPlan,
   process: (b: Blob) => Promise<ProcessedImage>,

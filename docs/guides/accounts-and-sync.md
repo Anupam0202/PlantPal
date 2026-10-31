@@ -1,4 +1,4 @@
-# Demo script: M10 (accounts, sync, sharing, plant-sitter, realtime, push)
+# Guide: Accounts, sync, sharing, plant-sitter links, live updates and push
 
 Accounts need the Worker with a secret. Run it locally like this:
 

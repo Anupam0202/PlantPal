@@ -2,7 +2,7 @@ import type { Harvest, PantryItem, PantryState } from '@plantpal/schemas';
 import { addDays } from './dates';
 import { qty, totalsByDimension, type Quantity } from './quantity';
 
-/** Mass and counts kept apart (S1, L15): `500 g + 3 bunches` is never one number. */
+/** Mass and counts kept apart (S1): `500 g + 3 bunches` is never one number. */
 export interface Totals {
   massG: number;
   counts: Record<string, number>;

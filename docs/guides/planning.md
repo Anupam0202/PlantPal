@@ -1,4 +1,4 @@
-# Demo script — M4 (plan core)
+# Guide: Planning
 
 Run the web app (`pnpm --filter @plantpal/web dev`, or `VITE_PROVIDERS=mock …` without internet) and open `/welcome` in a fresh browser profile.
 

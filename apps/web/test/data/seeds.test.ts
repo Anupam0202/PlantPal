@@ -135,7 +135,7 @@ describe('seed lots and lineage (§6.13)', () => {
   });
 });
 
-describe('Dexie upgrade to v8', () => {
+describe('local database upgrade to schema version 8', () => {
   it('adds seed lots without touching v7 data', async () => {
     const name = 'pp-upgrade-v8';
     await Dexie.delete(name);

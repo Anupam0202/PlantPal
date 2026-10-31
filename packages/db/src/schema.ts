@@ -1,6 +1,6 @@
 import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-/** Health and kill switch per environmental data provider (master prompt §15.1). Times are epoch ms. */
+/** Health and kill switch per environmental data provider (§15.1). Times are epoch ms. */
 export const providerStatus = sqliteTable('provider_status', {
   provider: text('provider').primaryKey(),
   enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
@@ -13,7 +13,7 @@ export const providerStatus = sqliteTable('provider_status', {
 });
 export type ProviderStatusRow = typeof providerStatus.$inferSelect;
 
-// ---------------------------------------------------------------- accounts, sharing and sync (M10)
+// ---------------------------------------------------------------- accounts, sharing and sync
 
 /** A shared garden space. Members and their roles live in `memberships`. */
 export const workspaces = sqliteTable('workspaces', {

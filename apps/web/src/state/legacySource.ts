@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-/** Where the v3 data being reviewed comes from: this browser's storage, or a backup file the user chose. */
+/** Where the earlier PlantPal data being reviewed comes from: this browser's storage, or a backup file the user chose. */
 interface LegacySourceState {
   fileRaw: Record<string, string> | null;
   fileName: string | null;

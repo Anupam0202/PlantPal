@@ -1,4 +1,4 @@
-# Demo script — M9 (nature, harvest and impact)
+# Guide: Nature, harvest and impact
 
 Everything works in demo mode (`VITE_PROVIDERS=mock pnpm --filter @plantpal/web dev`). Nature nearby then shows labelled demo data.
 
@@ -48,8 +48,8 @@ Automated evidence:
   - Darwin Core export: absences, unchecked rows left out, rounded and formula-safe;
   - Bloom Bridge: southern rotation, a fixture garden with exactly two gap months, unknown never a gap, observations overriding the catalogue;
   - Lens fixtures: a native, _Lantana camara_ GRIIS-listed in India, a conflict, unknown with reasons;
-  - harvest and pantry totals per dimension (L15), final states, use-soon;
-  - Impact Ledger methods, unknowns and no carbon number (L16);
+  - harvest and pantry totals per dimension, final states, use-soon;
+  - Impact Ledger methods, unknowns and no carbon number;
   - iNaturalist and GBIF URLs, licence filter, rounding and radius clamp;
   - nature and pantry commands, archive round trip, Dexie v7 upgrade.
 - **Playwright (both viewports):**

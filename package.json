@@ -1,7 +1,7 @@
 {
   "name": "plantpal",
   "private": true,
-  "version": "3.0.0-alpha.0",
+  "version": "1.0.0-alpha.0",
   "description": "PlantPal \u2014 turn constrained urban spaces into healthy, productive, climate-resilient and biodiverse living spaces.",
   "license": "MIT",
   "type": "module",

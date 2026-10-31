@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Bundle budgets (master prompt §22.1): initial JS ≤ 170 kB gzip; each lazy chunk ≤ 120 kB gzip
+// Bundle budgets (§22.1): initial JS ≤ 170 kB gzip; each lazy chunk ≤ 120 kB gzip
 // (vendor-only chunks for maps/charts/AI SDK are listed explicitly with their own ceilings).
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';

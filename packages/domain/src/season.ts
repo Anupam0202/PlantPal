@@ -1,7 +1,7 @@
 import type { MonthlyNormal } from './climate';
 
 /**
- * Season model (master prompt §6.15, S18): seasons come from the climate class, hemisphere and the
+ * Season model (§6.15, S18): seasons come from the climate class, hemisphere and the
  * monsoon, not from the Northern-Hemisphere calendar. Sowing windows come from monthly climatology.
  */
 

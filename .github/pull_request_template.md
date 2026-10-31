@@ -11,4 +11,4 @@
 
 ## Scope ledger and traceability
 
-Requirement IDs (e.g., L05, S4, W3) and status updates:
+Requirement IDs (e.g., S4, W3) and status updates:

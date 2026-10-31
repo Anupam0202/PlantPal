@@ -47,7 +47,7 @@ coverage/
 *.local
 *.tsbuildinfo
 
-# PlantPal v4
+# PlantPal
 .turbo/
 .wrangler/
 .dev.vars

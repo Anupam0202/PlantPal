@@ -5,7 +5,7 @@
 
 ## Context
 
-The master prompt routes all environmental calls through the API gateway for shared caching, quota control and privacy. The owner's current hosting (Vercel) serves static builds only, so previews would have no environmental data without the Worker.
+The specification routes all environmental calls through the API gateway for shared caching, quota control and privacy. The owner's current hosting (Vercel) serves static builds only, so previews would have no environmental data without the Worker.
 
 ## Decision
 

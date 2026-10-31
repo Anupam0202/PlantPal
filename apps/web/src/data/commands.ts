@@ -616,7 +616,7 @@ export async function logHarvest(input: HarvestInput, now = Date.now()): Promise
   });
 }
 
-// ---------------------------------------------------------------- nature log (M9)
+// ---------------------------------------------------------------- nature log
 
 export interface VisitInput {
   gardenId: string;
@@ -671,7 +671,7 @@ export async function logVisit(input: VisitInput, now = Date.now()): Promise<Nat
   });
 }
 
-// ---------------------------------------------------------------- pantry (M9)
+// ---------------------------------------------------------------- pantry
 
 export interface PantryInput {
   gardenId: string;

@@ -107,7 +107,7 @@ export function monthlyNormals(s: DailySeries, startYear: number, endYear: numbe
 }
 
 /**
- * USDA-style hardiness zone from the **mean annual extreme minimum** temperature (L09) — not from the
+ * USDA-style hardiness zone from the **mean annual extreme minimum** temperature — not from the
  * coldest monthly mean, which overstates hardiness by several zones.
  */
 export function hardiness(
@@ -163,7 +163,7 @@ function percentile(sorted: number[], p: number): number {
 }
 
 /**
- * Probabilistic frost dates (L09). Seasons run from the warmest part of the year to the next, so a
+ * Probabilistic frost dates. Seasons run from the warmest part of the year to the next, so a
  * winter is never split across calendar years: 1 July in the northern hemisphere, 1 January in the
  * southern (S18). Frost = daily minimum ≤ `thresholdC`.
  */
@@ -298,7 +298,7 @@ function windowMeans(s: DailySeries, from: number, to: number) {
 }
 
 /**
- * Change between two periods, computed **per model against its own baseline** (L08), then summarised
+ * Change between two periods, computed **per model against its own baseline**, then summarised
  * as a multi-model range. HighResMIP runs have no emission-scenario choice, so no scenario is named.
  */
 export function climateDeltas(

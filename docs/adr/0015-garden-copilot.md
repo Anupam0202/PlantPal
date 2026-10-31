@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-10-30
-- Milestone: M12 (§18.5–§18.7)
+- Specification: §18.5–§18.7
 
 ## Context
 

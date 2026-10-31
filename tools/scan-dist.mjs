@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Fails if a build directory contains anything shaped like a Google API key (L01) or other common secrets.
+// Fails if a build directory contains anything shaped like a Google API key or other common secrets.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 

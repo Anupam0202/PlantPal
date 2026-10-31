@@ -2,7 +2,7 @@ import { Temporal } from 'temporal-polyfill';
 import type { LocalDate } from './dates';
 
 /**
- * Water-Wise engine (master prompt §6.4, S5): a daily container water balance that suggests when to
+ * Water-Wise engine (§6.4, S5): a daily container water balance that suggests when to
  * **check**, never a fixed prescription, and never controls anything. 1 mm over 1 m² is 1 litre.
  *
  * Every coefficient below is a documented, editable assumption, labelled as an estimate in the UI.

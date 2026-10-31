@@ -1,5 +1,5 @@
 /*
- * PlantPal "Living Field Guide" design tokens.
+ * PlantPal design tokens.
  * Import after `@import "tailwindcss";` in the app stylesheet.
  * Raw ramps live in @theme (they generate utilities such as bg-moss-600).
  * Semantic tokens (--pp-*) switch per theme and are exposed as utilities via @theme inline.

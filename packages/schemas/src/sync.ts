@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { EpochMs, Id } from './primitives';
 
-/** A queued local change, pushed to the server once the workspace syncs (M10). */
+/** A queued local change, pushed to the server once the workspace syncs. */
 export const OutboxOp = z.object({
   opId: Id,
   workspaceId: Id,

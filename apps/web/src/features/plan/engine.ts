@@ -33,7 +33,7 @@ export function zoneFactsOf(zone: ZoneLike): ZoneFacts {
     covered: indoor ? true : zone.covered,
     containers: !GROUND_KINDS.includes(zone.kind),
     rooftop: zone.kind === 'rooftop',
-    // Preserve 0 (L21): only a missing profile is unknown.
+    // Preserve 0: only a missing profile is unknown.
     sunMonthly: zone.sun ? zone.sun.monthlyHours : null,
     indoorLight: zone.indoorLight,
     areaM2: zone.areaM2,

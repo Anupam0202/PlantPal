@@ -26,7 +26,7 @@ describe('fetchJson', () => {
     expect(r.json).toEqual({ a: 1 });
   });
 
-  it('L06: aborts at the deadline instead of hanging', async () => {
+  it('aborts at the deadline instead of hanging', async () => {
     const never: typeof fetch = (_u, init) =>
       new Promise((_, reject) =>
         init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))),
@@ -151,7 +151,7 @@ describe('coordinates', () => {
     expect(roundCoords(-0.001, -0.001, 0.05)).toEqual({ lat: 0, lon: 0 });
   });
 
-  it('L12: formats each hemisphere correctly', () => {
+  it('formats each hemisphere correctly', () => {
     expect(formatCoordinates(18.5204, 73.8567)).toBe('18.52° N, 73.86° E');
     expect(formatCoordinates(-33.8679, 151.2073)).toBe('33.87° S, 151.21° E');
     expect(formatCoordinates(40.7128, -74.006)).toBe('40.71° N, 74.01° W');

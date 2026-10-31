@@ -4,7 +4,7 @@
  *
  *   pnpm check:quota            # table for both modes; exit 1 if the default mode is over 70%
  *
- * Limits were researched in October 2026 for the master prompt (§15.3) and must be re-verified on
+ * Limits were researched in October 2026 for the specification (§15.3) and must be re-verified on
  * the providers' pages before launch. The envelope is an assumption, not observed demand.
  */
 import { forecastUrl, airUrl, PROVIDERS } from '../packages/providers/src';

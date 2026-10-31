@@ -5,7 +5,7 @@
 
 ## Context
 
-M8 adds the Space Designer (§6.7, W6): a 2D plan of a balcony, terrace, roof or yard, drawn to scale, with plants in containers, checks for spacing, light and weight, a sun and shade overlay, growth scenarios, versions and exports. Photo-to-Plan (F9) is experimental and sits behind a Labs switch.
+The Space Designer (§6.7, W6) is a 2D plan of a balcony, terrace, roof or yard, drawn to scale, with plants in containers, checks for spacing, light and weight, a sun and shade overlay, growth scenarios, versions and exports. Photo-to-Plan (F9) is experimental and sits behind a Labs switch.
 
 The integrity rules shape it:
 
@@ -38,7 +38,7 @@ The integrity rules shape it:
 6. **Exports.**
    - JSON (`type: 'plantpal-layout'`, schema 1) round-trips through import, which creates a new layout. GeoJSON files are refused with a clear message.
    - The SVG export is self-contained and to scale, with a legend, a 1 m scale bar and a north arrow from `rotationDeg`. PNG is rasterised from it. PDF goes through the browser's print dialog with print-only CSS.
-   - The shopping list counts containers, beds and fixtures with sizes and estimated potting mix. It is ready to feed Resources & Costs (M9).
+   - The shopping list counts containers, beds and fixtures with sizes and estimated potting mix. It is ready to feed Resources & Costs.
 7. **Photo-to-Plan (F9) is opt-in and draft-only.**
    - It appears only when **Settings › AI › Labs › Photo-to-Plan** is on and AI is enabled.
    - The photo is resized and re-encoded on the device, never stored, and sent only from the send preview (photos are a required category).
@@ -56,4 +56,4 @@ The integrity rules shape it:
   - snapping to other items' edges;
   - a per-item shadow-height editor for plants (plants cast no shade in this version).
 - The designer chunk loads only on the designer routes. The sun worker is its own chunk.
-- The Resources & Costs hand-off from the shopping list lands with M9.
+- The Resources & Costs hand-off from the shopping list is not built yet.

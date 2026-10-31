@@ -48,7 +48,7 @@ export const ShortText = z.string().trim().max(200);
 export const LongText = z.string().max(10_000);
 
 /**
- * Where a record came from. Legacy imports keep every field the v4 model has no home for in
+ * Where a record came from. Imports keep every field the data model has no home for in
  * `extra`, so nothing the user wrote is lost.
  */
 export const RecordSource = z
