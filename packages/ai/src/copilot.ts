@@ -373,7 +373,7 @@ export function toolIds(contents: readonly ChatContent[]): Set<string> {
 }
 
 /** Stands in for a removed id while the text around it is tidied. */
-const ID_MARK = '\u0000';
+const ID_MARK = '\uE000';
 
 /**
  * Removes internal ids from an answer, with the brackets or "id:" label around them, in case the
@@ -385,8 +385,8 @@ export function hideIds(text: string, ids: ReadonlySet<string>): string {
   for (const id of ids) out = out.split(id).join(ID_MARK);
   if (!out.includes(ID_MARK)) return text;
   return out
-    .replace(/ ?[([] ?(?:id|ID|Id)? ?[:#]? ?`?\u0000`? ?[)\]]/g, '')
-    .replace(/(?:\b(?:id|ID|Id) ?[:#]? ?)?`?\u0000`?/g, '')
+    .replace(/ ?[([] ?(?:id|ID|Id)? ?[:#]? ?`?\uE000`? ?[)\]]/g, '')
+    .replace(/(?:\b(?:id|ID|Id) ?[:#]? ?)?`?\uE000`?/g, '')
     .replace(/ {2,}/g, ' ')
     .replace(/ ([,.;:!?])/g, '$1')
     .replace(/([,;])[,;]+/g, '$1');
