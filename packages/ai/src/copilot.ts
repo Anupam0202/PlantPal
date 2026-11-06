@@ -358,8 +358,6 @@ export function copilotSystem(policy: PolicyContext): string {
   return `${sharedPolicy(policy)}\n\n${TASK}`;
 }
 
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
 /** Ids that tools returned in the conversation (values under `id` or `…Id` keys). */
 export function toolIds(contents: readonly ChatContent[]): Set<string> {
   const ids = new Set<string>();
@@ -374,22 +372,23 @@ export function toolIds(contents: readonly ChatContent[]): Set<string> {
   return ids;
 }
 
+/** Stands in for a removed id while the text around it is tidied. */
+const ID_MARK = '\u0000';
+
 /**
  * Removes internal ids from an answer, with the brackets or "id:" label around them, in case the
- * model shows one despite the instruction. Only ids the tools returned are touched.
+ * model shows one despite the instruction. Only ids the tools returned are touched. Plain string
+ * replacement and fixed patterns with bounded repeats keep this linear on any model output.
  */
 export function hideIds(text: string, ids: ReadonlySet<string>): string {
-  const label = '(?:id|ID|Id)';
-  let out = text;
-  for (const id of ids) {
-    const bare = '`?' + escapeRe(id) + '`?';
-    out = out
-      .replace(new RegExp(`[ \\t]*[(\\[][ \\t]*${label}?[ \\t]*[:#]?[ \\t]*${bare}[ \\t]*[)\\]]`, 'g'), '')
-      .replace(new RegExp(`(?:\\b${label}[ \\t]*[:#]?[ \\t]*)?${bare}`, 'g'), '');
-  }
+  let out = text.replace(/[ \t]{2,}/g, ' ');
+  for (const id of ids) out = out.split(id).join(ID_MARK);
+  if (!out.includes(ID_MARK)) return text;
   return out
-    .replace(/[ \t]{2,}/g, ' ')
-    .replace(/[ \t]+([,.;:!?])/g, '$1')
+    .replace(/ ?[([] ?(?:id|ID|Id)? ?[:#]? ?`?\u0000`? ?[)\]]/g, '')
+    .replace(/(?:\b(?:id|ID|Id) ?[:#]? ?)?`?\u0000`?/g, '')
+    .replace(/ {2,}/g, ' ')
+    .replace(/ ([,.;:!?])/g, '$1')
     .replace(/([,;])[,;]+/g, '$1');
 }
 

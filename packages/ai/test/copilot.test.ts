@@ -253,6 +253,13 @@ describe('internal ids stay out of answers', () => {
       'Water 300 ml every 2 days. Idea: mulch.',
     );
     expect(hideIds(`Basil, ID ${ULID}, is fine.`, ids)).toBe('Basil, is fine.');
+    // Text with no ids comes back untouched, spacing included.
+    expect(hideIds('Two  spaces  stay.', ids)).toBe('Two  spaces  stay.');
+    // Long runs of spaces or punctuation stay fast (no backtracking blow-up).
+    const t0 = Date.now();
+    hideIds(`${' '.repeat(50_000)}x${ULID}${' '.repeat(50_000)}(`, ids);
+    hideIds(`${' \t'.repeat(50_000)}!`, ids);
+    expect(Date.now() - t0).toBeLessThan(500);
   });
 });
 
