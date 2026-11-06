@@ -38,7 +38,8 @@ describe('key vault', () => {
     await v.remove();
     expect(await v.get()).toBeNull();
     expect(store.dump().size).toBe(0);
-    await expect(v.save('not-a-key', 'device')).rejects.toThrow();
+    await expect(v.save('two words', 'device')).rejects.toThrow();
+    await expect(v.save('   ', 'device')).rejects.toThrow();
   });
 
   it('tampered ciphertext reads as no key', async () => {

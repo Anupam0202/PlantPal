@@ -26,9 +26,10 @@ AI features must run on the person's own Gemini key, on their own device, and mu
 
 3. **Discovery** (`discovery.ts`).
    - The paginated model list is requested with the key in a header.
-   - One model is picked per role: it must support the method; stable is preferred over preview (except `deep`); seed ids are used when the key lists them; otherwise the newest version in the family. A user override wins if the key lists it.
+   - One model is picked per role: it must support the method; stable is preferred over preview (except `deep`); seed ids are used when the key lists them; otherwise the newest version in a known name family; otherwise the best text model by listed capability (thinking support, input and output limits). Names are preferences, never requirements. A user override wins if the key lists it.
    - Seeds carry a `verifiedAt` date and are used only when the live list contains them.
-   - On `MODEL_UNAVAILABLE` the client re-discovers **once**. It never walks a list of names.
+   - Saving or re-checking a key sends the main model one tiny request. Listed models that answer "not available" or "needs billing" are recorded as unusable and skipped (at most three tries).
+   - On `MODEL_UNAVAILABLE` the client re-discovers **once**, leaving out the model that failed. It never walks a list of names.
 4. **Error taxonomy** (`errors.ts`). Gemini errors map to typed codes, each with its own copy and recovery in the UI:
    - key invalid; permission denied; region unsupported;
    - rate limited, with a countdown; daily quota; billing required (a free-tier limit of 0);
@@ -44,7 +45,8 @@ AI features must run on the person's own Gemini key, on their own device, and mu
      - dates and units must be sane;
      - forbidden claims are rejected in English, Spanish and Hindi: edibility or toxicity clearance, pesticide names and doses, air purification, certainty language and safety certification.
    - A failure gets one repair round with the validator errors. If that also fails, the result is `SCHEMA_INVALID` and the manual fallback is shown.
-   - Thinking is set per feature. If a model rejects the setting, it is dropped once.
+   - Every request asks for little thinking (minimal or low, per feature), because thinking tokens count against the output limit. If a model rejects the setting, the next way of asking is tried (`thinkingLevel`, then `thinkingBudget`, then none) and remembered for that model; nothing is inferred from the model's name.
+   - A cut-off answer (`MAX_TOKENS`) is asked again once with minimal thinking and twice the output limit.
 6. **Prompts as versioned modules** (`prompts/*.ts`).
    - Each module combines the shared policy (Appendix A.1, `POLICY_VERSION`) with a task instruction.
    - Context is built as **sections**. Each section has a data category (`plants`, `space`, `climate`, `journal`, `photos`, `location`) and can be marked required or untrusted. Untrusted text is wrapped as `<user_data>`, and the wrapper cannot be closed early from inside.

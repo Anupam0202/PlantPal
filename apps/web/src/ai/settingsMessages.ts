@@ -1,3 +1,4 @@
+import type { KeyInputProblem } from '@plantpal/ai';
 import type { ModelRole } from '@plantpal/schemas';
 import { usePrefs, type LocalePref } from '../state/prefs';
 
@@ -16,7 +17,7 @@ const en = {
   placeholder: 'Paste your key',
   mode: 'Keep it',
   modeSession: 'This session only',
-  modeSessionHint: 'Gone when you close the tab.',
+  modeSessionHint: 'Gone when you reload the page or close the tab.',
   modeDevice: 'Remember on this device',
   modeDeviceHint: 'Encrypted with a browser key that cannot be exported.',
   check: 'Check and save',
@@ -24,8 +25,15 @@ const en = {
   saved: 'Key saved. AI features are ready.',
   remove: 'Remove key',
   removed: 'Key removed from this device',
-  badFormat:
-    'That does not look like an API key. Paste only the key, with no spaces or quotes. Gemini keys start with “AQ.” or “AIza”.',
+  keyProblem: {
+    empty: 'Paste your key first.',
+    spaces: 'A key is one piece of text with no spaces inside. Paste only the key.',
+    'too-long': 'That is longer than any API key. Paste only the key.',
+  } satisfies Record<KeyInputProblem, string>,
+  savedUnverified: 'Key saved, but Google could not run a test request just now.',
+  noTextModel:
+    'Google accepted the key, but it offers no model that can write text. Check the key’s project in Google AI Studio.',
+  retryIn: (s: number) => `Try again in ${s} s.`,
   getKey: 'Get a free key in Google AI Studio',
   guidanceTitle: 'Good practice',
   guidance: [
@@ -53,6 +61,11 @@ const en = {
   } satisfies Record<ModelRole, string>,
   automatic: 'Automatic',
   notListed: 'None for this key',
+  roleHints: {
+    fast: 'Notes, photo descriptions, plain explanations and the weekly reflection.',
+    balanced: 'Plan explanations, health checks, plant ID, species drafts and the Copilot.',
+    deep: 'No feature uses it yet.',
+  } as Partial<Record<ModelRole, string>>,
   labs: 'Labs',
   labsHint: 'Experimental features. They may change or go away, and their results need extra checking.',
   labsPhotoPlan: 'Photo-to-Plan',
@@ -109,7 +122,7 @@ const hi: AiSettingsMessages = {
   placeholder: 'अपनी कुंजी चिपकाएँ',
   mode: 'कहाँ रखें',
   modeSession: 'केवल इस सत्र में',
-  modeSessionHint: 'टैब बंद करते ही हट जाएगी।',
+  modeSessionHint: 'पेज दोबारा लोड करने या टैब बंद करने पर हट जाएगी।',
   modeDevice: 'इस डिवाइस पर याद रखें',
   modeDeviceHint: 'ब्राउज़र की ऐसी कुंजी से एन्क्रिप्ट जिसे निर्यात नहीं किया जा सकता।',
   check: 'जाँचें और सहेजें',
@@ -117,8 +130,15 @@ const hi: AiSettingsMessages = {
   saved: 'कुंजी सहेजी गई। AI सुविधाएँ तैयार हैं।',
   remove: 'कुंजी हटाएँ',
   removed: 'कुंजी इस डिवाइस से हटाई गई',
-  badFormat:
-    'यह API कुंजी जैसी नहीं लगती। केवल कुंजी चिपकाएँ, बिना खाली जगह या उद्धरण चिह्नों के। Gemini कुंजियाँ “AQ.” या “AIza” से शुरू होती हैं।',
+  keyProblem: {
+    empty: 'पहले अपनी कुंजी चिपकाएँ।',
+    spaces: 'कुंजी एक ही टुकड़ा होती है, उसके बीच में खाली जगह नहीं होती। केवल कुंजी चिपकाएँ।',
+    'too-long': 'यह किसी भी API कुंजी से लंबा है। केवल कुंजी चिपकाएँ।',
+  },
+  savedUnverified: 'कुंजी सहेजी गई, पर Google अभी जाँच अनुरोध नहीं चला सका।',
+  noTextModel:
+    'Google ने कुंजी स्वीकार की, पर उसमें लिखित जवाब देने वाला कोई मॉडल नहीं है। Google AI Studio में कुंजी का प्रोजेक्ट जाँचें।',
+  retryIn: (s) => `${s} सेकंड बाद फिर कोशिश करें।`,
   getKey: 'Google AI Studio में मुफ़्त कुंजी पाएँ',
   guidanceTitle: 'अच्छे तरीके',
   guidance: [
@@ -146,6 +166,11 @@ const hi: AiSettingsMessages = {
   },
   automatic: 'स्वचालित',
   notListed: 'इस कुंजी के लिए कोई नहीं',
+  roleHints: {
+    fast: 'नोट, फ़ोटो विवरण, सरल व्याख्या और साप्ताहिक सार।',
+    balanced: 'योजना की व्याख्या, स्वास्थ्य जाँच, पौधे की पहचान, प्रजाति मसौदे और Copilot।',
+    deep: 'अभी कोई सुविधा इसका उपयोग नहीं करती।',
+  },
   labs: 'प्रयोगशाला',
   labsHint: 'प्रयोग वाली सुविधाएँ। ये बदल सकती हैं या हट सकती हैं, और इनके नतीजे अच्छी तरह जाँचने होंगे।',
   labsPhotoPlan: 'फ़ोटो से नक्शा',
@@ -200,7 +225,7 @@ const es: AiSettingsMessages = {
   placeholder: 'Pega tu clave',
   mode: 'Guardarla',
   modeSession: 'Solo esta sesión',
-  modeSessionHint: 'Se borra al cerrar la pestaña.',
+  modeSessionHint: 'Se borra al recargar la página o cerrar la pestaña.',
   modeDevice: 'Recordar en este dispositivo',
   modeDeviceHint: 'Cifrada con una clave del navegador que no se puede exportar.',
   check: 'Comprobar y guardar',
@@ -208,8 +233,15 @@ const es: AiSettingsMessages = {
   saved: 'Clave guardada. Las funciones de IA están listas.',
   remove: 'Quitar clave',
   removed: 'Clave quitada de este dispositivo',
-  badFormat:
-    'Eso no parece una clave de API. Pega solo la clave, sin espacios ni comillas. Las claves de Gemini empiezan por “AQ.” o “AIza”.',
+  keyProblem: {
+    empty: 'Pega primero tu clave.',
+    spaces: 'Una clave es una sola pieza de texto, sin espacios dentro. Pega solo la clave.',
+    'too-long': 'Es más larga que cualquier clave de API. Pega solo la clave.',
+  },
+  savedUnverified: 'Clave guardada, pero Google no pudo hacer una petición de prueba ahora.',
+  noTextModel:
+    'Google aceptó la clave, pero no ofrece ningún modelo que escriba texto. Revisa el proyecto de la clave en Google AI Studio.',
+  retryIn: (s) => `Vuelve a intentarlo en ${s} s.`,
   getKey: 'Obtén una clave gratuita en Google AI Studio',
   guidanceTitle: 'Buenas prácticas',
   guidance: [
@@ -237,6 +269,11 @@ const es: AiSettingsMessages = {
   },
   automatic: 'Automático',
   notListed: 'Ninguno para esta clave',
+  roleHints: {
+    fast: 'Notas, descripciones de fotos, explicaciones sencillas y el resumen semanal.',
+    balanced: 'Explicaciones del plan, salud, identificación, borradores de especies y el Copilot.',
+    deep: 'Ninguna función lo usa todavía.',
+  },
   labs: 'Laboratorio',
   labsHint:
     'Funciones experimentales. Pueden cambiar o desaparecer, y sus resultados requieren revisión adicional.',

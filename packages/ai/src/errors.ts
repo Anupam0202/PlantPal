@@ -95,8 +95,10 @@ export function classifyGeminiError(
 }
 
 /**
- * Shapes of Google API keys: the older `AIza…` keys and the `AQ.…` keys Google AI Studio issues now.
- * Used only to keep keys out of prompts, logs and builds. Whether a key works is decided by Google.
+ * Leak-guard heuristic, kept in this one place: the shapes Google API keys have had so far (older
+ * `AIza…` keys and the `AQ.…` keys AI Studio issues now). It only helps keep key-like text out of
+ * prompts, logs and builds; the real guard compares against the person's actual saved key. It is
+ * never used to decide whether a key is valid: Google decides that.
  */
 const KEY_SOURCE = String.raw`AIza[0-9A-Za-z_-]{35}|AQ\.[0-9A-Za-z_-]{30,}`;
 
@@ -115,11 +117,20 @@ export function redactKeys(text: string): string {
   return text.replace(apiKeyPattern(), (k) => `${k.startsWith('AQ.') ? 'AQ.' : 'AIza'}…[redacted]`);
 }
 
+/** No API key is anywhere near this long; anything longer is a paste of something else. */
+export const MAX_KEY_LENGTH = 4096;
+
+export type KeyInputProblem = 'empty' | 'spaces' | 'too-long';
+
 /**
- * A light check before asking Google: one token of a plausible length, with no spaces or quotes.
- * It assumes no prefix, because Google changes key formats (`AIza…`, now `AQ.…`); the real check is
- * asking Google which models the key can use.
+ * The only checks made before asking Google, after trimming: something was entered, it is one piece
+ * (no spaces or line breaks inside) and it is not absurdly long. No prefix, length or character
+ * rules: key formats change (`AIza…`, then `AQ.…`), and whether a key works is Google's answer.
  */
-export function looksLikeGeminiKey(value: string): boolean {
-  return /^[0-9A-Za-z._-]{20,512}$/.test(value.trim());
+export function keyInputProblem(value: string): KeyInputProblem | null {
+  const key = value.trim();
+  if (!key) return 'empty';
+  if (/\s/.test(key)) return 'spaces';
+  if (key.length > MAX_KEY_LENGTH) return 'too-long';
+  return null;
 }

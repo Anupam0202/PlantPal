@@ -54,8 +54,16 @@ export interface GeminiClientOptions {
   getKey: () => Promise<string | null>;
   /** Model id per role, from discovery. */
   roles: () => Partial<Record<ModelRole, string>>;
-  /** Re-runs discovery once after MODEL_UNAVAILABLE and returns the new roles. */
-  rediscover?: () => Promise<Partial<Record<ModelRole, string>>>;
+  /**
+   * Re-runs discovery once after MODEL_UNAVAILABLE, leaving out the model that just failed, and
+   * returns the new roles.
+   */
+  rediscover?: (failed: { role: ModelRole; model: string }) => Promise<Partial<Record<ModelRole, string>>>;
+  /**
+   * Which thinking setting each model accepted (see THINKING_SETTINGS). Pass one map to every client
+   * so a model's answer is learned once per session; by default each client learns on its own.
+   */
+  thinkingMemory?: Map<string, number>;
   fetch?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
   now?: () => number;
@@ -75,12 +83,35 @@ interface GeminiResponse {
   usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; thoughtsTokenCount?: number };
 }
 
-function thinkingConfig(model: string, thinking: Thinking): Record<string, unknown> | null {
-  if (thinking === 'default') return null;
-  if (/gemini-[3-9]/.test(model)) return { thinkingLevel: 'low' };
-  if (/gemini-2\.5-flash/.test(model)) return { thinkingBudget: thinking === 'minimal' ? 0 : 512 };
-  return null;
+export type ThinkingConfig = Record<string, string | number>;
+
+/**
+ * Ways to ask for little thinking, tried in order until the model accepts one. Gemini models have
+ * taken `thinkingLevel` or `thinkingBudget`, some only part of their values, and some neither. The
+ * client learns which one a model takes from its answer (a 400 that names thinking), never from the
+ * model's name, so renamed or new models work without a code change. `null` sends no setting.
+ */
+export const THINKING_SETTINGS: Record<Thinking, ReadonlyArray<ThinkingConfig | null>> = {
+  minimal: [
+    { thinkingLevel: 'minimal' },
+    { thinkingLevel: 'low' },
+    { thinkingBudget: 0 },
+    { thinkingBudget: 512 },
+    null,
+  ],
+  low: [{ thinkingLevel: 'low' }, { thinkingBudget: 1024 }, null],
+};
+
+/** What one attempt sends: the thinking setting to use and the output budget. */
+export interface Tuning {
+  thinkingConfig: ThinkingConfig | null;
+  maxOutputTokens: number;
 }
+
+const generationTuning = (t: Tuning) => ({
+  maxOutputTokens: t.maxOutputTokens,
+  ...(t.thinkingConfig ? { thinkingConfig: t.thinkingConfig } : {}),
+});
 
 /** Turns a model response into text, or throws the matching finish-reason error. */
 export function finalText(body: GeminiResponse): string {
@@ -186,6 +217,8 @@ export interface GroundedModule<I> {
   role: ModelRole;
   maxOutputTokens: number;
   temperature: number;
+  /** Defaults to `low`. */
+  thinking?: Thinking;
   task: string;
   prompt: (input: I) => string;
   policy: (input: I) => PolicyContext;
@@ -226,6 +259,8 @@ export interface StreamStepRequest {
   toolMode: 'AUTO' | 'NONE';
   maxOutputTokens: number;
   temperature: number;
+  /** Defaults to `low`. */
+  thinking?: Thinking;
 }
 
 export interface StreamStepOptions {
@@ -248,8 +283,10 @@ export class GeminiClient implements AiClient {
   private readonly f: typeof fetch;
   private readonly sleep: (ms: number) => Promise<void>;
   private readonly now: () => number;
+  private readonly thinkingMemory: Map<string, number>;
 
   constructor(private readonly o: GeminiClientOptions) {
+    this.thinkingMemory = o.thinkingMemory ?? new Map();
     this.f = o.fetch ?? ((...a) => fetch(...a));
     this.sleep = o.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
     this.now = o.now ?? (() => Date.now());
@@ -279,31 +316,49 @@ export class GeminiClient implements AiClient {
   }
 
   /**
-   * Sends one logical request under the policy: ≤ 2 attempts for retryable failures, one
-   * re-discovery on MODEL_UNAVAILABLE, and an unsupported thinking setting dropped once.
+   * Sends one logical request under the policy: ≤ 2 attempts for retryable failures and one
+   * re-discovery on MODEL_UNAVAILABLE. Two repairs do not count as attempts: a thinking setting the
+   * model rejects is replaced by the next one it may accept, and a cut-off answer is asked again
+   * once with minimal thinking and twice the room (thinking tokens count against the output limit).
    */
-  private async send(
+  private async send<R>(
     role: ModelRole,
     meta: AiRunMeta,
     signal: AbortSignal | undefined,
-    attempt: (model: string, useThinking: boolean) => Promise<{ text: string; json: GeminiResponse }>,
-    state: { useThinking: boolean; rediscovered: boolean },
-  ): Promise<{ text: string; json: GeminiResponse }> {
+    plan: { thinking: Thinking; maxOutputTokens: number },
+    attempt: (model: string, tuning: Tuning) => Promise<R>,
+  ): Promise<R> {
+    let thinking = plan.thinking;
+    let maxOutputTokens = plan.maxOutputTokens;
+    let rediscovered = false;
+    let stretched = false;
     for (;;) {
       meta.attempts++;
+      const learned = `${meta.model}|${thinking}`;
+      const settings = THINKING_SETTINGS[thinking];
+      const index = Math.min(this.thinkingMemory.get(learned) ?? 0, settings.length - 1);
+      const thinkingConfig = settings[index] ?? null;
       try {
-        return await attempt(meta.model, state.useThinking);
+        return await attempt(meta.model, { thinkingConfig, maxOutputTokens });
       } catch (e) {
         if (!(e instanceof AiError)) throw e;
-        if (state.useThinking && e.opts.status === 400 && /thinking/i.test(e.message)) {
-          state.useThinking = false;
-          meta.degraded.push('thinking');
+        if (thinkingConfig && e.opts.status === 400 && /thinking/i.test(e.message)) {
+          this.thinkingMemory.set(learned, index + 1);
+          if (!meta.degraded.includes('thinking')) meta.degraded.push('thinking');
           meta.attempts--;
           continue;
         }
-        if (e.code === 'MODEL_UNAVAILABLE' && !state.rediscovered && this.o.rediscover) {
-          state.rediscovered = true;
-          const next = (await this.o.rediscover())[role];
+        if (e.code === 'OUTPUT_TRUNCATED' && !stretched) {
+          stretched = true;
+          thinking = 'minimal';
+          maxOutputTokens *= 2;
+          meta.degraded.push('truncated');
+          meta.attempts--;
+          continue;
+        }
+        if (e.code === 'MODEL_UNAVAILABLE' && !rediscovered && this.o.rediscover) {
+          rediscovered = true;
+          const next = (await this.o.rediscover({ role, model: meta.model }))[role];
           if (next && next !== meta.model) {
             meta.model = next;
             meta.degraded.push('rediscovered');
@@ -345,7 +400,6 @@ export class GeminiClient implements AiClient {
     const meta = this.newMeta(m.id, m.version, m.role);
     const system = systemInstruction(m, input);
     const jsonSchema = responseSchema(m.schema);
-    const state = { useThinking: true, rediscovered: false };
     const contents: Array<{ role: 'user' | 'model'; parts: GeminiPart[] }> = [{ role: 'user', parts }];
 
     const call = async (): Promise<string> =>
@@ -354,10 +408,9 @@ export class GeminiClient implements AiClient {
           m.role,
           meta,
           opts.signal,
-          (model, useThinking) => {
-            const thinking = useThinking ? thinkingConfig(model, m.thinking) : null;
-            if (!thinking) state.useThinking = false;
-            return this.post(
+          { thinking: m.thinking, maxOutputTokens: m.maxOutputTokens },
+          (model, tuning) =>
+            this.post(
               model,
               key,
               {
@@ -367,15 +420,12 @@ export class GeminiClient implements AiClient {
                   responseMimeType: 'application/json',
                   responseJsonSchema: jsonSchema,
                   temperature: m.temperature,
-                  maxOutputTokens: m.maxOutputTokens,
-                  ...(thinking ? { thinkingConfig: thinking } : {}),
+                  ...generationTuning(tuning),
                 },
               },
               meta,
               opts.signal,
-            );
-          },
-          state,
+            ),
         )
       ).text;
 
@@ -435,7 +485,8 @@ export class GeminiClient implements AiClient {
       m.role,
       meta,
       opts.signal,
-      (model) =>
+      { thinking: m.thinking ?? 'low', maxOutputTokens: m.maxOutputTokens },
+      (model, tuning) =>
         this.post(
           model,
           key,
@@ -443,12 +494,11 @@ export class GeminiClient implements AiClient {
             systemInstruction: { parts: [{ text: system }] },
             contents: [{ role: 'user', parts: [{ text: m.prompt(input) }] }],
             tools: [{ google_search: {} }],
-            generationConfig: { temperature: m.temperature, maxOutputTokens: m.maxOutputTokens },
+            generationConfig: { temperature: m.temperature, ...generationTuning(tuning) },
           },
           meta,
           opts.signal,
         ),
-      { useThinking: false, rediscovered: false },
     );
     const chunks = ((
       json.candidates?.[0] as { groundingMetadata?: { groundingChunks?: GroundingChunk[] } } | undefined
@@ -490,39 +540,29 @@ export class GeminiClient implements AiClient {
           throw new AiError('CONSENT_REQUIRED', 'The text contains an API key. Remove it before sending.', {
             detail: 'API_KEY_IN_INPUT',
           });
-    const body = (model: string, useThinking: boolean) => {
-      const thinking = useThinking ? thinkingConfig(model, 'low') : null;
-      return {
-        systemInstruction: { parts: [{ text: req.system }] },
-        contents: req.contents,
-        ...(req.functions.length
-          ? {
-              tools: [{ functionDeclarations: req.functions }],
-              toolConfig: { functionCallingConfig: { mode: req.toolMode } },
-            }
-          : {}),
-        generationConfig: {
-          temperature: req.temperature,
-          maxOutputTokens: req.maxOutputTokens,
-          ...(thinking ? { thinkingConfig: thinking } : {}),
-        },
-      };
-    };
-    let parts: ModelPart[] = [];
+    const body = (tuning: Tuning) => ({
+      systemInstruction: { parts: [{ text: req.system }] },
+      contents: req.contents,
+      ...(req.functions.length
+        ? {
+            tools: [{ functionDeclarations: req.functions }],
+            toolConfig: { functionCallingConfig: { mode: req.toolMode } },
+          }
+        : {}),
+      generationConfig: { temperature: req.temperature, ...generationTuning(tuning) },
+    });
     let first = true;
-    await this.send(
+    return this.send(
       req.role,
       session.meta,
       opts.signal,
-      async (model, useThinking) => {
+      { thinking: req.thinking ?? 'low', maxOutputTokens: req.maxOutputTokens },
+      (model, tuning) => {
         if (!first) opts.onRestart?.();
         first = false;
-        parts = await this.postStream(model, session.key, body(model, useThinking), session.meta, opts);
-        return { text: '', json: {} };
+        return this.postStream(model, session.key, body(tuning), session.meta, opts);
       },
-      { useThinking: true, rediscovered: false },
     );
-    return parts;
   }
 
   /** Server-sent events from `streamGenerateContent`; the key stays in the header. */

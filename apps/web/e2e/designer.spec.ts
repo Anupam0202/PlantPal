@@ -176,12 +176,13 @@ test('F9 Photo-to-Plan (Labs): marks items, scales from one width and places dra
   test.setTimeout(120_000);
   await mockProviders(page);
   await mockGemini(page);
+  await seedPune(page);
+  await saveKey(page);
+  // What this feature sends, from here on (checking the key above sends its own tiny request).
   const sent: string[] = [];
   page.on('request', (r) => {
     if (r.url().startsWith(GEMINI) && r.method() === 'POST') sent.push(r.postData() ?? '');
   });
-  await seedPune(page);
-  await saveKey(page);
   await newLayout(page, 'Photo balcony');
   // Off by default: nothing to see until Labs is switched on.
   await expect(page.getByTestId('photo-plan')).toHaveCount(0);

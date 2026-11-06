@@ -5,6 +5,8 @@ import { expect } from './helpers';
 export const KEY = 'AIza' + 'Sy' + 'E2E'.repeat(11);
 /** A key in the newer `AQ.` format that Google AI Studio issues now. */
 export const AQ_KEY = 'AQ' + '.Ab' + 'E2e9'.repeat(13);
+/** A key in a format Google has not used yet (other prefix and characters): it must still work. */
+export const FUTURE_KEY = 'gk' + '_live/' + 'F7+e~'.repeat(9) + '==';
 export const GEMINI = 'https://generativelanguage.googleapis.com/';
 
 const MODELS = [
@@ -37,6 +39,11 @@ export async function mockGemini(page: Page) {
   const state = {
     mode: 'ok' as Mode,
     generateCalls: 0,
+    /** Tiny test requests sent when a key is checked; not counted as feature calls. */
+    probeCalls: 0,
+    generateUrls: [] as string[],
+    /** Models the key lists but that answer 404, as models closed to new keys do. */
+    closed: [] as string[],
     lastImages: 0,
     signatureEchoed: false,
     streamUrls: [] as string[],
@@ -51,7 +58,7 @@ export async function mockGemini(page: Page) {
     const req = route.request();
     if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
     const sent = req.headers()['x-goog-api-key'];
-    if (sent !== KEY && sent !== AQ_KEY)
+    if (sent !== KEY && sent !== AQ_KEY && sent !== FUTURE_KEY)
       return route.fulfill({
         status: 400,
         headers: cors,
@@ -117,7 +124,34 @@ export async function mockGemini(page: Page) {
         body: chunks.map((c) => `data: ${JSON.stringify(c)}\r\n\r\n`).join(''),
       });
     }
+    const closed = state.closed.find((m) => req.url().includes(`/models/${m}:`));
+    if (closed)
+      return route.fulfill({
+        status: 404,
+        headers: cors,
+        body: JSON.stringify({
+          error: {
+            code: 404,
+            status: 'NOT_FOUND',
+            message: `This model models/${closed} is no longer available to new users.`,
+          },
+        }),
+      });
+    const sentBody = JSON.parse(req.postData() ?? '{}') as { systemInstruction?: unknown };
+    if (!sentBody.systemInstruction) {
+      // The tiny test request made when a key is checked.
+      state.probeCalls++;
+      return route.fulfill({
+        status: 200,
+        headers: cors,
+        body: JSON.stringify({
+          candidates: [{ content: { parts: [{ text: 'OK' }] }, finishReason: 'STOP' }],
+          usageMetadata: { promptTokenCount: 8, candidatesTokenCount: 1 },
+        }),
+      });
+    }
     state.generateCalls++;
+    state.generateUrls.push(req.url());
     if (state.mode === 'rate-limited')
       return route.fulfill({
         status: 429,

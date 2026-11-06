@@ -127,6 +127,8 @@ export const ModelInfo = z.object({
   inputTokenLimit: z.number().nullable(),
   outputTokenLimit: z.number().nullable(),
   methods: z.array(z.string()),
+  /** The model list says the model can think before answering (absent on older lists). */
+  thinking: z.boolean().nullable().optional(),
 });
 export type ModelInfo = z.infer<typeof ModelInfo>;
 

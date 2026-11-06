@@ -844,7 +844,10 @@ function captureCases(): EvalCase[] {
       origin: 'synthetic',
       tags: ['truncated'],
       input: capIn('watered basil 1 l'),
-      responses: [ok('{"proposals": [{"type": "careEv', 'MAX_TOKENS')],
+      responses: [
+        ok('{"proposals": [{"type": "careEv', 'MAX_TOKENS'),
+        ok('{"proposals": [{"type": "careEvent", "spec', 'MAX_TOKENS'),
+      ],
       expect: { outcome: 'error', code: 'OUTPUT_TRUNCATED' },
     },
     {
@@ -1364,6 +1367,12 @@ function errorCases(): EvalCase[] {
     ),
     e('network-retried', [{ networkError: true }, good], { outcome: 'ok' }, ['network']),
     e(
+      'truncated-then-complete',
+      [ok('{"summary": "These plants fit', 'MAX_TOKENS'), good],
+      { outcome: 'ok' },
+      ['truncated'],
+    ),
+    e(
       'network-twice',
       [{ networkError: true }, { networkError: true }],
       { outcome: 'error', code: 'NETWORK' },
@@ -1378,7 +1387,10 @@ function errorCases(): EvalCase[] {
     e('safety-finish', [ok('', 'SAFETY')], { outcome: 'error', code: 'SAFETY_BLOCKED' }, ['refusal']),
     e(
       'truncated',
-      [ok('{"summary": "These plants fit', 'MAX_TOKENS')],
+      [
+        ok('{"summary": "These plants fit', 'MAX_TOKENS'),
+        ok('{"summary": "These plants fit a west', 'MAX_TOKENS'),
+      ],
       { outcome: 'error', code: 'OUTPUT_TRUNCATED' },
       ['truncated'],
     ),
@@ -1604,7 +1616,10 @@ function healthCases(): EvalCase[] {
       'partial-json',
       ['truncated', 'partial-json'],
       healthIn(),
-      [ok('{"imageUsable": true, "plantPresent": true, "candidates": [{"category": "abio', 'MAX_TOKENS')],
+      [
+        ok('{"imageUsable": true, "plantPresent": true, "candidates": [{"category": "abio', 'MAX_TOKENS'),
+        ok('{"imageUsable": true, "plantPresent": true, "candidates": [{"category": "abiotic"', 'MAX_TOKENS'),
+      ],
       { outcome: 'error', code: 'OUTPUT_TRUNCATED' },
     ),
     c(
@@ -1792,7 +1807,10 @@ function photoIdCases(): EvalCase[] {
       'partial-json',
       ['truncated', 'partial-json'],
       idIn(),
-      [ok('{"imageUsable": true, "candidates": [{"scientificName": "Ocim', 'MAX_TOKENS')],
+      [
+        ok('{"imageUsable": true, "candidates": [{"scientificName": "Ocim', 'MAX_TOKENS'),
+        ok('{"imageUsable": true, "candidates": [{"scientificName": "Ocimum ba', 'MAX_TOKENS'),
+      ],
       { outcome: 'error', code: 'OUTPUT_TRUNCATED' },
     ),
     c(
@@ -1906,7 +1924,10 @@ function spaceCases(): EvalCase[] {
       'partial-json',
       ['truncated', 'partial-json'],
       spaceIn(),
-      [ok('{"items": [{"label": "pot", "box_2d": [640, 1', 'MAX_TOKENS')],
+      [
+        ok('{"items": [{"label": "pot", "box_2d": [640, 1', 'MAX_TOKENS'),
+        ok('{"items": [{"label": "pot", "box_2d": [640, 120, 9', 'MAX_TOKENS'),
+      ],
       { outcome: 'error', code: 'OUTPUT_TRUNCATED' },
     ),
     c(
@@ -2074,7 +2095,10 @@ function speciesCases(): EvalCase[] {
       'partial-json',
       ['truncated', 'partial-json'],
       draftIn(),
-      [ok('{"traits": [{"trait": "minTempC", "val', 'MAX_TOKENS')],
+      [
+        ok('{"traits": [{"trait": "minTempC", "val', 'MAX_TOKENS'),
+        ok('{"traits": [{"trait": "minTempC", "value": 1', 'MAX_TOKENS'),
+      ],
       { outcome: 'error', code: 'OUTPUT_TRUNCATED' },
     ),
   ];

@@ -222,6 +222,12 @@ export interface SelectFieldProps<V extends string> {
   className?: string;
 }
 
+/**
+ * Stands in for an option whose value is the empty string: the select treats `''` as "nothing
+ * chosen" and would show the placeholder instead of that option's label (such as "Automatic").
+ */
+const EMPTY_VALUE = '\u0000empty';
+
 export function SelectField<V extends string>({
   label,
   value,
@@ -231,13 +237,15 @@ export function SelectField<V extends string>({
   description,
   className,
 }: SelectFieldProps<V>) {
+  const hasEmpty = options.some((o) => o.value === '');
+  const toSelect = (v: string) => (hasEmpty && v === '' ? EMPTY_VALUE : v);
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
       <BaseSelect.Root
-        items={options.map((o) => ({ value: o.value, label: o.label }))}
-        value={value}
+        items={options.map((o) => ({ value: toSelect(o.value), label: o.label }))}
+        value={value === null ? null : toSelect(value)}
         onValueChange={(v) => {
-          if (v !== null) onValueChange(v as V);
+          if (v !== null) onValueChange((v === EMPTY_VALUE ? '' : v) as V);
         }}
       >
         <BaseSelect.Label className="text-body-s font-medium text-ink">{label}</BaseSelect.Label>
@@ -256,7 +264,7 @@ export function SelectField<V extends string>({
                 {options.map((o) => (
                   <BaseSelect.Item
                     key={o.value}
-                    value={o.value}
+                    value={toSelect(o.value)}
                     className="grid min-h-11 cursor-default grid-cols-[1.25rem_1fr] items-center gap-2 rounded-md px-2.5 py-1.5 text-body-s text-ink outline-none select-none data-highlighted:bg-accent-soft data-highlighted:text-accent-ink"
                   >
                     <BaseSelect.ItemIndicator className="col-start-1">

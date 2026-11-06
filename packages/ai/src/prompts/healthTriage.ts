@@ -29,7 +29,7 @@ export const healthTriageV1: PromptModule<HealthTriageInput, HealthTriage> = {
   schema: HealthTriage,
   maxOutputTokens: 2048,
   temperature: 0.2,
-  thinking: 'default',
+  thinking: 'low',
   task: [
     'Task: triage a possible plant health problem from the photos and the gardener’s answers.',
     'If the photos are not of a plant, or too unclear to judge, set imageUsable or plantPresent to false, return no candidates and explain in abstainReason.',
