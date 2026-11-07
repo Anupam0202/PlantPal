@@ -517,6 +517,9 @@ export const es: Messages = {
       'Tu posición exacta se queda en este dispositivo. El tiempo y los mapas usan una zona de unos 5 km.',
     myLocation: 'Mi ubicación',
     offline: 'La búsqueda de lugares necesita conexión. También puedes usar la ubicación del dispositivo.',
+    unavailable:
+      'La búsqueda de lugares no responde ahora. Vuelve a intentarlo o usa la ubicación del dispositivo.',
+    retry: 'Reintentar',
   },
   plan: {
     title: 'Planificar',

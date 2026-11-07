@@ -106,7 +106,16 @@ export function LocationField({
       {query.trim().length >= 2 && (
         <div aria-live="polite">
           {search.isFetching && <p className="text-body-s text-muted">{t.location.searching}</p>}
-          {search.isError && <p className="text-body-s text-muted">{t.location.offline}</p>}
+          {search.isError && !search.isFetching && (
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-body-s text-muted">
+                {navigator.onLine ? t.location.unavailable : t.location.offline}
+              </p>
+              <Button type="button" size="sm" variant="secondary" onClick={() => void search.refetch()}>
+                {t.location.retry}
+              </Button>
+            </div>
+          )}
           {search.isSuccess && results.length === 0 && (
             <p className="text-body-s text-muted">{t.location.noResults}</p>
           )}

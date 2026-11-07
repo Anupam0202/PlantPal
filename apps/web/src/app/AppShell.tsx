@@ -158,7 +158,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 title={t.nav.commandPalette}
               >
                 <Search className="size-5" aria-hidden="true" />
-                <span className="sr-only flex-1 text-left xl:not-sr-only">Search</span>
+                <span className="sr-only flex-1 text-left xl:not-sr-only">{t.common.search}</span>
                 <span className="hidden gap-1 xl:flex" aria-hidden="true">
                   <Kbd>⌘</Kbd>
                   <Kbd>K</Kbd>

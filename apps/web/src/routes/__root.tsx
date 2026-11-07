@@ -14,6 +14,7 @@ function NotFound() {
   return (
     <Page width="narrow">
       <EmptyState
+        headingLevel={1}
         illustration={<MagnifierLeafIllustration />}
         title={t.notFound.title}
         description={t.notFound.body}

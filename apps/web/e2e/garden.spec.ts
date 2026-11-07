@@ -49,6 +49,15 @@ test('photos are re-encoded on the device and lose EXIF and GPS data', async ({ 
   expect(stored.includes(Buffer.from('PLANTPAL-SECRET-GPS'))).toBe(false);
   expect(stored.length).toBeLessThan(original.length);
   await expect(page.locator('main img').first()).toBeVisible();
+
+  // A saved photo can get alt text later, from the plant page.
+  await page.getByRole('button', { name: 'Alt text for photo' }).click();
+  const editor = page.getByTestId('alt-editor');
+  await editor.getByRole('textbox', { name: 'Alt text' }).fill('Basil in a terracotta pot');
+  await editor.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByText('Alt text saved').first()).toBeVisible();
+  await expect(page.locator('main img[alt="Basil in a terracotta pot"]').first()).toBeVisible();
+  await expect(editor).toHaveCount(0);
 });
 
 test('typed quick capture becomes proposals that are saved only after confirmation', async ({ page }) => {

@@ -8,14 +8,24 @@ export interface EmptyStateProps {
   description?: ReactNode;
   action?: ReactNode;
   className?: string;
+  /** 1 when the empty state is the whole page (e.g. "page not found"), so the page has a main heading. */
+  headingLevel?: 1 | 2;
 }
 
 /** One illustration, one explanation, one primary action. */
-export function EmptyState({ illustration, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({
+  illustration,
+  title,
+  description,
+  action,
+  className,
+  headingLevel = 2,
+}: EmptyStateProps) {
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
   return (
     <div className={cn('flex flex-col items-center gap-3 px-4 py-10 text-center', className)}>
       {illustration && <div className="mb-1 text-accent-ink">{illustration}</div>}
-      <h2 className="text-h3 text-balance text-ink">{title}</h2>
+      <Heading className="text-h3 text-balance text-ink">{title}</Heading>
       {description && <p className="max-w-[48ch] text-body-s text-muted text-pretty">{description}</p>}
       {action && <div className="mt-2 flex flex-wrap justify-center gap-2">{action}</div>}
     </div>

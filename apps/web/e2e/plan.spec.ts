@@ -73,7 +73,9 @@ test('W1 with every provider down: the manual path still saves a plan', async ({
   await page.getByRole('button', { name: 'Next' }).click();
 
   await page.getByRole('searchbox', { name: 'Search for a town or area' }).fill('Pune');
-  await expect(page.getByText('Place search needs a connection.', { exact: false })).toBeVisible();
+  // Online but the service is down: said as such, with a way to try again.
+  await expect(page.getByText('Place search is not answering right now.', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
   await page.getByRole('radio', { name: 'Northern' }).check();
   await page.getByRole('radio', { name: 'Never' }).check();
   await page
@@ -96,6 +98,55 @@ test('W1 with every provider down: the manual path still saves a plan', async ({
   await expect(page.getByRole('heading', { name: 'Your garden is planted' })).toBeVisible();
   await page.getByRole('link', { name: 'See your next steps' }).click();
   await expect(page.getByTestId('next-steps')).toContainText('Add your garden’s location');
+});
+
+test('place search that fails can be tried again', async ({ page }) => {
+  await mockProviders(page);
+  let down = true;
+  await page.route('https://geocoding-api.open-meteo.com/**', (route) =>
+    down
+      ? route.fulfill({ status: 503, headers: { 'access-control-allow-origin': '*' }, body: '{}' })
+      : route.fallback(),
+  );
+  await page.goto('/welcome?step=space');
+  await page.getByRole('button', { name: 'Balcony' }).click();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('searchbox', { name: 'Search for a town or area' }).fill('Pune');
+  await expect(page.getByText('Place search is not answering right now.', { exact: false })).toBeVisible();
+  down = false;
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByRole('list', { name: 'Places found' }).getByRole('button').first()).toBeVisible();
+});
+
+test('climate unavailable for a chosen place: all three fallback questions stay answerable', async ({
+  page,
+}) => {
+  await mockProviders(page);
+  // Place search works; the climate history service is down.
+  await page.route('https://archive-api.open-meteo.com/**', (route) =>
+    route.fulfill({ status: 503, headers: { 'access-control-allow-origin': '*' }, body: '{}' }),
+  );
+  await page.goto('/welcome?step=space');
+  await page.getByRole('button', { name: 'Balcony' }).click();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('searchbox', { name: 'Search for a town or area' }).fill('Pune');
+  await page.getByRole('list', { name: 'Places found' }).getByRole('button').first().click();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('button', { name: 'Skip' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Plants that fit' })).toBeVisible();
+  await page.getByRole('group', { name: 'Frost in winter?' }).getByRole('radio', { name: 'Never' }).check();
+  // Answering the first question keeps the other two on screen.
+  const hot = page.getByRole('group', { name: 'Very hot summers (35 °C or more)?' });
+  await hot.getByRole('radio', { name: 'Yes' }).check();
+  await page
+    .getByRole('group', { name: 'A monsoon or rainy season?' })
+    .getByRole('radio', { name: 'Yes' })
+    .check();
+  await expect(hot.getByRole('radio', { name: 'Yes' })).toBeChecked();
+  await expect(page.getByTestId('match').first()).toBeVisible();
 });
 
 test('light 0 stays 0: "No direct sun" leaves out sun lovers', async ({ page }) => {
