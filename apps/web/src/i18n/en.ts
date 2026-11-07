@@ -575,6 +575,7 @@ export const en = {
     lowData: 'Low-data mode',
     lowDataHint: 'Smaller images, no map tiles until you ask, no background animation.',
     language: 'Language',
+    languageDraft: 'Hindi and Spanish are draft translations awaiting review by native speakers.',
     units: 'Units',
     metric: 'Metric',
     imperial: 'Imperial',

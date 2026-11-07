@@ -10,7 +10,13 @@ import type {
   SKY_STATES,
   WIND_STATES,
 } from '@plantpal/schemas';
-import type { IncompatibleReason, LedgerMetric, LedgerMethod, MonthState } from '@plantpal/domain';
+import type {
+  IncompatibleReason,
+  LedgerMetric,
+  LedgerMethod,
+  LedgerSource,
+  MonthState,
+} from '@plantpal/domain';
 import { usePrefs, type LocalePref } from '../../state/prefs';
 
 type Sky = (typeof SKY_STATES)[number];
@@ -340,7 +346,62 @@ const en = {
     } as Record<LedgerMetric, string>,
     carbonNote:
       'PlantPal does not put a carbon number on herbs, vegetables and flowers. Woody plants need a cited method first.',
-    sources: { own: 'Your records' },
+    sources: {
+      own: 'Your records',
+      'catalogue-native': 'PlantPal catalogue native statuses (drafts until reviewed against WCVP)',
+      'bloom-bridge': 'Bloom Bridge (catalogue reference timing and your flowering checks)',
+      'catalogue-spread': 'Mature spread ranges in the PlantPal catalogue (drafts)',
+      'not-estimated': 'Not estimated',
+    } satisfies Record<LedgerSource, string>,
+    notes: {
+      unlinked: (n: number) =>
+        n === 1
+          ? '1 plant not linked to the catalogue is not counted'
+          : `${n} plants not linked to the catalogue are not counted`,
+      missingMonths: 'Months with missing data are not counted',
+      effort: 'Depends on time spent looking; groups and species are counted as names',
+      substrate: (n: number) =>
+        `${n} containers with a recorded substrate; counts peat-free and coir mixes (plain "potting mix" may contain peat)`,
+      spread: (lo: string, hi: string, n: number) => `${lo}–${hi} m² from the spread ranges; ${n} plants`,
+      noMethod: 'Needs a cited allometric method for woody plants; herbs and annuals are not counted',
+    },
+    units: { kg: 'kg', L: 'L', min: 'min', months: 'months', 'm²': 'm²' } as Record<string, string>,
+  },
+  story: {
+    title: 'Garden Story',
+    hubBody: 'Your year told from your records, to keep or share.',
+    heading: (year: number, garden: string) => `${year} in ${garden}`,
+    empty: (year: number) => `Nothing recorded in ${year} yet`,
+    emptyBody:
+      'Plantings, harvests, nature visits, rainwater and photos you record will tell this year’s story.',
+    plantings: 'First plantings',
+    bloom: 'Bloom for pollinators',
+    bloomBody: 'Months with known forage now, from the catalogue and your own flowering checks.',
+    bloomLabel: 'Months with known forage',
+    forage: 'forage',
+    noForage: 'no known forage',
+    harvests: 'Top harvests',
+    visitors: 'Visitors observed',
+    visitorsBody: (n: number) =>
+      `${n === 1 ? '1 nature visit' : `${n} nature visits`}. Counts reflect when and where you looked.`,
+    rain: 'Rainwater used',
+    rainBody: (litres: string) => `${litres} litres, as logged`,
+    photos: 'Photo timeline',
+    share: 'Share this story',
+    shareNote:
+      'Only the garden’s name appears, never its address or coordinates. Check what you share first.',
+    withPhotos: 'Include photos',
+    withPhotosHint: 'Photos can show faces or details of where you live. Look through them before sharing.',
+    saveImage: 'Save as image',
+    print: 'Print or save as PDF',
+    imageFailed: 'Could not make the image. Please try again.',
+    card: {
+      plantings: (n: number) => (n === 1 ? '1 new planting' : `${n} new plantings`),
+      harvest: (list: string) => `Harvest: ${list}`,
+      visits: (n: number) => (n === 1 ? '1 nature visit' : `${n} nature visits`),
+      rain: (litres: string) => `${litres} litres of rainwater used`,
+      footer: 'From my PlantPal records',
+    },
   },
 };
 
@@ -657,7 +718,58 @@ const hi: NatureMessages = {
     },
     carbonNote:
       'PlantPal जड़ी-बूटियों, सब्ज़ियों और फूलों पर कार्बन की संख्या नहीं लगाता। लकड़ी वाले पौधों के लिए पहले एक संदर्भित तरीका चाहिए।',
-    sources: { own: 'आपके रिकॉर्ड' },
+    sources: {
+      own: 'आपके रिकॉर्ड',
+      'catalogue-native': 'PlantPal सूची की देशी स्थितियाँ (WCVP से जाँच होने तक मसौदा)',
+      'bloom-bridge': 'ब्लूम ब्रिज (सूची का संदर्भ समय और आपकी फूल-जाँच)',
+      'catalogue-spread': 'PlantPal सूची में पूरे बढ़े पौधों का फैलाव (मसौदा)',
+      'not-estimated': 'अनुमान नहीं लगाया',
+    },
+    notes: {
+      unlinked: (n) => `सूची से न जुड़े ${n} पौधे नहीं गिने गए`,
+      missingMonths: 'जिन महीनों के आँकड़े नहीं हैं, वे नहीं गिने गए',
+      effort: 'देखने में लगाए समय पर निर्भर; समूह और प्रजातियाँ नामों के रूप में गिनी जाती हैं',
+      substrate: (n) =>
+        `दर्ज मिट्टी-मिश्रण वाले ${n} गमले; पीट-रहित और नारियल-भूसी (कॉयर) मिश्रण गिने जाते हैं (साधारण "पॉटिंग मिक्स" में पीट हो सकता है)`,
+      spread: (lo, hi, n) => `फैलाव की सीमाओं से ${lo}–${hi} मी²; ${n} पौधे`,
+      noMethod:
+        'लकड़ी वाले पौधों के लिए संदर्भित एलोमेट्रिक तरीका चाहिए; जड़ी-बूटियाँ और एक-वर्षीय पौधे नहीं गिने जाते',
+    },
+    units: { kg: 'किग्रा', L: 'लीटर', min: 'मिनट', months: 'महीने', 'm²': 'मी²' },
+  },
+  story: {
+    title: 'बगीचे की कहानी',
+    hubBody: 'आपके रिकॉर्ड से बनी आपके साल की कहानी, रखने या साझा करने के लिए।',
+    heading: (year, garden) => `${garden} में ${year}`,
+    empty: (year) => `${year} में अभी कुछ दर्ज नहीं`,
+    emptyBody:
+      'आप जो पौधे लगाएँगे, फ़सल, प्रकृति विज़िट, बारिश का पानी और फ़ोटो दर्ज करेंगे, वही इस साल की कहानी बताएँगे।',
+    plantings: 'पहली बार लगाए पौधे',
+    bloom: 'परागण करने वालों के लिए फूल',
+    bloomBody: 'अभी ज्ञात भोजन वाले महीने, सूची और आपकी अपनी फूल-जाँच से।',
+    bloomLabel: 'ज्ञात भोजन वाले महीने',
+    forage: 'भोजन',
+    noForage: 'कोई ज्ञात भोजन नहीं',
+    harvests: 'सबसे बड़ी फ़सलें',
+    visitors: 'देखे गए मेहमान',
+    visitorsBody: (n) => `${n} प्रकृति विज़िट। गिनती बताती है कि आपने कब और कहाँ देखा।`,
+    rain: 'इस्तेमाल किया गया बारिश का पानी',
+    rainBody: (litres) => `${litres} लीटर, दर्ज किए अनुसार`,
+    photos: 'फ़ोटो समयरेखा',
+    share: 'यह कहानी साझा करें',
+    shareNote: 'केवल बगीचे का नाम दिखता है, उसका पता या निर्देशांक कभी नहीं। साझा करने से पहले जाँच लें।',
+    withPhotos: 'फ़ोटो शामिल करें',
+    withPhotosHint: 'फ़ोटो में चेहरे या आपके घर की जानकारी दिख सकती है। साझा करने से पहले उन्हें देख लें।',
+    saveImage: 'तस्वीर के रूप में सहेजें',
+    print: 'छापें या PDF के रूप में सहेजें',
+    imageFailed: 'तस्वीर नहीं बन सकी। कृपया फिर कोशिश करें।',
+    card: {
+      plantings: (n) => `${n} नए पौधे लगाए`,
+      harvest: (list) => `फ़सल: ${list}`,
+      visits: (n) => `${n} प्रकृति विज़िट`,
+      rain: (litres) => `${litres} लीटर बारिश का पानी इस्तेमाल`,
+      footer: 'मेरे PlantPal रिकॉर्ड से',
+    },
   },
 };
 
@@ -975,7 +1087,63 @@ const es: NatureMessages = {
     },
     carbonNote:
       'PlantPal no pone una cifra de carbono a hierbas, hortalizas y flores. Las plantas leñosas necesitan antes un método citado.',
-    sources: { own: 'Tus registros' },
+    sources: {
+      own: 'Tus registros',
+      'catalogue-native': 'Estados nativos del catálogo de PlantPal (borradores hasta revisarlos con WCVP)',
+      'bloom-bridge': 'Puente de floración (fechas de referencia del catálogo y tus revisiones de floración)',
+      'catalogue-spread': 'Rangos de extensión adulta del catálogo de PlantPal (borradores)',
+      'not-estimated': 'Sin estimar',
+    },
+    notes: {
+      unlinked: (n) =>
+        n === 1
+          ? '1 planta sin vincular al catálogo no se cuenta'
+          : `${n} plantas sin vincular al catálogo no se cuentan`,
+      missingMonths: 'Los meses sin datos no se cuentan',
+      effort: 'Depende del tiempo dedicado a mirar; los grupos y las especies se cuentan como nombres',
+      substrate: (n) =>
+        `${n} macetas con sustrato registrado; cuenta las mezclas sin turba y de fibra de coco (un "sustrato universal" puede contener turba)`,
+      spread: (lo, hi, n) => `${lo}–${hi} m² según los rangos de extensión; ${n} plantas`,
+      noMethod:
+        'Necesita un método alométrico citado para plantas leñosas; las hierbas y anuales no se cuentan',
+    },
+    units: { kg: 'kg', L: 'L', min: 'min', months: 'meses', 'm²': 'm²' },
+  },
+  story: {
+    title: 'Historia del jardín',
+    hubBody: 'Tu año contado a partir de tus registros, para guardar o compartir.',
+    heading: (year, garden) => `${year} en ${garden}`,
+    empty: (year) => `Aún no hay nada registrado en ${year}`,
+    emptyBody:
+      'Las plantaciones, cosechas, visitas de naturaleza, agua de lluvia y fotos que registres contarán la historia de este año.',
+    plantings: 'Primeras plantaciones',
+    bloom: 'Flores para polinizadores',
+    bloomBody: 'Meses con alimento conocido ahora, según el catálogo y tus propias revisiones de floración.',
+    bloomLabel: 'Meses con alimento conocido',
+    forage: 'alimento',
+    noForage: 'sin alimento conocido',
+    harvests: 'Mejores cosechas',
+    visitors: 'Visitantes observados',
+    visitorsBody: (n) =>
+      `${n === 1 ? '1 visita de naturaleza' : `${n} visitas de naturaleza`}. Los conteos reflejan cuándo y dónde miraste.`,
+    rain: 'Agua de lluvia usada',
+    rainBody: (litres) => `${litres} litros, según lo registrado`,
+    photos: 'Fotos del año',
+    share: 'Compartir esta historia',
+    shareNote:
+      'Solo aparece el nombre del jardín, nunca su dirección ni sus coordenadas. Revisa lo que compartes.',
+    withPhotos: 'Incluir fotos',
+    withPhotosHint: 'Las fotos pueden mostrar caras o detalles de dónde vives. Revísalas antes de compartir.',
+    saveImage: 'Guardar como imagen',
+    print: 'Imprimir o guardar como PDF',
+    imageFailed: 'No se pudo crear la imagen. Inténtalo de nuevo.',
+    card: {
+      plantings: (n) => (n === 1 ? '1 plantación nueva' : `${n} plantaciones nuevas`),
+      harvest: (list) => `Cosecha: ${list}`,
+      visits: (n) => (n === 1 ? '1 visita de naturaleza' : `${n} visitas de naturaleza`),
+      rain: (litres) => `${litres} litros de agua de lluvia usados`,
+      footer: 'De mis registros de PlantPal',
+    },
   },
 };
 
@@ -984,4 +1152,14 @@ export const catalogs: Record<LocalePref, NatureMessages> = { en, hi, es };
 export function useNatureT(): NatureMessages {
   const locale = usePrefs((s) => s.locale);
   return catalogs[locale];
+}
+
+/** A visit record's group, by name: pollinator groups, sighting groups, phases, or a bird. */
+export function groupName(m: NatureMessages, g: string): string {
+  return (
+    (m.groups as Record<string, string>)[g] ??
+    (m.sightingGroups as Record<string, string>)[g] ??
+    (m.phases as Record<string, string>)[g] ??
+    (g === 'bird' ? m.birds.species : g)
+  );
 }

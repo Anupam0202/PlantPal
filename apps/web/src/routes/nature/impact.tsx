@@ -1,4 +1,11 @@
-import { addDays, impactLedger, nativeStatusOf, todayIn, type LedgerRow } from '@plantpal/domain';
+import {
+  addDays,
+  impactLedger,
+  nativeStatusOf,
+  todayIn,
+  type LedgerNote,
+  type LedgerRow,
+} from '@plantpal/domain';
 import { Badge, Card, PageHeader, SegmentedControl } from '@plantpal/ui';
 import { createFileRoute } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
@@ -14,7 +21,7 @@ import {
 } from '../../data/queries';
 import { GardenLoading, NoGarden } from '../../features/garden/NoGarden';
 import { gardenBloomWheel } from '../../features/nature/bloomData';
-import { useNatureT } from '../../features/nature/messages';
+import { useNatureT, type NatureMessages } from '../../features/nature/messages';
 import { taxonById } from '../../features/plan/engine';
 import { useFormat } from '../../i18n';
 
@@ -77,7 +84,7 @@ function Impact() {
 
   const value = (r: LedgerRow) => {
     if (r.value === null) return r.metric === 'carbon' ? m.impact.notEstimated : m.impact.unknown;
-    const unit = r.label ?? (r.unit === 'count' ? '' : r.unit);
+    const unit = r.label ?? (r.unit === 'count' ? '' : (m.impact.units[r.unit] ?? r.unit));
     const digits = Number.isInteger(r.value) ? 0 : Math.abs(r.value) < 10 ? 2 : 1;
     return `${fmt.number(r.value, digits)}${unit ? ` ${unit}` : ''}`;
   };
@@ -139,8 +146,8 @@ function Impact() {
                   </Badge>
                 </td>
                 <td className="p-3 text-caption text-muted">
-                  {r.source === 'Your records' ? m.impact.sources.own : r.source}
-                  {r.uncertainty ? ` · ${r.uncertainty}` : ''}
+                  {m.impact.sources[r.source]}
+                  {r.uncertainty ? ` · ${noteText(m, r.uncertainty, fmt.number)}` : ''}
                 </td>
               </tr>
             ))}
@@ -150,4 +157,22 @@ function Impact() {
       <p className="mt-3 text-caption text-muted">{m.impact.carbonNote}</p>
     </Page>
   );
+}
+
+/** What limits a line's figure, in the person's language. */
+function noteText(m: NatureMessages, n: LedgerNote, num: (v: number, digits?: number) => string): string {
+  switch (n.kind) {
+    case 'unlinked':
+      return m.impact.notes.unlinked(n.plants);
+    case 'missing-months':
+      return m.impact.notes.missingMonths;
+    case 'effort':
+      return m.impact.notes.effort;
+    case 'substrate':
+      return m.impact.notes.substrate(n.containers);
+    case 'spread':
+      return m.impact.notes.spread(num(n.lo, 1), num(n.hi, 1), n.plants);
+    case 'no-method':
+      return m.impact.notes.noMethod;
+  }
 }

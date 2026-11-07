@@ -577,6 +577,8 @@ export const es: Messages = {
     lowData: 'Modo de pocos datos',
     lowDataHint: 'Imágenes más pequeñas, sin mapas hasta que los pidas y sin animaciones de fondo.',
     language: 'Idioma',
+    languageDraft:
+      'El hindi y el español son traducciones en borrador pendientes de revisión por hablantes nativos.',
     units: 'Unidades',
     metric: 'Métrico',
     imperial: 'Imperial',
