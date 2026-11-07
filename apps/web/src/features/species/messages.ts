@@ -182,6 +182,22 @@ const hi: SpeciesMessages = {
   lookAlikes: 'मिलते-जुलते पौधे',
   catalogue: 'PlantPal सूची में खोजें',
   linked: 'सूची से जुड़ा',
+
+  namesSource: 'Wikidata से (CC0)',
+  traitNames: {
+    minTempC: 'न्यूनतम तापमान',
+    maxHeightM: 'ऊँचाई',
+    maxSpreadM: 'फैलाव',
+    directSunHoursMin: 'धूप (न्यूनतम)',
+    directSunHoursMax: 'धूप (अधिकतम)',
+    waterNeed: 'पानी की ज़रूरत',
+    containerMinL: 'गमले का आकार',
+    bloomMonths: 'फूल के महीने',
+    lifecycle: 'जीवन चक्र',
+    pollinatorValue: 'परागणकों के लिए महत्व',
+    hostFor: 'इनके लार्वा का भोजन',
+    toxicity: 'विषाक्तता',
+  },
 };
 
 const es: SpeciesMessages = {
@@ -265,9 +281,26 @@ const es: SpeciesMessages = {
   lookAlikes: 'Parecidas',
   catalogue: 'Buscar en el catálogo de PlantPal',
   linked: 'Vinculada al catálogo',
+
+  namesSource: 'De Wikidata (CC0)',
+  traitNames: {
+    minTempC: 'Temperatura mínima',
+    maxHeightM: 'Altura',
+    maxSpreadM: 'Anchura',
+    directSunHoursMin: 'Sol (mínimo)',
+    directSunHoursMax: 'Sol (máximo)',
+    waterNeed: 'Necesidad de agua',
+    containerMinL: 'Tamaño de maceta',
+    bloomMonths: 'Meses de floración',
+    lifecycle: 'Ciclo de vida',
+    pollinatorValue: 'Valor para polinizadores',
+    hostFor: 'Planta nutricia de',
+    toxicity: 'Toxicidad',
+  },
 };
 
-const catalogs: Record<LocalePref, SpeciesMessages> = { en, hi, es };
+/** Exported for the translation completeness test. */
+export const catalogs: Record<LocalePref, SpeciesMessages> = { en, hi, es };
 
 export function useSpeciesT(): SpeciesMessages {
   const locale = usePrefs((s) => s.locale);
