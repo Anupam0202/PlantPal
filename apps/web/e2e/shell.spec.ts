@@ -59,7 +59,8 @@ test('without a community server, the community pages say it is not switched on'
 
 test('unknown routes show a helpful not-found page', async ({ page }) => {
   await page.goto('/definitely/not/here');
-  await expect(page.getByRole('heading', { name: 'This path leads nowhere' })).toBeVisible();
+  // The page's main heading, so screen-reader users land on it like on any other page.
+  await expect(page.getByRole('heading', { level: 1, name: 'This path leads nowhere' })).toBeVisible();
   await page.getByRole('link', { name: 'Go to Today' }).click();
   await expect(page).toHaveURL(/\/today$/);
 });
@@ -75,7 +76,7 @@ test('skip link moves focus to the main content', async ({ page, isMobile }) => 
   await expect(page.locator('#main')).toBeFocused();
 });
 
-test('theme, contrast and language preferences apply and persist', async ({ page }) => {
+test('theme, contrast and language preferences apply and persist', async ({ page, isMobile }) => {
   await page.goto('/settings');
   await expect(page.getByRole('heading', { level: 1, name: 'Settings' })).toBeVisible();
   await page.getByRole('button', { name: 'Dark' }).click();
@@ -89,6 +90,8 @@ test('theme, contrast and language preferences apply and persist', async ({ page
   await page.getByRole('option', { name: 'Español' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Ajustes' })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+  // The side navigation follows the language too (desktop only; phones use the bottom bar).
+  if (!isMobile) await expect(page.getByRole('button', { name: 'Buscar', exact: true })).toBeVisible();
 });
 
 test('command palette opens with the keyboard and navigates', async ({ page, isMobile }) => {

@@ -250,7 +250,7 @@ function PlanPage() {
           </div>
 
           <aside className="flex flex-col gap-6">
-            <Card className="flex flex-col gap-3 lg:sticky lg:top-6">
+            <Card className="flex flex-col gap-3">
               <h2 className="text-h3 text-ink">{m.plan.starterSet(selection.size)}</h2>
               <ul className="flex flex-col gap-1 text-body-s">
                 {[...selection].map((id) => {

@@ -11,9 +11,10 @@ import {
   Sheet,
   TaxonName,
 } from '@plantpal/ui';
-import { Archive, ArchiveRestore, ChevronLeft, NotebookPen, Pencil } from 'lucide-react';
+import { Archive, ArchiveRestore, ChevronLeft, NotebookPen, Pencil, Type } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useAiT } from '../../../ai/messages';
 import { Page } from '../../../app/Page';
 import { setSpecimenStatus, updateSpecimen } from '../../../data/commands';
 import {
@@ -28,6 +29,7 @@ import {
 import { CarePanel } from '../../../features/care/CarePanel';
 import { PlantHealth } from '../../../features/health/PlantHealth';
 import { reportError } from '../../../features/garden/errors';
+import { AltTextEditor } from '../../../features/garden/AltText';
 import { FamilyTree } from '../../../features/garden/FamilyTree';
 import { useLocalDayLabel } from '../../../features/garden/format';
 import { MediaThumb } from '../../../features/garden/Media';
@@ -54,6 +56,8 @@ function PlantPage() {
   const cover = useMedia(specimen?.coverMediaId ? [specimen.coverMediaId] : []);
   const openCapture = useCapture((s) => s.openCapture);
   const [editing, setEditing] = useState(false);
+  const [altOpen, setAltOpen] = useState(false);
+  const at = useAiT();
   const dayLabel = useLocalDayLabel(garden?.timezone);
 
   if (specimen === undefined || (specimen && garden === undefined))
@@ -115,7 +119,25 @@ function PlantPage() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-10">
         <div className="flex flex-col gap-4">
           {cover && cover[0] ? (
-            <MediaThumb media={cover[0]} size="lg" className="rounded-lg shadow-1" />
+            <div className="flex flex-col gap-2">
+              <MediaThumb media={cover[0]} size="lg" className="rounded-lg shadow-1" />
+              {cover[0].kind === 'stored' && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="self-start"
+                  aria-pressed={altOpen}
+                  onClick={() => setAltOpen(!altOpen)}
+                >
+                  <Type className="size-4" aria-hidden="true" />
+                  {at.alt.edit(at.alt.photo)}
+                  {cover[0].alt ? ' ✓' : null}
+                </Button>
+              )}
+              {altOpen && cover[0].kind === 'stored' && (
+                <AltTextEditor media={cover[0]} plantName={name} onDone={() => setAltOpen(false)} />
+              )}
+            </div>
           ) : null}
           <PageHeader
             eyebrow={garden.name}

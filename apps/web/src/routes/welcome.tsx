@@ -163,6 +163,11 @@ function Seed() {
   const measured = climateQuery.data && climateQuery.data.extremeMinC !== null ? climateQuery.data : null;
   const climateFailed =
     base !== null && (climateQuery.isError || (climateQuery.data !== undefined && !measured));
+  // The manual questions appear on the matches step when climate is missing and unanswered. Once
+  // shown they stay, so answering the first one does not hide the other two.
+  const manualNeeded = (climateFailed || !base) && !d.manual.frost;
+  const [manualShown, setManualShown] = useState(false);
+  if (step === 'matches' && manualNeeded && !manualShown) setManualShown(true);
 
   // `computedAt` is stamped at save time; the memo stays pure.
   const zones = useMemo(() => {
@@ -601,7 +606,7 @@ function Seed() {
             {m.seed.climateUpdated}
           </p>
         )}
-        {(climateFailed || !base) && !d.manual.frost && (
+        {(climateFailed || !base) && (manualNeeded || manualShown) && (
           <Notice tone="info" title={m.seed.manualTitle}>
             <p className="mb-3">{m.seed.climateFailed}</p>
             <ClimateQuestions value={d.manual} onChange={(manual) => set({ manual })} />

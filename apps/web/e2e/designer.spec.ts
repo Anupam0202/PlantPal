@@ -189,7 +189,12 @@ test('F9 Photo-to-Plan (Labs): marks items, scales from one width and places dra
   const editor = page.url();
 
   await page.goto('/settings/ai');
-  await page.getByRole('switch', { name: 'Photo-to-Plan' }).click();
+  const labs = page.getByRole('switch', { name: 'Photo-to-Plan' });
+  await labs.click();
+  // Leave only once the setting is saved: it survives a reload.
+  await expect(labs).toBeChecked();
+  await page.reload();
+  await expect(page.getByRole('switch', { name: 'Photo-to-Plan' })).toBeChecked();
   await page.goto(editor);
   const panel = page.getByTestId('photo-plan');
   await expect(panel).toBeVisible();

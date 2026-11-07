@@ -517,6 +517,8 @@ export const en = {
     privacy: 'Your exact position stays on this device. Weather and maps use an area of about 5 km.',
     myLocation: 'My location',
     offline: 'Place search needs a connection. You can also use your device location.',
+    unavailable: 'Place search is not answering right now. Try again, or use your device location.',
+    retry: 'Try again',
   },
   plan: {
     title: 'Plan',
