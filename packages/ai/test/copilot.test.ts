@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   bindProposal,
   checkBinding,
+  copilotSystem,
   copilotTurn,
   GeminiClient,
   hideIds,
@@ -220,6 +221,14 @@ describe('Garden Copilot tool loop (§18.6)', () => {
       ),
     ).rejects.toMatchObject({ code: 'CONSENT_REQUIRED' });
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe('answers in the person’s language', () => {
+  it('asks for the closing "What I don’t know" line in the answer’s language, not in English', () => {
+    const system = copilotSystem({ locale: 'hi', units: 'metric', seasonModel: 'monsoon' });
+    expect(system).toContain('answer in Hindi');
+    expect(system).toMatch(/What I don’t know:", written in the language of your answer/);
   });
 });
 
