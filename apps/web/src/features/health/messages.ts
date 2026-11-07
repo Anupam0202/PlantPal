@@ -243,6 +243,7 @@ const hi: HealthMessages = {
   by: { user: 'आप', rules: 'नियम', ai: 'AI ड्राफ़्ट' },
   compare: 'पहले और बाद',
   compareHint: 'पहली और नई फ़ोटो की तुलना के लिए स्लाइडर खिसकाएँ।',
+  compareLabel: 'तुलना की स्थिति',
   followUp: 'आगे की जाँच जोड़ें',
   trend: 'अब कैसा है?',
   trends: { better: 'बेहतर', same: 'लगभग वैसा', worse: 'बदतर' },
@@ -363,6 +364,7 @@ const es: HealthMessages = {
   by: { user: 'Tú', rules: 'Reglas', ai: 'Borrador de IA' },
   compare: 'Antes y después',
   compareHint: 'Mueve el control para comparar la primera y la última foto.',
+  compareLabel: 'Posición de la comparación',
   followUp: 'Añadir seguimiento',
   trend: '¿Cómo está ahora?',
   trends: { better: 'Mejor', same: 'Igual', worse: 'Peor' },
@@ -380,7 +382,7 @@ const es: HealthMessages = {
   cancel: 'Cancelar',
 };
 
-const catalogs: Record<LocalePref, HealthMessages> = { en, hi, es };
+export const catalogs: Record<LocalePref, HealthMessages> = { en, hi, es };
 
 export function useHealthT(): HealthMessages {
   const locale = usePrefs((s) => s.locale);

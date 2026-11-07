@@ -58,7 +58,7 @@ function SeedLibrary() {
     );
 
   const plants = specimens.filter((p) => p.deletedAt === null && !p.holding);
-  const fallbackName = parent ? `${parent.displayName} seeds` : '';
+  const fallbackName = parent ? s.defaultName(parent.displayName) : '';
   const today = todayIn(garden.timezone);
 
   const save = async () => {

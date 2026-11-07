@@ -202,6 +202,7 @@ const en = {
       CONFLICT: 'Status disputed',
       UNKNOWN: '',
     },
+    whyLabel: 'Why it fits',
     why: {
       food: 'Good food plant',
       pollinators: 'Feeds pollinators',
@@ -448,6 +449,7 @@ const hi: PlanMessages = {
       CONFLICT: 'स्थिति विवादित',
       UNKNOWN: '',
     },
+    whyLabel: 'यह क्यों ठीक है',
     why: {
       food: 'अच्छा खाद्य पौधा',
       pollinators: 'परागणकों को भोजन',
@@ -703,6 +705,7 @@ const es: PlanMessages = {
       CONFLICT: 'Estado en disputa',
       UNKNOWN: '',
     },
+    whyLabel: 'Por qué encaja',
     why: {
       food: 'Buena para comer',
       pollinators: 'Alimenta polinizadores',
@@ -756,7 +759,7 @@ const es: PlanMessages = {
   },
 };
 
-const catalogs: Record<LocalePref, PlanMessages> = { en, hi, es };
+export const catalogs: Record<LocalePref, PlanMessages> = { en, hi, es };
 
 export function usePlanT(): PlanMessages {
   const locale = usePrefs((s) => s.locale);

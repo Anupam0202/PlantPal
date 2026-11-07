@@ -59,11 +59,129 @@ const en = {
 };
 
 export type MapMessages = typeof en;
-const catalogs: Record<LocalePref, MapMessages> = {
-  en,
-  hi: { ...en, corridor: { ...en.corridor, title: 'हरित गलियारा', hub: 'हरित गलियारा' } },
-  es: { ...en, corridor: { ...en.corridor, title: 'Corredor verde', hub: 'Corredor verde' } },
+const hi: MapMessages = {
+  unavailable: 'इस डिवाइस पर नक्शा नहीं दिखाया जा सकता। नीचे की सूची में यही जानकारी है।',
+  basemapMissing: 'पृष्ठभूमि का नक्शा अभी उपलब्ध नहीं; षट्भुज फिर भी सही हैं।',
+  corridor: {
+    title: 'हरित गलियारा',
+    hub: 'हरित गलियारा',
+    hubBody: 'आपका बगीचा आसपास के नक्शे में दर्ज पार्कों, जंगलों और बगीचों से कैसे जुड़ता है।',
+    intro:
+      'पास-पास की हरी जगहें कीटों और पक्षियों को उनके बीच आने-जाने देती हैं। आपका बगीचा इस राह का एक पड़ाव बन सकता है।',
+    needLocation: 'आसपास की हरी जगह देखने के लिए बगीचे का स्थान सेट करें।',
+    addLocation: 'स्थान जोड़ें',
+    needServer: 'गलियारे के नक्शे के लिए PlantPal सर्वर चाहिए, जो यहाँ उपलब्ध नहीं है।',
+    failed: 'नक्शे में दर्ज हरी जगह लोड नहीं हो सकी। कृपया बाद में फिर कोशिश करें।',
+    retry: 'फिर कोशिश करें',
+    loading: 'नक्शे में दर्ज हरी जगह खोजी जा रही है…',
+    mapLabel: 'आपके बगीचे के आसपास नक्शे में दर्ज हरी जगह का नक्शा',
+    steppingStone: (distance, kind) =>
+      `आपका बगीचा एक पड़ाव है: नक्शे में दर्ज सबसे नज़दीकी हरी जगह (${kind}) ${distance} दूर है।`,
+    inside: (kind) => `आपका बगीचा नक्शे में दर्ज हरी जगह (${kind}) के अंदर है।`,
+    none: 'लगभग 1 किमी के भीतर नक्शे में दर्ज कोई हरी जगह नहीं। यहाँ पौधों वाली हर बालकनी या आँगन और भी ज़्यादा मायने रखता है।',
+    share: (pct) => `आपके आसपास के इलाके का लगभग ${pct}% हिस्सा नक्शे में दर्ज हरी जगह है।`,
+    nearest: 'नक्शे में दर्ज सबसे नज़दीकी हरी जगह',
+    unnamed: 'बिना नाम',
+    away: (distance) => `${distance} दूर`,
+    here: 'आप यहाँ हैं',
+    legend: 'गहरे षट्भुजों में नक्शे में दर्ज हरी जगह ज़्यादा है (हर एक लगभग 0.1 किमी² का है)।',
+    honesty:
+      'यह OpenStreetMap में दर्ज ज़मीन का उपयोग है, आवास की गुणवत्ता नहीं, और कुछ जगहों का नक्शा दूसरों से ज़्यादा पूरा है।',
+    truncated: 'यहाँ केवल सबसे बड़े इलाके दिखाए गए हैं।',
+    privacy:
+      'इसे खोजने के लिए केवल एक मोटा इलाका (लगभग 5 किमी²) भेजा जाता है। दूरियाँ इसी डिवाइस पर निकाली जाती हैं।',
+    kinds: {
+      park: 'पार्क',
+      wood: 'जंगल',
+      meadow: 'घास का मैदान',
+      allotment: 'सामुदायिक बगीचा',
+      cemetery: 'कब्रिस्तान',
+      garden: 'बगीचा',
+      'green-roof': 'हरी छत',
+    },
+  },
+  community: {
+    tab: 'नक्शा',
+    mapLabel: 'आपके इलाके के सक्रिय बागवानों का नक्शा',
+    intro:
+      'लगभग 5 किमी² के षट्भुज जिनमें सक्रिय बागवान हैं। कोई इलाका तभी दिखता है जब वहाँ कम से कम पाँच लोग सक्रिय हों, ताकि किसी एक की पहचान न हो सके।',
+    empty: 'नक्शा दिखाने के लिए अभी काफ़ी सक्रिय बागवान नहीं',
+    emptyBody:
+      'इलाके तब दिखते हैं जब पास के कम से कम पाँच लोगों ने पिछले 90 दिनों में कुछ साझा किया हो। इससे सबकी निजता सुरक्षित रहती है।',
+    growers: (n) => `${n} सक्रिय बागवान`,
+    where: (distance, direction) => `इलाके के केंद्र से ${distance} ${direction}`,
+    centre: 'इलाके के केंद्र में',
+    directions: [
+      'उत्तर',
+      'उत्तर-पूर्व',
+      'पूर्व',
+      'दक्षिण-पूर्व',
+      'दक्षिण',
+      'दक्षिण-पश्चिम',
+      'पश्चिम',
+      'उत्तर-पश्चिम',
+    ],
+  },
 };
+
+const es: MapMessages = {
+  unavailable:
+    'El mapa no se puede mostrar en este dispositivo. La lista de abajo tiene la misma información.',
+  basemapMissing: 'El mapa de fondo no está disponible ahora; los hexágonos siguen siendo correctos.',
+  corridor: {
+    title: 'Corredor verde',
+    hub: 'Corredor verde',
+    hubBody: 'Cómo se conecta tu jardín con los parques, bosques y jardines cartografiados cercanos.',
+    intro:
+      'Los espacios verdes cercanos entre sí permiten que insectos y aves se muevan entre ellos. Tu jardín puede ser un punto de paso.',
+    needLocation: 'Indica la ubicación de tu jardín para ver los espacios verdes a su alrededor.',
+    addLocation: 'Añadir una ubicación',
+    needServer: 'El mapa del corredor necesita el servidor de PlantPal, que no está disponible aquí.',
+    failed: 'No se pudieron cargar los espacios verdes cartografiados. Inténtalo más tarde.',
+    retry: 'Reintentar',
+    loading: 'Buscando espacios verdes cartografiados…',
+    mapLabel: 'Mapa de los espacios verdes cartografiados alrededor de tu jardín',
+    steppingStone: (distance, kind) =>
+      `Tu jardín es un punto de paso a ${distance} de la zona verde cartografiada más cercana (${kind}).`,
+    inside: (kind) => `Tu jardín está dentro de una zona verde cartografiada (${kind}).`,
+    none: 'No hay espacios verdes cartografiados a menos de 1 km. Aquí cada balcón o patio con plantas cuenta todavía más.',
+    share: (pct) => `Alrededor del ${pct}% de la zona que te rodea es espacio verde cartografiado.`,
+    nearest: 'Espacio verde cartografiado más cercano',
+    unnamed: 'Sin nombre',
+    away: (distance) => `a ${distance}`,
+    here: 'Estás aquí',
+    legend: 'Los hexágonos más oscuros tienen más espacio verde cartografiado (cada uno mide unos 0,1 km²).',
+    honesty:
+      'Esto es la cobertura del suelo cartografiada en OpenStreetMap, no la calidad del hábitat, y la cartografía está más completa en unos lugares que en otros.',
+    truncated: 'Aquí solo se muestran las zonas más grandes.',
+    privacy:
+      'Para buscarlo solo se envía una zona aproximada (unos 5 km²). Las distancias se calculan en este dispositivo.',
+    kinds: {
+      park: 'parque',
+      wood: 'bosque',
+      meadow: 'prado o pastizal',
+      allotment: 'huerto urbano',
+      cemetery: 'cementerio',
+      garden: 'jardín',
+      'green-roof': 'cubierta verde',
+    },
+  },
+  community: {
+    tab: 'Mapa',
+    mapLabel: 'Mapa de cultivadores activos en tu zona',
+    intro:
+      'Hexágonos de unos 5 km² con cultivadores activos. Una zona solo aparece cuando hay al menos cinco personas activas, para que nadie pueda ser identificado.',
+    empty: 'Aún no hay suficientes cultivadores activos para mostrar el mapa',
+    emptyBody:
+      'Las zonas aparecen cuando al menos cinco personas cercanas han compartido algo en los últimos 90 días. Así se protege la privacidad de todos.',
+    growers: (n) => `${n} cultivadores activos`,
+    where: (distance, direction) => `a ${distance} al ${direction} del centro de la zona`,
+    centre: 'En el centro de la zona',
+    directions: ['norte', 'noreste', 'este', 'sureste', 'sur', 'suroeste', 'oeste', 'noroeste'],
+  },
+};
+
+export const catalogs: Record<LocalePref, MapMessages> = { en, hi, es };
 
 export function useMapT(): MapMessages {
   return catalogs[usePrefs((s) => s.locale)];
