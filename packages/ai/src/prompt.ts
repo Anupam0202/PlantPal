@@ -48,7 +48,12 @@ export interface ContextSection {
   untrusted?: boolean;
 }
 
-export type Thinking = 'minimal' | 'low' | 'default';
+/**
+ * How much the model may think before answering. Thinking tokens count against `maxOutputTokens`,
+ * so every request asks for a small amount; left to itself a model can think through the whole
+ * budget and return nothing (MAX_TOKENS).
+ */
+export type Thinking = 'minimal' | 'low';
 
 export interface PromptModule<I, T> {
   id: AiFeatureId;

@@ -32,7 +32,7 @@ export const planExplainV1: PromptModule<PlanExplainInput, PlanExplanation> = {
   schema: PlanExplanation,
   maxOutputTokens: 2048,
   temperature: 0.3,
-  thinking: 'default',
+  thinking: 'low',
   task: [
     'Task: explain why the candidate plants below fit this garden, using only the facts given.',
     'For each candidate you mention, use its exact taxonKey. Do not add plants to perPlant that are not in the candidate list.',

@@ -26,8 +26,10 @@ export interface AiSettings {
   /** The single switch that turns every AI feature off (§18.7). */
   enabled: boolean;
   roles: Partial<Record<ModelRole, string>>;
-  /** Text models the key can use, for overrides. */
+  /** Text models the key can use, best first, for overrides. */
   available: string[];
+  /** Listed models that failed when tried (closed to new keys, or billing needed); never picked. */
+  unusable: string[];
   checkedAt: string | null;
   overrides: Partial<Record<ModelRole, string>>;
   /** Categories the person allowed per feature in the send preview. */
@@ -51,6 +53,7 @@ const DEFAULTS: AiSettings = {
   enabled: true,
   roles: {},
   available: [],
+  unusable: [],
   checkedAt: null,
   overrides: {},
   consent: {},
@@ -86,7 +89,11 @@ interface AiState extends AiSettings {
   pending: PendingAction | null;
   load: () => Promise<void>;
   update: (patch: Partial<AiSettings>) => Promise<void>;
-  saveKey: (key: string, mode: VaultMode, models: Pick<AiSettings, 'roles' | 'available'>) => Promise<void>;
+  saveKey: (
+    key: string,
+    mode: VaultMode,
+    models: Pick<AiSettings, 'roles' | 'available' | 'unusable'>,
+  ) => Promise<void>;
   removeKey: () => Promise<void>;
   setPending: (p: PendingAction | null) => void;
 }
@@ -95,6 +102,7 @@ const settingsOf = (s: AiSettings): AiSettings => ({
   enabled: s.enabled,
   roles: s.roles,
   available: s.available,
+  unusable: s.unusable,
   checkedAt: s.checkedAt,
   overrides: s.overrides,
   consent: s.consent,
@@ -137,12 +145,17 @@ export const useAiState = create<AiState>((set, get) => ({
     await aiVault().save(key, mode);
     const status = await aiVault().status();
     set({ vault: status, keyVersion: get().keyVersion + 1 });
-    await get().update({ ...models, checkedAt: new Date().toISOString() });
+    await get().update({
+      roles: models.roles,
+      available: models.available,
+      unusable: models.unusable,
+      checkedAt: new Date().toISOString(),
+    });
   },
   removeKey: async () => {
     await aiVault().remove();
     set({ vault: { mode: null, hint: null, savedAt: null }, keyVersion: get().keyVersion + 1 });
-    await get().update({ roles: {}, available: [], checkedAt: null });
+    await get().update({ roles: {}, available: [], unusable: [], checkedAt: null });
   },
   setPending: (pending) => set({ pending }),
 }));

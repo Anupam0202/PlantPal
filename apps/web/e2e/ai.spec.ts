@@ -3,7 +3,7 @@ import { strFromU8, unzipSync } from 'fflate';
 import type { Page } from '@playwright/test';
 import { expectNoA11yViolations } from './axe';
 import { expect, test } from './helpers';
-import { AQ_KEY, GEMINI, KEY, mockGemini, saveKey, seedPune } from './gemini';
+import { AQ_KEY, FUTURE_KEY, GEMINI, KEY, mockGemini, saveKey, seedPune } from './gemini';
 import { mockProviders } from './providers';
 
 /** Everything this origin keeps: web storage, cookies, every IndexedDB database and Cache Storage. */
@@ -108,11 +108,14 @@ test('ai/key-never-leaves-device: the key goes only to Gemini, only in its heade
   // Every request: the key appears only in the x-goog-api-key header of Gemini requests.
   const seen = await Promise.all(pending);
   const geminiRequests = seen.filter((r) => r.url.startsWith(GEMINI) && r.method !== 'OPTIONS');
-  // One model listing (key check) and one generation.
-  expect(geminiRequests.map((r) => (r.url.includes(':generateContent') ? 'generate' : 'models'))).toEqual([
-    'models',
-    'generate',
-  ]);
+  // The key check (one model listing and one tiny test request), then one generation.
+  const kind = (r: { url: string; body: string }) =>
+    !r.url.includes(':generateContent')
+      ? 'models'
+      : r.body.includes('systemInstruction')
+        ? 'generate'
+        : 'key test';
+  expect(geminiRequests.map(kind)).toEqual(['models', 'key test', 'generate']);
   for (const r of seen) {
     expect(r.url).not.toContain(KEY);
     expect(r.body).not.toContain(KEY);
@@ -137,9 +140,10 @@ test('no key: the action explains, links to Settings › AI and resumes after th
   expect(gemini.generateCalls).toBe(0);
   await page.getByRole('link', { name: 'Open Settings › AI' }).click();
 
-  await page.getByRole('textbox', { name: 'API key' }).fill('not-a-key');
+  // Two things pasted together are caught before asking Google; nothing else about the shape is.
+  await page.getByRole('textbox', { name: 'API key' }).fill(`GEMINI_API_KEY ${KEY}`);
   await page.getByRole('button', { name: 'Check and save' }).click();
-  await expect(page.getByText('That does not look like an API key')).toBeVisible();
+  await expect(page.getByText('A key is one piece of text with no spaces inside')).toBeVisible();
   await page.getByRole('textbox', { name: 'API key' }).fill(KEY);
   await page.getByRole('button', { name: 'Check and save' }).click();
   await page.getByRole('button', { name: 'Go back and continue' }).click();
@@ -170,7 +174,49 @@ test('a key Google does not accept is reported as not accepted, whatever its for
   await page.getByRole('textbox', { name: 'API key' }).fill('AQ' + '.Ab' + 'n0tV4lid'.repeat(6));
   await page.getByRole('button', { name: 'Check and save' }).click();
   await expect(page.getByText('That key was not accepted', { exact: false }).first()).toBeVisible();
-  await expect(page.getByText('That does not look like an API key')).toHaveCount(0);
+  await expect(page.getByText('A key is one piece of text')).toHaveCount(0);
+});
+
+test('a key in a format Google has not used yet is checked by Google, not by its shape', async ({ page }) => {
+  await mockProviders(page);
+  const gemini = await mockGemini(page);
+  await page.goto('/settings/ai');
+  await page.getByRole('textbox', { name: 'API key' }).fill(FUTURE_KEY);
+  await page.getByRole('button', { name: 'Check and save' }).click();
+  await expect(page.getByText('Key saved. AI features are ready.').first()).toBeVisible();
+  await expect(page.getByTestId('key-status')).toContainText(`…${FUTURE_KEY.slice(-4)}`);
+  // One models list and one tiny test request to the chosen model.
+  expect(gemini.probeCalls).toBe(1);
+  expect(gemini.generateCalls).toBe(0);
+});
+
+test('a listed model that is closed to the key is skipped, at the check and mid-request', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await mockProviders(page);
+  const gemini = await mockGemini(page);
+  await seedPune(page);
+  gemini.closed = ['gemini-3.5-flash'];
+  await saveKey(page);
+  // The closed model answered 404 to the test request; the next pick answered.
+  expect(gemini.probeCalls).toBe(1);
+  // The person sees which model each role uses and can pick any text model the key offers.
+  await expect(page.getByText('Automatic: gemini-3.5-flash-lite').first()).toBeVisible();
+
+  // Re-check: every model is tried again; once the model works again it is picked again.
+  gemini.closed = [];
+  await page.getByRole('button', { name: 'Re-check models' }).click();
+  await expect(page.getByText('Models updated').first()).toBeVisible();
+  await expect(page.getByText('Automatic: gemini-3.5-flash', { exact: true }).first()).toBeVisible();
+
+  // It closes again: the next request finds out, discovery leaves it out and the request goes on.
+  gemini.closed = ['gemini-3.5-flash'];
+  await page.goto('/plan');
+  await page.getByRole('button', { name: 'Explain these matches' }).click();
+  await page.getByRole('region', { name: 'Send to Gemini?' }).getByRole('button', { name: 'Send' }).click();
+  await expect(page.getByTestId('plan-explanation')).toBeVisible();
+  expect(gemini.generateUrls.at(-1)).toContain('/models/gemini-3.5-flash-lite:generateContent');
 });
 
 test('rate limits show a countdown and are not retried in a loop (Appendix B)', async ({ page }) => {

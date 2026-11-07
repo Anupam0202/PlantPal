@@ -4,6 +4,8 @@ import {
   captureParseV1,
   GeminiClient,
   planExplainV1,
+  speciesResearchV1,
+  THINKING_SETTINGS,
   type CaptureParseInput,
   type PlanExplainInput,
   type UsageRecord,
@@ -227,12 +229,15 @@ describe('GeminiClient.generateStructured', () => {
     let rediscoveries = 0;
     const notFound = () =>
       jsonResponse({ error: { code: 404, status: 'NOT_FOUND', message: 'not found' } }, 404);
+    const failed: unknown[] = [];
     const r = client([notFound(), jsonResponse(geminiText(JSON.stringify(goodPlan)))], {
-      rediscover: async () => (rediscoveries++, { balanced: 'gemini-3.6-flash' }),
+      rediscover: async (f) => (rediscoveries++, failed.push(f), { balanced: 'gemini-3.6-flash' }),
     });
     const res = await r.c.generateStructured(planExplainV1, planInput);
     expect(res.meta.model).toBe('gemini-3.6-flash');
     expect(r.calls[1]!.url).toContain('gemini-3.6-flash:generateContent');
+    // Discovery is told which model failed, so it can leave that one out.
+    expect(failed).toEqual([{ role: 'balanced', model: 'gemini-3.5-flash' }]);
     const twice = client([notFound(), notFound(), notFound()], {
       rediscover: async () => ({ balanced: `gemini-${Math.random()}-flash` }),
     });
@@ -257,7 +262,8 @@ describe('GeminiClient.generateStructured', () => {
       ],
     ];
     for (const [body, code] of cases) {
-      const { c } = client([jsonResponse(body)]);
+      // A cut-off answer is asked again once (see below), so it is cut off twice here.
+      const { c } = client([jsonResponse(body), jsonResponse(body)]);
       await expect(c.generateStructured(planExplainV1, planInput)).rejects.toMatchObject({ code });
     }
   });
@@ -291,44 +297,105 @@ describe('GeminiClient.generateStructured', () => {
     });
   });
 
-  it('an unsupported thinking setting is dropped once without counting as an attempt', async () => {
-    const captureInput: CaptureParseInput = {
-      policy,
-      text: 'watered basil 1 l',
-      today: '2026-10-29',
-      specimens: [{ id: 's1', name: 'Basil' }],
-    };
-    const out = {
-      proposals: [
-        {
-          type: 'careEvent',
-          specimenId: 's1',
-          kind: 'water',
-          amount: { value: 1, unit: 'l' },
-          when: 'now',
-          sourceSpan: 'watered basil 1 l',
-        },
+  it('every request asks for an explicit, small amount of thinking (F1 was cut off without one)', async () => {
+    const { c, calls } = client([jsonResponse(geminiText(JSON.stringify(goodPlan)))]);
+    await c.generateStructured(planExplainV1, planInput);
+    expect(bodyOf(calls[0]!.init).generationConfig.thinkingConfig).toEqual({ thinkingLevel: 'low' });
+    expect(bodyOf(calls[0]!.init).generationConfig.maxOutputTokens).toBe(planExplainV1.maxOutputTokens);
+  });
+
+  const captureInput: CaptureParseInput = {
+    policy,
+    text: 'watered basil 1 l',
+    today: '2026-10-29',
+    specimens: [{ id: 's1', name: 'Basil' }],
+  };
+  const captureOut = {
+    proposals: [
+      {
+        type: 'careEvent',
+        specimenId: 's1',
+        kind: 'water',
+        amount: { value: 1, unit: 'l' },
+        when: 'now',
+        sourceSpan: 'watered basil 1 l',
+      },
+    ],
+    unparsed: '',
+  };
+  const rejectsThinking = (message: string) =>
+    jsonResponse({ error: { code: 400, status: 'INVALID_ARGUMENT', message } }, 400);
+
+  it('a rejected thinking setting is replaced by the next way of asking, learned once per model', async () => {
+    const memory = new Map<string, number>();
+    const { c, calls } = client(
+      [
+        rejectsThinking('thinking_level is not supported for this model.'),
+        rejectsThinking('Thinking level LOW is not supported.'),
+        jsonResponse(geminiText(JSON.stringify(captureOut))),
+        jsonResponse(geminiText(JSON.stringify(captureOut))),
       ],
-      unparsed: '',
-    };
-    const { c, calls } = client([
-      jsonResponse(
-        {
-          error: {
-            code: 400,
-            status: 'INVALID_ARGUMENT',
-            message: 'thinking_level is not supported for this model.',
-          },
-        },
-        400,
-      ),
-      jsonResponse(geminiText(JSON.stringify(out))),
-    ]);
+      { thinkingMemory: memory },
+    );
     const r = await c.generateStructured(captureParseV1, captureInput);
     expect(r.meta.degraded).toEqual(['thinking']);
     expect(r.meta.attempts).toBe(1);
+    const sent = calls.map((x) => bodyOf(x.init).generationConfig.thinkingConfig);
+    expect(sent).toEqual([{ thinkingLevel: 'minimal' }, { thinkingLevel: 'low' }, { thinkingBudget: 0 }]);
+    // The next request to the same model goes straight to the setting it accepted.
+    await c.generateStructured(captureParseV1, captureInput);
+    expect(bodyOf(calls[3]!.init).generationConfig.thinkingConfig).toEqual({ thinkingBudget: 0 });
+    expect(memory.get('gemini-3.5-flash-lite|minimal')).toBe(2);
+  });
+
+  it('a model that takes no thinking setting at all is sent none; other 400s are not retried', async () => {
+    const no = () =>
+      rejectsThinking('Unknown name "thinkingConfig": thinking is not supported by this model.');
+    const { c, calls } = client([no(), no(), jsonResponse(geminiText(JSON.stringify(goodPlan)))]);
+    await c.generateStructured(planExplainV1, planInput);
+    expect(calls).toHaveLength(THINKING_SETTINGS.low.length);
+    expect(bodyOf(calls[2]!.init).generationConfig.thinkingConfig).toBeUndefined();
+
+    const other = client([rejectsThinking('Request contains an invalid argument.')]);
+    await expect(other.c.generateStructured(planExplainV1, planInput)).rejects.toMatchObject({
+      code: 'SCHEMA_INVALID',
+    });
+    expect(other.calls).toHaveLength(1);
+  });
+
+  it('a cut-off answer is asked again once, with minimal thinking and twice the room', async () => {
+    const cut = () =>
+      jsonResponse(
+        geminiText('{"summary": "cut', 'MAX_TOKENS', {
+          promptTokenCount: 900,
+          candidatesTokenCount: 85,
+          thoughtsTokenCount: 1963,
+        }),
+      );
+    const { c, calls, usage } = client([cut(), jsonResponse(geminiText(JSON.stringify(goodPlan)))]);
+    const r = await c.generateStructured(planExplainV1, planInput);
+    expect(r.data.summary).toBe(goodPlan.summary);
+    expect(r.meta.degraded).toEqual(['truncated']);
+    expect(r.meta.attempts).toBe(1);
+    expect(bodyOf(calls[1]!.init).generationConfig).toMatchObject({
+      maxOutputTokens: planExplainV1.maxOutputTokens * 2,
+      thinkingConfig: { thinkingLevel: 'minimal' },
+    });
+    // Both requests are metered, thinking included.
+    expect(usage.map((u) => u.outputTokens)).toEqual([85 + 1963, 50]);
+
+    const twice = client([cut(), cut(), jsonResponse(geminiText(JSON.stringify(goodPlan)))]);
+    await expect(twice.c.generateStructured(planExplainV1, planInput)).rejects.toMatchObject({
+      code: 'OUTPUT_TRUNCATED',
+    });
+    expect(twice.calls).toHaveLength(2);
+  });
+
+  it('web research also asks for little thinking', async () => {
+    const { c, calls } = client([jsonResponse(geminiText('Basil likes warmth.'))]);
+    await c.generateGrounded(speciesResearchV1, { policy, scientificName: 'Ocimum basilicum', family: null });
     expect(bodyOf(calls[0]!.init).generationConfig.thinkingConfig).toEqual({ thinkingLevel: 'low' });
-    expect(bodyOf(calls[1]!.init).generationConfig.thinkingConfig).toBeUndefined();
+    expect(bodyOf(calls[0]!.init).tools).toEqual([{ google_search: {} }]);
   });
 
   it('refuses to send a note that contains an API key (Appendix B)', async () => {

@@ -6,10 +6,9 @@ import {
   AiError,
   altTextV1,
   captureParseV1,
+  discoverModels,
   GeminiClient,
-  listModels,
   overSoftCap,
-  pickModels,
   plainExplainV1,
   planExplainV1,
   healthTriageV1,
@@ -25,6 +24,7 @@ import {
   type AiResult,
   type ContextSection,
   type DayUsage,
+  type Discovery,
   type PromptModule,
   copilotSearchV1,
   copilotTurn,
@@ -77,23 +77,34 @@ export function modelFor(feature: AiFeature): string | null {
   return useAiState.getState().roles[MODULES[feature].role] ?? null;
 }
 
-/** Lists the key's models and picks one per role, honouring the person's overrides. */
-export async function discover(key: string, overrides = useAiState.getState().overrides) {
-  const models = await listModels(key);
-  const roles = pickModels(models, overrides);
-  const available = models
-    .filter((m) => m.methods.includes('generateContent') && /gemini/i.test(m.name))
-    .map((m) => m.name.replace(/^models\//, ''))
-    .sort();
-  return { roles, available };
+/**
+ * Asks Google which models the key can use, picks one per role (honouring the person's overrides)
+ * and tries the main one with a tiny request. Models in `unusable` are left out.
+ */
+export async function discover(key: string, unusable: readonly string[] = []): Promise<Discovery> {
+  return discoverModels(key, { overrides: useAiState.getState().overrides, unusable });
 }
 
-export async function recheckModels(): Promise<void> {
+/**
+ * Re-checks the saved key's models. A re-check the person starts tries every model again; one after
+ * a model failed mid-request keeps the earlier failures and adds that model.
+ */
+export async function recheckModels(failed?: string): Promise<Discovery> {
   const key = await aiVault().get();
   if (!key) throw new AiError('KEY_MISSING', 'No key');
-  const { roles, available } = await discover(key);
-  await useAiState.getState().update({ roles, available, checkedAt: new Date().toISOString() });
+  const state = useAiState.getState();
+  const d = await discover(key, failed ? [...state.unusable, failed] : []);
+  await state.update({
+    roles: d.roles,
+    available: d.available,
+    unusable: d.unusable,
+    checkedAt: new Date().toISOString(),
+  });
+  return d;
 }
+
+/** Which thinking setting each model accepted; shared by every client in this session. */
+const thinkingMemory = new Map<string, number>();
 
 export async function capReached(): Promise<number | null> {
   const cap = useAiState.getState().dailyCap;
@@ -119,16 +130,7 @@ export async function run<T>(
 ): Promise<AiResult<T>> {
   const state = useAiState.getState();
   if (!state.enabled) throw new AiError('AI_DISABLED', 'AI is switched off');
-  const usageMeter = meter();
-  const client = new GeminiClient({
-    getKey: () => aiVault().get(),
-    roles: () => useAiState.getState().roles,
-    rediscover: async (): Promise<Partial<Record<ModelRole, string>>> => {
-      await recheckModels();
-      return useAiState.getState().roles;
-    },
-    onUsage: (u) => void usageMeter.record(u, localDay()),
-  });
+  const client = newClient();
   if (feature === 'species-draft') {
     const i = input as SpeciesResearchInput;
     if (!allowed.includes('plants')) throw new AiError('CONSENT_REQUIRED', 'Needs: plants');
@@ -156,11 +158,12 @@ function newClient() {
   return new GeminiClient({
     getKey: () => aiVault().get(),
     roles: () => useAiState.getState().roles,
-    rediscover: async (): Promise<Partial<Record<ModelRole, string>>> => {
-      await recheckModels();
+    rediscover: async ({ model }): Promise<Partial<Record<ModelRole, string>>> => {
+      await recheckModels(model);
       return useAiState.getState().roles;
     },
     onUsage: (u) => void usageMeter.record(u, localDay()),
+    thinkingMemory,
   });
 }
 

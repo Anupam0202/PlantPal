@@ -1,4 +1,11 @@
-import { capabilitiesOf, looksLikeGeminiKey, MODEL_SEEDS, type DayUsage } from '@plantpal/ai';
+import {
+  AiError,
+  capabilitiesOf,
+  keyInputProblem,
+  MAX_KEY_LENGTH,
+  type DayUsage,
+  type Discovery,
+} from '@plantpal/ai';
 import type { ModelRole } from '@plantpal/schemas';
 import {
   Badge,
@@ -44,7 +51,9 @@ function AiSettingsPage() {
   const [mode, setMode] = useState<VaultMode>('device');
   const [busy, setBusy] = useState(false);
   const [rechecking, setRechecking] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ text: string; waitMs: number | null } | null>(null);
+  /** Seconds left before Google takes requests again, after a rate limit. */
+  const [waitS, setWaitS] = useState(0);
   const [days, setDays] = useState<DayUsage[]>([]);
   const [today, setToday] = useState({ requests: 0, tokens: 0 });
   const [legacy, setLegacy] = useState<string | null>(() => readPlaintextKey());
@@ -59,15 +68,44 @@ function AiSettingsPage() {
     });
   }, [s.keyVersion]);
 
+  // A rate limit names when to try again: count down to it, then let the person retry.
+  useEffect(() => {
+    const waitMs = error?.waitMs;
+    if (!waitMs) return;
+    const until = Date.now() + waitMs;
+    const id = setInterval(() => {
+      const left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      setWaitS(left);
+      if (left === 0) clearInterval(id);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [error]);
+
   const failText = (e: unknown) => {
     const code = (e as { code?: AiErrorCode }).code;
+    if (code === 'MODEL_UNAVAILABLE') return t.noTextModel;
     return code ? `${at.errors[code].title}. ${at.errors[code].body}` : (e as Error).message;
+  };
+  const waitMsOf = (e: unknown) =>
+    e instanceof AiError && e.code === 'RATE_LIMITED' && e.retryAfterMs ? e.retryAfterMs : null;
+  /** Tells the person the key was saved, and why it could not be tried yet when that happened. */
+  const announce = (d: Discovery, done: string) => {
+    if (!d.unverified) return toast.success(done);
+    const waitMs = waitMsOf(d.unverified);
+    toast.warning(t.savedUnverified, {
+      description: `${failText(d.unverified)}${waitMs ? ` ${t.retryIn(Math.ceil(waitMs / 1000))}` : ''}`,
+    });
+  };
+  const fail = (text: string, waitMs: number | null = null) => {
+    setError({ text, waitMs });
+    setWaitS(waitMs ? Math.ceil(waitMs / 1000) : 0);
   };
 
   const save = async (value: string, how: VaultMode) => {
     setError(null);
-    if (!looksLikeGeminiKey(value)) {
-      setError(t.badFormat);
+    const problem = keyInputProblem(value);
+    if (problem) {
+      fail(t.keyProblem[problem]);
       return false;
     }
     setBusy(true);
@@ -75,10 +113,10 @@ function AiSettingsPage() {
       const models = await discover(value.trim());
       await s.saveKey(value.trim(), how, models);
       setKey('');
-      toast.success(t.saved);
+      announce(models, t.saved);
       return true;
     } catch (e) {
-      setError(failText(e));
+      fail(failText(e), waitMsOf(e));
       return false;
     } finally {
       setBusy(false);
@@ -97,8 +135,7 @@ function AiSettingsPage() {
   const recheck = async () => {
     setRechecking(true);
     try {
-      await recheckModels();
-      toast.success(t.rechecked);
+      announce(await recheckModels(), t.rechecked);
     } catch (e) {
       toast.error(failText(e));
     } finally {
@@ -196,12 +233,13 @@ function AiSettingsPage() {
                 value={key}
                 onValueChange={(v) => {
                   setKey(v);
-                  setError(null);
+                  // During a rate-limit countdown the message stays, so the wait stays explained.
+                  if (waitS === 0) setError(null);
                 }}
                 autoComplete="off"
                 placeholder={t.placeholder}
-                error={error ?? undefined}
-                maxLength={512}
+                error={error ? `${error.text}${waitS > 0 ? ` ${t.retryIn(waitS)}` : ''}` : undefined}
+                maxLength={MAX_KEY_LENGTH}
               />
               <div className="flex flex-col gap-2">
                 <span className="text-body-s font-medium text-ink">{t.mode}</span>
@@ -219,7 +257,7 @@ function AiSettingsPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button type="submit" disabled={busy || !key.trim()}>
+                <Button type="submit" disabled={busy || !key.trim() || waitS > 0}>
                   {busy ? <Spinner /> : <ShieldCheck className="size-4" aria-hidden="true" />}
                   {busy ? t.checking : t.check}
                 </Button>
@@ -271,13 +309,8 @@ function AiSettingsPage() {
               <div className="flex flex-col gap-3">
                 <p className="text-body-s font-medium text-ink">{t.models}</p>
                 {SHOWN_ROLES.map((role) => {
-                  const options = s.available.filter((m) =>
-                    role === 'fast'
-                      ? /flash-lite/.test(m)
-                      : role === 'deep'
-                        ? /-pro/.test(m)
-                        : /flash(?!-lite)/.test(m),
-                  );
+                  // Every text model the key can use, best first: no guessing from names.
+                  const options = s.available;
                   return (
                     <SelectField<string>
                       key={role}
@@ -293,11 +326,7 @@ function AiSettingsPage() {
                         { value: '', label: `${t.automatic}: ${s.roles[role] ?? t.notListed}` },
                         ...options.map((m) => ({ value: m, label: m })),
                       ]}
-                      description={
-                        role === 'balanced' || role === 'fast'
-                          ? `Seed: ${MODEL_SEEDS[role].ids[0]} (${MODEL_SEEDS[role].verifiedAt})`
-                          : undefined
-                      }
+                      description={t.roleHints[role]}
                     />
                   );
                 })}

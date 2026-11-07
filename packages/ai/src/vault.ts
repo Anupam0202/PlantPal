@@ -1,4 +1,4 @@
-import { looksLikeGeminiKey } from './errors';
+import { keyInputProblem } from './errors';
 
 /**
  * Key vault (§18.2). Two modes:
@@ -99,7 +99,7 @@ export class KeyVault {
   /** Stores a key. Replaces any key held in either mode. */
   async save(key: string, mode: VaultMode, now = new Date()): Promise<void> {
     const value = key.trim();
-    if (!looksLikeGeminiKey(value)) throw new Error('That does not look like a Gemini API key.');
+    if (keyInputProblem(value)) throw new Error('Paste the API key on its own, as one piece.');
     await this.remove();
     if (mode === 'session') {
       this.sessionKey = value;

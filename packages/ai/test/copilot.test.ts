@@ -4,6 +4,7 @@ import {
   checkBinding,
   copilotTurn,
   GeminiClient,
+  hideIds,
   MAX_TOOL_CALLS,
   toolsFor,
   type CopilotExecutor,
@@ -219,6 +220,46 @@ describe('Garden Copilot tool loop (§18.6)', () => {
       ),
     ).rejects.toMatchObject({ code: 'CONSENT_REQUIRED' });
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe('internal ids stay out of answers', () => {
+  const ULID = '01KQ7Z3V9WJ4M2N8P5R6S7T8XY';
+
+  it('the answer never shows ids the tools returned, even when the model writes them', async () => {
+    const { c, calls } = client([
+      sse([call('get_garden_overview', {})]),
+      sse([
+        text(`Your Basil (id: ${ULID}) on the Railing [${ULID}] needs water; see plant \`${ULID}\`.`, 'STOP'),
+      ]),
+    ]);
+    const exec = executor({
+      read: async () => ({ plants: [{ id: ULID, name: 'Basil', spaceId: ULID }] }),
+    });
+    const turn = await copilotTurn(
+      c,
+      { policy, history: [], message: 'Does anything need water?', allowed: ALL, allowSearch: false },
+      exec,
+    );
+    expect(turn.text).toBe('Your Basil on the Railing needs water; see plant.');
+    // The model is told ids are for tools only.
+    const system = JSON.parse(String(calls[0]!.init.body)).systemInstruction.parts[0].text as string;
+    expect(system).toMatch(/never show one to the person/);
+  });
+
+  it('only ids from tools are touched; ordinary words and numbers stay', () => {
+    const ids = new Set([ULID]);
+    expect(hideIds('Water 300 ml every 2 days. Idea: mulch.', ids)).toBe(
+      'Water 300 ml every 2 days. Idea: mulch.',
+    );
+    expect(hideIds(`Basil, ID ${ULID}, is fine.`, ids)).toBe('Basil, is fine.');
+    // Text with no ids comes back untouched, spacing included.
+    expect(hideIds('Two  spaces  stay.', ids)).toBe('Two  spaces  stay.');
+    // Long runs of spaces or punctuation stay fast (no backtracking blow-up).
+    const t0 = Date.now();
+    hideIds(`${' '.repeat(50_000)}x${ULID}${' '.repeat(50_000)}(`, ids);
+    hideIds(`${' \t'.repeat(50_000)}!`, ids);
+    expect(Date.now() - t0).toBeLessThan(500);
   });
 });
 

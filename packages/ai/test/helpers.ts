@@ -13,7 +13,10 @@ export function jsonResponse(body: unknown, status = 200, headers: Record<string
 export function geminiText(
   text: string,
   finishReason = 'STOP',
-  usage = { promptTokenCount: 100, candidatesTokenCount: 50 },
+  usage: { promptTokenCount: number; candidatesTokenCount: number; thoughtsTokenCount?: number } = {
+    promptTokenCount: 100,
+    candidatesTokenCount: 50,
+  },
 ) {
   return { candidates: [{ content: { parts: [{ text }] }, finishReason }], usageMetadata: usage };
 }
