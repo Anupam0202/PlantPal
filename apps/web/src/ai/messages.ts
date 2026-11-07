@@ -385,7 +385,7 @@ const es: AiMessages = {
   },
 };
 
-const catalogs: Record<LocalePref, AiMessages> = { en, hi, es };
+export const catalogs: Record<LocalePref, AiMessages> = { en, hi, es };
 
 export function useAiT(): AiMessages {
   const locale = usePrefs((s) => s.locale);

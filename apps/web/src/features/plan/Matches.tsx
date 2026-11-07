@@ -54,7 +54,7 @@ function MatchCard({
           </span>
         )}
       </div>
-      <ul className="flex flex-wrap gap-1.5" aria-label="Why">
+      <ul className="flex flex-wrap gap-1.5" aria-label={m.plan.whyLabel}>
         {whyKeys(c).map((k) => (
           <li key={k}>
             <Badge tone="accent" icon={<Leaf className="size-3" aria-hidden="true" />}>

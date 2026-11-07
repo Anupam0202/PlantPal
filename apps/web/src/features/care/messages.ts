@@ -484,7 +484,7 @@ const es: CareMessages = {
   },
 };
 
-const catalogs: Record<LocalePref, CareMessages> = { en, hi, es };
+export const catalogs: Record<LocalePref, CareMessages> = { en, hi, es };
 
 export function useCareT(): CareMessages {
   const locale = usePrefs((s) => s.locale);

@@ -192,11 +192,24 @@ export type AccountMessages = typeof en;
 const hi: AccountMessages = {
   ...en,
   account: {
-    ...en.account,
     title: 'खाता और सिंक',
+    intro:
+      'PlantPal बिना खाते के पूरी तरह काम करता है। खाता आपके बगीचों का बैकअप रखता है और उन्हें आपके घर के लोगों या पौधों की देखभाल करने वाले के साथ साझा करने देता है।',
+    noPasswords: 'खाते केवल पासकी इस्तेमाल करते हैं: न पासवर्ड, न ईमेल पता।',
+    unavailable: 'इस सर्वर पर खाते उपलब्ध नहीं हैं, इसलिए आपके बगीचे इसी डिवाइस पर रहते हैं।',
+    unsupported: 'यह ब्राउज़र पासकी इस्तेमाल नहीं कर सकता। आपके बगीचे इसी डिवाइस पर रहते हैं।',
+    nameLabel: 'आपका नाम',
+    nameHint: 'उन लोगों को दिखता है जिनके साथ आप बगीचा साझा करते हैं।',
     create: 'पासकी से खाता बनाएँ',
     signIn: 'पासकी से साइन इन करें',
     signOut: 'साइन आउट',
+    signedInAs: (name) => `${name} के रूप में साइन इन`,
+    created: 'खाता बन गया',
+    signedIn: 'साइन इन हो गया',
+    signedOut: 'साइन आउट हो गया। आपके बगीचे अब भी इसी डिवाइस पर हैं।',
+    cancelled: 'पासकी विंडो बंद हुई। कुछ नहीं बदला।',
+    failed: 'यह काम नहीं किया। कृपया फिर कोशिश करें।',
+    offline: 'आप ऑफ़लाइन हैं। कनेक्ट होने पर फिर कोशिश करें।',
   },
   sync: { ...en.sync, title: 'सिंक', claim: 'बैकअप और सिंक करें', syncNow: 'अभी सिंक करें' },
   sharing: { ...en.sharing, title: 'साझा करना', members: 'लोग', invite: 'किसी को आमंत्रित करें' },
@@ -207,11 +220,25 @@ const hi: AccountMessages = {
 const es: AccountMessages = {
   ...en,
   account: {
-    ...en.account,
     title: 'Cuenta y sincronización',
+    intro:
+      'PlantPal funciona por completo sin cuenta. Una cuenta guarda una copia de tus jardines y te deja compartirlos con tu hogar o con quien cuide tus plantas.',
+    noPasswords: 'Las cuentas solo usan llaves de acceso: sin contraseñas ni correo electrónico.',
+    unavailable:
+      'Las cuentas no están disponibles en este servidor, así que tus jardines se quedan en este dispositivo.',
+    unsupported: 'Este navegador no puede usar llaves de acceso. Tus jardines se quedan en este dispositivo.',
+    nameLabel: 'Tu nombre',
+    nameHint: 'Lo ven las personas con quienes compartes un jardín.',
     create: 'Crear cuenta con una llave de acceso',
     signIn: 'Entrar con una llave de acceso',
     signOut: 'Cerrar sesión',
+    signedInAs: (name) => `Sesión iniciada como ${name}`,
+    created: 'Cuenta creada',
+    signedIn: 'Sesión iniciada',
+    signedOut: 'Sesión cerrada. Tus jardines siguen en este dispositivo.',
+    cancelled: 'Se cerró la ventana de la llave de acceso. No cambió nada.',
+    failed: 'No funcionó. Inténtalo de nuevo.',
+    offline: 'Estás sin conexión. Inténtalo cuando vuelvas a estar conectado.',
   },
   sync: {
     ...en.sync,
@@ -224,7 +251,7 @@ const es: AccountMessages = {
   sit: { ...en.sit, title: 'Cuidado de plantas', watered: 'Regado' },
 };
 
-const catalogs: Record<LocalePref, AccountMessages> = { en, hi, es };
+export const catalogs: Record<LocalePref, AccountMessages> = { en, hi, es };
 
 export function useAccountT(): AccountMessages {
   const locale = usePrefs((s) => s.locale);

@@ -315,7 +315,7 @@ const es: AiSettingsMessages = {
   resume: 'Volver y continuar',
 };
 
-const catalogs: Record<LocalePref, AiSettingsMessages> = { en, hi, es };
+export const catalogs: Record<LocalePref, AiSettingsMessages> = { en, hi, es };
 
 export function useAiSettingsT(): AiSettingsMessages {
   const locale = usePrefs((s) => s.locale);
