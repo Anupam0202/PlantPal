@@ -17,7 +17,7 @@ import { claimErrors, prohibitedClaims } from './validators';
  * tools never write, they create proposals the person confirms; web search runs as a separate
  * grounded request. At most six tool calls per turn.
  */
-export const COPILOT_VERSION = 3;
+export const COPILOT_VERSION = 4;
 export const MAX_TOOL_CALLS = 6;
 const PROPOSAL_TTL_MS = 30 * 60_000;
 
@@ -317,6 +317,8 @@ export interface CopilotInput {
   message: string;
   allowed: ReadonlySet<AiDataCategory>;
   allowSearch: boolean;
+  /** The garden's local date (YYYY-MM-DD), so "today", "this week" and due dates make sense. */
+  today?: string;
 }
 
 export interface ToolUse {
@@ -360,9 +362,15 @@ export const UNKNOWN_LABEL: Record<PolicyContext['locale'], string> = {
   es: 'Lo que no sé:',
 };
 
-export function copilotSystem(policy: PolicyContext): string {
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+export function copilotSystem(policy: PolicyContext, today?: string): string {
   const closing = `Keep answers short and practical. When something important is missing, end with a line that starts "${UNKNOWN_LABEL[policy.locale]}".`;
-  return `${sharedPolicy(policy)}\n\n${TASK}\n${closing}`;
+  const day = today && /^\d{4}-\d{2}-\d{2}$/.test(today) ? new Date(`${today}T12:00:00Z`) : null;
+  const date = day
+    ? `\nToday is ${WEEKDAYS[day.getUTCDay()]}, ${today}, in the garden's time zone. Use it for "today", "this week" and how far away dates are.`
+    : '';
+  return `${sharedPolicy(policy)}\n\n${TASK}\n${closing}${date}`;
 }
 
 /** Puts the closing label in the answer's language when the model wrote it in English. */
@@ -429,7 +437,7 @@ export async function copilotTurn(
     description,
     parameters,
   }));
-  const system = copilotSystem(input.policy);
+  const system = copilotSystem(input.policy, input.today);
   const contents: ChatContent[] = [...input.history, { role: 'user', parts: [{ text: input.message }] }];
   const proposals: Proposal[] = [];
   const used: ToolUse[] = [];

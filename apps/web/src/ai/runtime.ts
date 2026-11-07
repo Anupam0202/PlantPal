@@ -34,6 +34,7 @@ import {
   type StreamStepOptions,
   type ToolUse,
 } from '@plantpal/ai';
+import { todayIn } from '@plantpal/domain';
 import type { AiDataCategory, ModelRole } from '@plantpal/schemas';
 import { copilotScope, createExecutor } from './copilotTools';
 import { aiStore, aiVault, useAiState, type AiFeature } from './state';
@@ -193,7 +194,12 @@ export async function copilotSend(
   });
   return copilotTurn(
     client,
-    { ...input, allowed: new Set(choice.allowed), allowSearch: choice.search },
+    {
+      ...input,
+      allowed: new Set(choice.allowed),
+      allowSearch: choice.search,
+      today: todayIn(scope.garden.timezone),
+    },
     exec,
     handlers,
   );

@@ -235,6 +235,14 @@ describe('answers in the person’s language', () => {
     expect(copilotSystem({ ...policy, locale: 'en' })).toContain('starts "What I don’t know:"');
   });
 
+  it('tells the model today’s date in the garden, so "this week" means this week', () => {
+    expect(copilotSystem(policy, '2026-11-07')).toContain(
+      "Today is Saturday, 2026-11-07, in the garden's time zone.",
+    );
+    expect(copilotSystem(policy)).not.toContain('Today is');
+    expect(copilotSystem(policy, 'not a date')).not.toContain('Today is');
+  });
+
   it('replaces the English label when the model writes it anyway', () => {
     expect(localizeUnknownLabel("Water when dry. What I don't know: pot size.", 'es')).toBe(
       'Water when dry. Lo que no sé: pot size.',

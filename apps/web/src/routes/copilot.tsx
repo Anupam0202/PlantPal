@@ -21,6 +21,7 @@ import { useActiveGarden } from '../data/queries';
 import { useCopilotT } from '../features/copilot/messages';
 import { GardenLoading, NoGarden } from '../features/garden/NoGarden';
 import { usePrefs } from '../state/prefs';
+import { AnswerText } from '../features/copilot/AnswerText';
 
 export const Route = createFileRoute('/copilot')({
   component: CopilotPage,
@@ -259,7 +260,7 @@ function MessageView({ m, running }: { m: Message; running: boolean }) {
         </p>
       )}
       {running && !m.text && <p className="text-body-s text-muted">{c.thinking}</p>}
-      {m.text && <p className="text-body whitespace-pre-line text-ink [overflow-wrap:anywhere]">{m.text}</p>}
+      {m.text && <AnswerText text={m.text} />}
       {m.withheld && <Notice tone="warning">{c.withheld}</Notice>}
       {m.error && (
         <Notice tone="warning" title={m.error.title}>

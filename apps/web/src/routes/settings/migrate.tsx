@@ -5,6 +5,7 @@ import {
   buttonClasses,
   Card,
   Dialog,
+  EmptyState,
   Notice,
   PageHeader,
   Section,
@@ -135,6 +136,8 @@ function MigratePage() {
 
   const done = state?.status === 'done' && !running;
   const failed = state?.status === 'failed' && !running;
+  /** Nothing from the earlier app in this browser (and no earlier run to finish or show). */
+  const nothing = !plan.detected && !done && !failed && !running;
   const categories = LEGACY_CATEGORIES.filter((c) => plan.counts[c].found > 0);
   const problems = plan.problems.filter((p) => p.code !== 'plaintext-key');
   const grouped: Record<LegacyProblem['severity'], LegacyProblem[]> = { error: [], warning: [], info: [] };
@@ -148,7 +151,11 @@ function MigratePage() {
       <PageHeader
         title={t.migrate.title}
         description={
-          source === 'file' && fileName ? `${t.migrate.description} (${fileName})` : t.migrate.description
+          nothing
+            ? undefined
+            : source === 'file' && fileName
+              ? `${t.migrate.description} (${fileName})`
+              : t.migrate.description
         }
       />
 
@@ -177,7 +184,16 @@ function MigratePage() {
           </Notice>
         )}
 
-        {done && state.verification ? (
+        {nothing ? (
+          <EmptyState
+            title={t.data.legacyNone}
+            action={
+              <Link to="/settings/data" className={buttonClasses('secondary')}>
+                {t.data.title}
+              </Link>
+            }
+          />
+        ) : done && state.verification ? (
           <Card padding="lg" className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="size-7 text-accent" aria-hidden="true" />
@@ -335,14 +351,6 @@ function MigratePage() {
           </>
         }
       />
-      {!done && !running && !plan.detected && (
-        <p className="mt-6 text-body-s text-muted">
-          {t.data.legacyNone}{' '}
-          <Link to="/settings/data" className={buttonClasses('ghost', 'sm')}>
-            {t.data.title}
-          </Link>
-        </p>
-      )}
     </Page>
   );
 }
