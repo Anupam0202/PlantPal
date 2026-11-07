@@ -91,3 +91,14 @@ test('a full backup restores everything after the device data is deleted (W12)',
   await expect(page.getByRole('heading', { level: 1, name: 'Terrace' })).toBeVisible();
   await expect(page.getByRole('link', { name: /=SUM\(A1\)/ })).toBeVisible();
 });
+
+test('with no earlier data, the migration page says so and nothing else', async ({ page }) => {
+  await page.goto('/settings/migrate');
+  await expect(
+    page.getByRole('heading', { name: 'No earlier PlantPal data found in this browser.' }),
+  ).toBeVisible();
+  await expect(page.getByText('We found data from the previous version', { exact: false })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Back up and bring it over' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Your data' }).last().click();
+  await expect(page).toHaveURL(/\/settings\/data$/);
+});

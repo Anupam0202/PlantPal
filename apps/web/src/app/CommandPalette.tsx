@@ -2,7 +2,9 @@ import { Dialog as BaseDialog } from '@base-ui/react/dialog';
 import { useNavigate } from '@tanstack/react-router';
 import { Command } from 'cmdk';
 import {
+  Bird,
   Database,
+  LayoutGrid,
   Moon,
   NotebookPen,
   Plus,
@@ -45,6 +47,36 @@ export function CommandPalette({
     fn();
   };
 
+  // Every page a person may look for, in their language, with English words that also find it.
+  const p = t.palette.pages;
+  const pages = [
+    { to: '/garden/spaces', label: t.garden.tabSpaces, words: 'spaces zones balcony', icon: Sprout },
+    { to: '/garden/journal', label: t.garden.tabJournal, words: 'journal notes history', icon: Sprout },
+    { to: '/garden/health', label: t.garden.tabHealth, words: 'health cases sick', icon: Sprout },
+    { to: '/garden/harvest', label: t.garden.tabHarvest, words: 'harvest pick produce pantry', icon: Sprout },
+    { to: '/garden/seeds', label: t.garden.tabSeeds, words: 'seeds seed library', icon: Sprout },
+    { to: '/garden/labels', label: t.garden.tabLabels, words: 'labels qr print', icon: Sprout },
+    { to: '/plan/sun', label: p.sun, words: 'sun hours light shade', icon: LayoutGrid },
+    { to: '/plan/calendar', label: p.calendar, words: 'calendar sow plant when', icon: LayoutGrid },
+    { to: '/nature/climate', label: p.climate, words: 'climate fit weather', icon: Bird },
+    { to: '/nature/count', label: p.count, words: 'pollinator count insects bees', icon: Bird },
+    { to: '/nature/birds', label: p.birds, words: 'bird count', icon: Bird },
+    { to: '/nature/sighting', label: p.sighting, words: 'sighting bee butterfly bird', icon: Bird },
+    { to: '/nature/phenology', label: p.phenology, words: 'flowering fruiting checks', icon: Bird },
+    { to: '/nature/log', label: p.natureLog, words: 'nature log visits', icon: Bird },
+    { to: '/nature/bloom', label: p.bloom, words: 'bloom bridge pollinators months', icon: Bird },
+    { to: '/nature/lens', label: p.lens, words: 'native invasive', icon: Bird },
+    { to: '/nature/nearby', label: p.nearby, words: 'nearby wildlife records', icon: Bird },
+    { to: '/nature/corridor', label: p.corridor, words: 'corridor map green', icon: Bird },
+    { to: '/nature/impact', label: p.impact, words: 'impact ledger', icon: Bird },
+    { to: '/nature/stamps', label: p.stamps, words: 'stamps badges', icon: Bird },
+    { to: '/nature/story', label: p.story, words: 'story year review', icon: Bird },
+    { to: '/learn', label: p.learn, words: 'learn lessons guides', icon: BookOpen },
+    { to: '/settings/ai', label: t.settings.ai, words: 'ai gemini key models', icon: Settings },
+    { to: '/settings/sources', label: t.env.sources.title, words: 'data sources weather', icon: Settings },
+    { to: '/settings/account', label: p.account, words: 'account sync sign in', icon: Settings },
+  ] as const;
+
   const item =
     'flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-3 text-body-s text-ink data-[selected=true]:bg-accent-soft data-[selected=true]:text-accent-ink';
 
@@ -60,16 +92,16 @@ export function CommandPalette({
               <Command.Input
                 value={query}
                 onValueChange={setQuery}
-                placeholder="Search pages and commands"
+                placeholder={t.palette.placeholder}
                 className="h-14 w-full bg-transparent text-body text-ink outline-none placeholder:text-subtle"
               />
             </div>
             <Command.List className="max-h-[50vh] overflow-y-auto p-2">
               <Command.Empty className="px-3 py-6 text-center text-body-s text-muted">
-                No matches.
+                {t.palette.empty}
               </Command.Empty>
               <Command.Group
-                heading="Go to"
+                heading={t.palette.goTo}
                 className="text-caption text-muted [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2"
               >
                 {destinations.map((d) => (
@@ -91,9 +123,20 @@ export function CommandPalette({
                   <Settings className="size-5 text-muted" aria-hidden="true" />
                   {t.nav.settings}
                 </Command.Item>
+                {pages.map((pg) => (
+                  <Command.Item
+                    key={pg.to}
+                    value={`${pg.label} ${pg.words}`}
+                    onSelect={() => run(() => void navigate({ to: pg.to }))}
+                    className={item}
+                  >
+                    <pg.icon className="size-5 text-muted" aria-hidden="true" />
+                    {pg.label}
+                  </Command.Item>
+                ))}
               </Command.Group>
               <Command.Group
-                heading="Commands"
+                heading={t.palette.commands}
                 className="text-caption text-muted [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2"
               >
                 <Command.Item
@@ -137,7 +180,7 @@ export function CommandPalette({
                   {t.garden.spaceDesigner}
                 </Command.Item>
                 <Command.Item
-                  value="Open Garden Copilot ask AI assistant chat"
+                  value={`${t.copilot.open} copilot ask ai assistant chat`}
                   onSelect={() => run(() => void navigate({ to: '/copilot' }))}
                   className={item}
                 >
@@ -161,7 +204,7 @@ export function CommandPalette({
                   {t.data.title}
                 </Command.Item>
                 <Command.Item
-                  value="Toggle theme dark light"
+                  value={`${t.palette.toggleTheme} theme dark light`}
                   onSelect={() => run(() => setPrefs({ theme: theme === 'dark' ? 'light' : 'dark' }))}
                   className={item}
                 >
@@ -170,7 +213,7 @@ export function CommandPalette({
                   ) : (
                     <Moon className="size-5 text-muted" aria-hidden="true" />
                   )}
-                  Toggle theme
+                  {t.palette.toggleTheme}
                 </Command.Item>
               </Command.Group>
             </Command.List>

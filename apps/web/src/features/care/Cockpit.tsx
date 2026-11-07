@@ -26,6 +26,13 @@ function kindOf(task: CareTask): TaskLog['kind'] {
   return task.type === 'water' ? 'check-water' : task.occ.kind;
 }
 
+/** A custom task (a reminder, a health follow-up) shows its own title; others their kind. */
+function titleOf(task: CareTask, kinds: Record<TaskLog['kind'], string>): string {
+  return task.type === 'schedule' && task.occ.kind === 'custom' && task.occ.title
+    ? task.occ.title
+    : kinds[kindOf(task)];
+}
+
 function useDayName() {
   const fmt = useFormat();
   const m = useCareT();
@@ -244,8 +251,7 @@ function TaskCard({ task, garden, today }: { task: CareTask; garden: Garden; tod
   const date = task.type === 'water' ? task.check.checkBy : task.occ.date;
   const overdue = date < today;
   const name = task.specimen?.displayName ?? (task.type === 'schedule' ? task.occ.title : '');
-  const title =
-    task.type === 'schedule' && task.occ.kind === 'custom' && task.occ.title ? task.occ.title : m.kinds[kind];
+  const title = titleOf(task, m.kinds);
   const base = {
     gardenId: garden.id,
     occurrenceKey: task.key,
@@ -422,7 +428,7 @@ export function CareCockpit({ garden }: { garden: Garden }) {
                 <ul className="mt-1 flex flex-col gap-0.5 text-caption text-muted">
                   {tasks.slice(0, 4).map((task) => (
                     <li key={task.key} className="truncate">
-                      {m.kinds[kindOf(task)]}
+                      {titleOf(task, m.kinds)}
                       {task.specimen ? ` · ${task.specimen.displayName}` : ''}
                     </li>
                   ))}

@@ -137,6 +137,9 @@ test('climate unavailable for a chosen place: all three fallback questions stay 
   await page.getByRole('button', { name: 'Skip' }).click();
 
   await expect(page.getByRole('heading', { name: 'Plants that fit' })).toBeVisible();
+  // A place was chosen, so the box says the climate service is down, not that a location is missing.
+  await expect(page.getByText('Local climate is unavailable', { exact: true })).toBeVisible();
+  await expect(page.getByText('No location? Answer these instead')).toHaveCount(0);
   await page.getByRole('group', { name: 'Frost in winter?' }).getByRole('radio', { name: 'Never' }).check();
   // Answering the first question keeps the other two on screen.
   const hot = page.getByRole('group', { name: 'Very hot summers (35 °C or more)?' });

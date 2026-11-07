@@ -607,8 +607,9 @@ function Seed() {
           </p>
         )}
         {(climateFailed || !base) && (manualNeeded || manualShown) && (
-          <Notice tone="info" title={m.seed.manualTitle}>
-            <p className="mb-3">{m.seed.climateFailed}</p>
+          // With a location, the climate service is down; without one, there is nothing to look up.
+          <Notice tone="info" title={base ? m.seed.climateFailedTitle : m.seed.manualTitle}>
+            <p className="mb-3">{base ? m.seed.climateFailed : m.seed.noLocationHint}</p>
             <ClimateQuestions value={d.manual} onChange={(manual) => set({ manual })} />
           </Notice>
         )}

@@ -70,6 +70,12 @@ test('W5: a health case with photos, rule triage, AI second look, follow-up and 
   await expect(timeline.getByText('AI draft')).toBeVisible();
   await expectNoA11yViolations(page, 'health case');
 
+  // Its follow-up check is named on Today's week view, not shown as a bare "Task".
+  const caseUrl = page.url();
+  await page.goto('/today');
+  await expect(page.getByRole('list', { name: 'This week' })).toContainText('Health check:');
+  await page.goto(caseUrl);
+
   await page.getByRole('radio', { name: 'Better' }).check();
   await page.getByRole('textbox', { name: 'Anything else?' }).fill('Perked up after watering');
   await page.getByRole('button', { name: 'Save', exact: true }).click();

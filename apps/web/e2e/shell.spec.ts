@@ -104,6 +104,17 @@ test('command palette opens with the keyboard and navigates', async ({ page, isM
   await input.fill('nature');
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/nature\/?$/);
+  // Pages below the main sections are found too, by their name or a familiar word.
+  for (const [query, path] of [
+    ['harvest', /\/garden\/harvest$/],
+    ['sun hours', /\/plan\/sun$/],
+    ['bird count', /\/nature\/birds$/],
+  ] as const) {
+    await page.keyboard.press('Control+k');
+    await page.getByPlaceholder('Search pages and commands').fill(query);
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(path);
+  }
 });
 
 test.describe('security headers', () => {
