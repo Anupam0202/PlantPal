@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   bindProposal,
   checkBinding,
+  copilotSystem,
+  localizeUnknownLabel,
+  UNKNOWN_LABEL,
   copilotTurn,
   GeminiClient,
   hideIds,
@@ -220,6 +223,23 @@ describe('Garden Copilot tool loop (§18.6)', () => {
       ),
     ).rejects.toMatchObject({ code: 'CONSENT_REQUIRED' });
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe('answers in the person’s language', () => {
+  it('gives the closing "What I don’t know" label in the answer’s language', () => {
+    const hi = copilotSystem({ locale: 'hi', units: 'metric', seasonModel: 'monsoon' });
+    expect(hi).toContain('answer in Hindi');
+    expect(hi).toContain(`starts "${UNKNOWN_LABEL.hi}"`);
+    expect(hi).not.toContain('What I don’t know');
+    expect(copilotSystem({ ...policy, locale: 'en' })).toContain('starts "What I don’t know:"');
+  });
+
+  it('replaces the English label when the model writes it anyway', () => {
+    expect(localizeUnknownLabel("Water when dry. What I don't know: pot size.", 'es')).toBe(
+      'Water when dry. Lo que no sé: pot size.',
+    );
+    expect(localizeUnknownLabel('What I don’t know: pot size.', 'en')).toBe('What I don’t know: pot size.');
   });
 });
 

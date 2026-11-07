@@ -79,11 +79,161 @@ const en = {
 };
 
 export type CopilotMessages = typeof en;
-const catalogs: Record<LocalePref, CopilotMessages> = {
-  en,
-  hi: { ...en, title: 'गार्डन कोपायलट' },
-  es: { ...en, title: 'Copiloto del jardín' },
+
+const hi: CopilotMessages = {
+  title: 'गार्डन कोपायलट',
+  intro:
+    'अपने बगीचे के बारे में पूछें। यह इस डिवाइस पर आपके रिकॉर्ड देखता है और बदलाव सुझाता है, जिन्हें आप पक्का करते हैं। यह आपकी अपनी Gemini कुंजी का उपयोग करता है।',
+  off: 'AI सुविधाएँ बंद हैं।',
+  noKey: 'कोपायलट इस्तेमाल करने के लिए सेटिंग्स › AI में अपनी Gemini कुंजी जोड़ें।',
+  settings: 'सेटिंग्स › AI खोलें',
+  noGarden: 'पहले एक बगीचा बनाएँ, ताकि कोपायलट के पास देखने को कुछ हो।',
+  access: {
+    title: 'कोपायलट क्या पढ़ सकता है',
+    intro:
+      'जवाब देते समय यह सिर्फ़ वही भेजता है जो यह देखता है। आपका सटीक स्थान कभी नहीं भेजा जाता; मौसम और जलवायु इस डिवाइस पर देखे जाते हैं और सिर्फ़ नतीजे जाते हैं।',
+    plants: 'आपके पौधे और उनकी देखभाल की समय-सारिणी',
+    space: 'आपकी जगहें और उनकी धूप',
+    journal: 'देखभाल का इतिहास और डायरी नोट',
+    climate: 'बगीचे का मौसम और जलवायु',
+    search: 'खुले सवालों के लिए वेब पर खोजें (सिर्फ़ सवाल भेजा जाता है)',
+    catalogue: 'PlantPal की पौधा सूची हमेशा उपलब्ध है; उसमें कोई निजी जानकारी नहीं है।',
+    save: 'सहेजें और शुरू करें',
+    change: 'बदलें कि यह क्या पढ़ सकता है',
+    done: 'हो गया',
+  },
+  composer: 'कोपायलट से पूछें',
+  placeholder: 'जैसे “इस हफ़्ते किन पौधों को पानी चाहिए?”',
+  send: 'पूछें',
+  cancel: 'रोकें',
+  thinking: 'जानकारी देख रहे हैं…',
+  you: 'आप',
+  copilot: 'कोपायलट',
+  tools: {
+    get_garden_overview: 'आपका बगीचा',
+    get_specimen: 'एक पौधा',
+    get_recent_activity: 'हाल की देखभाल और नोट',
+    get_conditions: 'मौसम',
+    get_climate_fit: 'आपकी जलवायु',
+    search_catalog: 'पौधा सूची',
+    get_species_facts: 'प्रजाति की जानकारी',
+    check_eligibility: 'क्या पौधा उपयुक्त है',
+    get_tasks: 'आपके काम',
+    search_web: 'वेब',
+  },
+  lookedAt: 'देखा',
+  sources: 'स्रोत',
+  withheld:
+    'जवाब PlantPal के सुरक्षा नियमों के ख़िलाफ़ था, इसलिए नहीं दिखाया गया। पौधों की सुरक्षा के सवाल किसी स्थानीय कृषि विस्तार सेवा या ज़हर नियंत्रण केंद्र से पूछें।',
+  proposals: {
+    title: 'सुझाया गया बदलाव: सहेजने से पहले जाँचें',
+    kinds: {
+      propose_care_event: 'देखभाल दर्ज करें',
+      propose_observation: 'डायरी नोट जोड़ें',
+      propose_task: 'रिमाइंडर जोड़ें',
+      propose_schedule_change: 'समय-सारिणी बदलें',
+      propose_plan_items: 'योजना में जोड़ें',
+      propose_health_case: 'स्वास्थ्य मामला खोलें',
+    },
+    confirm: 'पक्का करें',
+    dismiss: 'हटाएँ',
+    done: 'सहेजा गया',
+    dismissed: 'हटाया गया',
+    stale: 'सुझाव के बाद कुछ बदल गया है, या यह 30 मिनट से पुराना है। फिर से पूछें।',
+  },
+  empty: 'अपने पौधों, देखभाल, कीटों या आगे क्या उगाएँ, इसके बारे में कुछ भी पूछें।',
+  clear: 'नई बातचीत',
+  reflection: {
+    title: 'पिछले हफ़्ते आपके बगीचे में',
+    care: (n) => (n === 1 ? '1 देखभाल दर्ज हुई' : `${n} देखभाल दर्ज हुईं`),
+    notes: (n) => (n === 1 ? '1 डायरी नोट' : `${n} डायरी नोट`),
+    visits: (n) => (n === 1 ? '1 प्रकृति अवलोकन' : `${n} प्रकृति अवलोकन`),
+    harvest: (n) => (n === 1 ? '1 फ़सल' : `${n} फ़सलें`),
+    quiet: 'एक शांत हफ़्ता: कुछ दर्ज नहीं हुआ, और यह ठीक है। पौधे बढ़ते रहते हैं।',
+    tasks: (n) => (n === 1 ? 'इस हफ़्ते 1 काम' : `इस हफ़्ते ${n} काम`),
+    dismiss: 'बंद करें',
+    words: 'शब्दों में बताएँ',
+  },
 };
+
+const es: CopilotMessages = {
+  title: 'Copiloto del jardín',
+  intro:
+    'Pregunta por tu jardín. Consulta tus registros en este dispositivo y sugiere cambios que tú confirmas. Usa tu propia clave de Gemini.',
+  off: 'Las funciones de IA están desactivadas.',
+  noKey: 'Añade tu clave de Gemini en Ajustes › IA para usar el Copiloto.',
+  settings: 'Abrir Ajustes › IA',
+  noGarden: 'Crea primero un jardín, para que el Copiloto tenga algo que consultar.',
+  access: {
+    title: 'Qué puede leer el Copiloto',
+    intro:
+      'Solo envía lo que consulta al responder. Tu ubicación exacta nunca se envía; el tiempo y el clima se consultan en este dispositivo y solo se envían los resultados.',
+    plants: 'Tus plantas y sus calendarios de cuidados',
+    space: 'Tus espacios y su sol',
+    journal: 'Historial de cuidados y notas del diario',
+    climate: 'Tiempo y clima del jardín',
+    search: 'Buscar en la web preguntas abiertas (solo se envía la pregunta)',
+    catalogue: 'El catálogo de plantas de PlantPal siempre está disponible; no contiene datos personales.',
+    save: 'Guardar y empezar',
+    change: 'Cambiar lo que puede leer',
+    done: 'Hecho',
+  },
+  composer: 'Pregunta al Copiloto',
+  placeholder: 'p. ej. «¿Qué plantas necesitan agua esta semana?»',
+  send: 'Preguntar',
+  cancel: 'Detener',
+  thinking: 'Consultando…',
+  you: 'Tú',
+  copilot: 'Copiloto',
+  tools: {
+    get_garden_overview: 'tu jardín',
+    get_specimen: 'una planta',
+    get_recent_activity: 'cuidados y notas recientes',
+    get_conditions: 'el tiempo',
+    get_climate_fit: 'tu clima',
+    search_catalog: 'el catálogo',
+    get_species_facts: 'datos de la especie',
+    check_eligibility: 'si una planta encaja',
+    get_tasks: 'tus tareas',
+    search_web: 'la web',
+  },
+  lookedAt: 'Consultado',
+  sources: 'Fuentes',
+  withheld:
+    'La respuesta incumplía las normas de seguridad de PlantPal, así que no se muestra. Para dudas de seguridad de plantas, consulta a un servicio de extensión agraria local o a un centro de toxicología.',
+  proposals: {
+    title: 'Cambio sugerido: revísalo antes de guardarlo',
+    kinds: {
+      propose_care_event: 'Registrar cuidado',
+      propose_observation: 'Añadir una nota al diario',
+      propose_task: 'Añadir un recordatorio',
+      propose_schedule_change: 'Cambiar un calendario',
+      propose_plan_items: 'Añadir a un plan',
+      propose_health_case: 'Abrir un caso de salud',
+    },
+    confirm: 'Confirmar',
+    dismiss: 'Descartar',
+    done: 'Guardado',
+    dismissed: 'Descartado',
+    stale: 'Algo cambió desde que se sugirió, o tiene más de 30 minutos. Vuelve a preguntar.',
+  },
+  empty: 'Pregunta lo que quieras sobre tus plantas, cuidados, plagas o qué cultivar después.',
+  clear: 'Nueva conversación',
+  reflection: {
+    title: 'La semana pasada en tu jardín',
+    care: (n) => (n === 1 ? '1 cuidado registrado' : `${n} cuidados registrados`),
+    notes: (n) => (n === 1 ? '1 nota del diario' : `${n} notas del diario`),
+    visits: (n) => (n === 1 ? '1 visita de naturaleza' : `${n} visitas de naturaleza`),
+    harvest: (n) => (n === 1 ? '1 cosecha' : `${n} cosechas`),
+    quiet: 'Una semana tranquila: no se registró nada, y está bien. Las plantas siguen creciendo.',
+    tasks: (n) => (n === 1 ? '1 tarea esta semana' : `${n} tareas esta semana`),
+    dismiss: 'Cerrar',
+    words: 'Ponerlo en palabras',
+  },
+};
+
+/** Exported for the translation completeness test. */
+export const catalogs: Record<LocalePref, CopilotMessages> = { en, hi, es };
 
 export function useCopilotT(): CopilotMessages {
   return catalogs[usePrefs((s) => s.locale)];
