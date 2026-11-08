@@ -40,7 +40,10 @@ const en = {
   } satisfies Record<AiDataCategory, string>,
   cap: {
     title: 'Daily soft cap reached',
-    body: (n: number) => `You set a soft cap of ${n} AI requests a day. Send anyway?`,
+    body: (n: number) =>
+      n === 1
+        ? 'You set a soft cap of 1 AI request a day. Send anyway?'
+        : `You set a soft cap of ${n} AI requests a day. Send anyway?`,
     sendAnyway: 'Send anyway',
   },
   errors: {
@@ -174,7 +177,10 @@ const hi: AiMessages = {
   },
   cap: {
     title: 'दैनिक सीमा पूरी हुई',
-    body: (n) => `आपने रोज़ ${n} AI अनुरोधों की सीमा रखी है। फिर भी भेजें?`,
+    body: (n) =>
+      n === 1
+        ? 'आपने रोज़ 1 AI अनुरोध की सीमा रखी है। फिर भी भेजें?'
+        : `आपने रोज़ ${n} AI अनुरोधों की सीमा रखी है। फिर भी भेजें?`,
     sendAnyway: 'फिर भी भेजें',
   },
   errors: {
@@ -236,7 +242,10 @@ const hi: AiMessages = {
     firstSteps: 'पहले कदम',
     extras: 'और देखने लायक',
     extrasNote: 'PlantPal के नियमों से आपके बगीचे के लिए फिर से जाँचा गया।',
-    dropped: (n) => `${n} AI सुझाव छोड़े गए: PlantPal की सूची में नहीं या यहाँ उपयुक्त नहीं।`,
+    dropped: (n) =>
+      n === 1
+        ? '1 AI सुझाव छोड़ा गया: PlantPal की सूची में नहीं या यहाँ उपयुक्त नहीं।'
+        : `${n} AI सुझाव छोड़े गए: PlantPal की सूची में नहीं या यहाँ उपयुक्त नहीं।`,
     fallback: 'हर पौधे के कारण PlantPal के अपने नियमों से आते हैं।',
   },
   capture: {
@@ -300,7 +309,10 @@ const es: AiMessages = {
   },
   cap: {
     title: 'Límite diario alcanzado',
-    body: (n) => `Pusiste un límite de ${n} solicitudes de IA al día. ¿Enviar de todos modos?`,
+    body: (n) =>
+      n === 1
+        ? 'Pusiste un límite de 1 solicitud de IA al día. ¿Enviar de todos modos?'
+        : `Pusiste un límite de ${n} solicitudes de IA al día. ¿Enviar de todos modos?`,
     sendAnyway: 'Enviar de todos modos',
   },
   errors: {
@@ -368,7 +380,10 @@ const es: AiMessages = {
     firstSteps: 'Primeros pasos',
     extras: 'Más para revisar',
     extrasNote: 'Revisadas para tu jardín con las reglas de PlantPal.',
-    dropped: (n) => `${n} sugerencias de IA se omitieron: no están en el catálogo o no son adecuadas aquí.`,
+    dropped: (n) =>
+      n === 1
+        ? '1 sugerencia de IA se omitió: no está en el catálogo o no es adecuada aquí.'
+        : `${n} sugerencias de IA se omitieron: no están en el catálogo o no son adecuadas aquí.`,
     fallback: 'los motivos de cada planta vienen de las reglas de PlantPal.',
   },
   capture: {

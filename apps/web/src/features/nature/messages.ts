@@ -92,7 +92,7 @@ const en = {
     unsure: 'Not sure',
     unsureFor: (what: string) => `Not sure: ${what}`,
     zero: 'A zero is data. Thank you for counting.',
-    total: (n: number) => `${n} insects`,
+    total: (n: number) => (n === 1 ? '1 insect' : `${n} insects`),
     save: 'Save count',
     saved: 'Count saved',
     wakeLock: 'The screen stays on while counting.',
@@ -259,7 +259,7 @@ const en = {
     needLocation: 'Set your garden’s location to see nature nearby.',
     groups: { insects: 'Insects, including pollinators', birds: 'Birds', plants: 'Plants' },
     species: (n: number) => `${n} species with research-grade records`,
-    observations: (n: number) => `${n} records`,
+    observations: (n: number) => (n === 1 ? '1 record' : `${n} records`),
     gbif: 'GBIF occurrence records',
     gbifLine: (records: number, taxa: string) => `${records} records of ${taxa} species`,
     gbifLicence: 'Only openly licensed records (CC0 and CC BY) are counted.',
@@ -304,7 +304,10 @@ const en = {
     moved: (s: string) => `Marked ${s.toLowerCase()}`,
     useBy: (d: string) => `Use by ${d}`,
     useSoon: 'Use soon',
-    useSoonBody: (n: number) => `${n} items in your pantry reach their use-by date soon.`,
+    useSoonBody: (n: number) =>
+      n === 1
+        ? '1 item in your pantry reaches its use-by date soon.'
+        : `${n} items in your pantry reach their use-by date soon.`,
     finished: 'Finished',
     countsSeparate: 'Weights and counts are totalled separately.',
   },
@@ -361,8 +364,9 @@ const en = {
       missingMonths: 'Months with missing data are not counted',
       effort: 'Depends on time spent looking; groups and species are counted as names',
       substrate: (n: number) =>
-        `${n} containers with a recorded substrate; counts peat-free and coir mixes (plain "potting mix" may contain peat)`,
-      spread: (lo: string, hi: string, n: number) => `${lo}–${hi} m² from the spread ranges; ${n} plants`,
+        `${n === 1 ? '1 container' : `${n} containers`} with a recorded substrate; counts peat-free and coir mixes (plain "potting mix" may contain peat)`,
+      spread: (lo: string, hi: string, n: number) =>
+        `${lo}–${hi} m² from the spread ranges; ${n === 1 ? '1 plant' : `${n} plants`}`,
       noMethod: 'Needs a cited allometric method for woody plants; herbs and annuals are not counted',
     },
     units: { kg: 'kg', L: 'L', min: 'min', months: 'months', 'm²': 'm²' } as Record<string, string>,
@@ -567,7 +571,7 @@ const hi: NatureMessages = {
     reasonsTitle: 'दूसरी गिनतियों की तुलना क्यों नहीं हुई:',
     incomplete: 'जल्दी रोकी गई',
     poorWeather: 'PoMS मौसम सीमा से बाहर',
-    uncertain: (n) => `${n} पक्के नहीं`,
+    uncertain: (n) => (n === 1 ? '1 पक्का नहीं' : `${n} पक्के नहीं`),
     remove: 'हटाएँ',
     removed: 'विज़िट हटाई गई',
   },
@@ -633,7 +637,8 @@ const hi: NatureMessages = {
     privacy: 'केवल लगभग 5 किमी तक गोल किया गया एक बिंदु और दूरी भेजी जाती है।',
     needLocation: 'आसपास की प्रकृति देखने के लिए बगीचे का स्थान सेट करें।',
     groups: { insects: 'कीट, परागण करने वालों सहित', birds: 'पक्षी', plants: 'पौधे' },
-    species: (n) => `शोध-स्तर के रिकॉर्ड वाली ${n} प्रजातियाँ`,
+    species: (n) =>
+      n === 1 ? 'शोध-स्तर के रिकॉर्ड वाली 1 प्रजाति' : `शोध-स्तर के रिकॉर्ड वाली ${n} प्रजातियाँ`,
     observations: (n) => `${n} रिकॉर्ड`,
     gbif: 'GBIF उपस्थिति रिकॉर्ड',
     gbifLine: (records, taxa) => `${taxa} प्रजातियों के ${records} रिकॉर्ड`,
@@ -679,7 +684,10 @@ const hi: NatureMessages = {
     moved: (s) => `“${s}” चिह्नित किया`,
     useBy: (d) => `${d} तक इस्तेमाल करें`,
     useSoon: 'जल्दी इस्तेमाल करें',
-    useSoonBody: (n) => `आपके भंडार की ${n} चीज़ों की आखिरी तारीख जल्द आ रही है।`,
+    useSoonBody: (n) =>
+      n === 1
+        ? 'आपके भंडार की 1 चीज़ की आखिरी तारीख जल्द आ रही है।'
+        : `आपके भंडार की ${n} चीज़ों की आखिरी तारीख जल्द आ रही है।`,
     finished: 'खत्म',
     countsSeparate: 'वज़न और गिनती का जोड़ अलग-अलग होता है।',
   },
@@ -764,7 +772,7 @@ const hi: NatureMessages = {
     print: 'छापें या PDF के रूप में सहेजें',
     imageFailed: 'तस्वीर नहीं बन सकी। कृपया फिर कोशिश करें।',
     card: {
-      plantings: (n) => `${n} नए पौधे लगाए`,
+      plantings: (n) => (n === 1 ? '1 नया पौधा लगाया' : `${n} नए पौधे लगाए`),
       harvest: (list) => `फ़सल: ${list}`,
       visits: (n) => `${n} प्रकृति विज़िट`,
       rain: (litres) => `${litres} लीटर बारिश का पानी इस्तेमाल`,
@@ -1002,8 +1010,11 @@ const es: NatureMessages = {
     privacy: 'Solo se envían un punto redondeado a unos 5 km y la distancia.',
     needLocation: 'Indica la ubicación de tu jardín para ver la naturaleza cercana.',
     groups: { insects: 'Insectos, incluidos polinizadores', birds: 'Aves', plants: 'Plantas' },
-    species: (n) => `${n} especies con registros de grado de investigación`,
-    observations: (n) => `${n} registros`,
+    species: (n) =>
+      n === 1
+        ? '1 especie con registros de grado de investigación'
+        : `${n} especies con registros de grado de investigación`,
+    observations: (n) => (n === 1 ? '1 registro' : `${n} registros`),
     gbif: 'Registros de presencia de GBIF',
     gbifLine: (records, taxa) => `${records} registros de ${taxa} especies`,
     gbifLicence: 'Solo se cuentan los registros con licencia abierta (CC0 y CC BY).',
@@ -1048,7 +1059,10 @@ const es: NatureMessages = {
     moved: (s) => `Marcado como ${s.toLowerCase()}`,
     useBy: (d) => `Consumir antes del ${d}`,
     useSoon: 'Consumir pronto',
-    useSoonBody: (n) => `${n} productos de tu despensa llegan pronto a su fecha límite.`,
+    useSoonBody: (n) =>
+      n === 1
+        ? '1 producto de tu despensa llega pronto a su fecha límite.'
+        : `${n} productos de tu despensa llegan pronto a su fecha límite.`,
     finished: 'Terminado',
     countsSeparate: 'Los pesos y las unidades se suman por separado.',
   },
@@ -1102,8 +1116,9 @@ const es: NatureMessages = {
       missingMonths: 'Los meses sin datos no se cuentan',
       effort: 'Depende del tiempo dedicado a mirar; los grupos y las especies se cuentan como nombres',
       substrate: (n) =>
-        `${n} macetas con sustrato registrado; cuenta las mezclas sin turba y de fibra de coco (un "sustrato universal" puede contener turba)`,
-      spread: (lo, hi, n) => `${lo}–${hi} m² según los rangos de extensión; ${n} plantas`,
+        `${n === 1 ? '1 maceta' : `${n} macetas`} con sustrato registrado; cuenta las mezclas sin turba y de fibra de coco (un "sustrato universal" puede contener turba)`,
+      spread: (lo, hi, n) =>
+        `${lo}–${hi} m² según los rangos de extensión; ${n === 1 ? '1 planta' : `${n} plantas`}`,
       noMethod:
         'Necesita un método alométrico citado para plantas leñosas; las hierbas y anuales no se cuentan',
     },

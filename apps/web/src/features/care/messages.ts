@@ -1,3 +1,4 @@
+import { HEALTH_CHECK_TITLE_PREFIX } from '../../data/titles';
 import { usePrefs, type LocalePref } from '../../state/prefs';
 
 /** Care cockpit, alerts, schedules, Climate Fit and calendar messages (loaded with their routes). */
@@ -53,6 +54,7 @@ const en = {
   welcomeTitle: (days: number) => `Welcome back — ${days} days away`,
   welcomeBody: 'Missed tasks are folded into one check per plant. Nothing is replayed.',
   missed: (n: number) => (n === 1 ? '1 missed task' : `${n} missed tasks`),
+  healthCheck: (what: string) => `Health check: ${what}`,
   alertGuidance: 'Gardening guidance, not a safety warning.',
   frostTitle: (day: string, t: string) => `Frost risk ${day}: down to ${t}`,
   heatTitle: (day: string, t: string) => `Heat ${day}: up to ${t}`,
@@ -216,7 +218,8 @@ const hi: CareMessages = {
   noWaterNeeded: 'हो गया, पानी नहीं चाहिए',
   welcomeTitle: (days: number) => `वापसी पर स्वागत — ${days} दिन बाहर`,
   welcomeBody: 'छूटे कार्य हर पौधे के लिए एक जाँच में मिला दिए गए हैं। कुछ भी दोहराया नहीं जाता।',
-  missed: (n: number) => `${n} छूटे कार्य`,
+  missed: (n: number) => (n === 1 ? '1 छूटा कार्य' : `${n} छूटे कार्य`),
+  healthCheck: (what: string) => `स्वास्थ्य जाँच: ${what}`,
   alertGuidance: 'बागवानी सलाह, सुरक्षा चेतावनी नहीं।',
   frostTitle: (day: string, t: string) => `${day} पाले का ख़तरा: ${t} तक`,
   heatTitle: (day: string, t: string) => `${day} गर्मी: ${t} तक`,
@@ -374,6 +377,7 @@ const es: CareMessages = {
   welcomeTitle: (days: number) => `Bienvenido de nuevo: ${days} días fuera`,
   welcomeBody: 'Las tareas perdidas se agrupan en una comprobación por planta. No se repite nada.',
   missed: (n: number) => (n === 1 ? '1 tarea perdida' : `${n} tareas perdidas`),
+  healthCheck: (what: string) => `Revisión de salud: ${what}`,
   alertGuidance: 'Consejo de jardinería, no un aviso de seguridad.',
   frostTitle: (day: string, t: string) => `Riesgo de helada ${day}: hasta ${t}`,
   heatTitle: (day: string, t: string) => `Calor ${day}: hasta ${t}`,
@@ -492,3 +496,15 @@ export function useCareT(): CareMessages {
 }
 
 export const careMessagesEn: CareMessages = en;
+
+/**
+ * What a care task is called: a custom task (a reminder, a health follow-up) by its own title, any
+ * other by its kind. Health follow-ups are stored with an English prefix and named here in the
+ * person's language.
+ */
+export function careTitle(m: CareMessages, kind: keyof CareMessages['kinds'], title: string | null): string {
+  if (kind !== 'custom' || !title) return m.kinds[kind];
+  return title.startsWith(HEALTH_CHECK_TITLE_PREFIX)
+    ? m.healthCheck(title.slice(HEALTH_CHECK_TITLE_PREFIX.length))
+    : title;
+}

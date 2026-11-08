@@ -136,8 +136,8 @@ export const hi: Messages = {
     addPlant: 'पौधा जोड़ें',
     searchPlants: 'पौधे खोजें',
     noMatches: 'इन फ़िल्टरों से कोई पौधा मेल नहीं खाता।',
-    plantCount: (n: number) => `${n} पौधे`,
-    activeCount: (n: number) => `${n} बढ़ रहे हैं`,
+    plantCount: (n: number) => (n === 1 ? '1 पौधा' : `${n} पौधे`),
+    activeCount: (n: number) => (n === 1 ? '1 बढ़ रहा है' : `${n} बढ़ रहे हैं`),
     name: 'बगीचे का नाम',
     namePlaceholder: 'जैसे बालकनी, पिछवाड़ा, क्यारी',
     timezone: 'समय क्षेत्र',
@@ -200,7 +200,7 @@ export const hi: Messages = {
     substratePlaceholder: 'जैसे कम्पोस्ट और रेत',
     deleteContainerTitle: 'यह गमला हटाएँ?',
     deleteContainerBody: 'इसके पौधे इसी जगह में बने रहेंगे।',
-    plantsHere: (n: number) => `${n} पौधे`,
+    plantsHere: (n: number) => (n === 1 ? '1 पौधा' : `${n} पौधे`),
   },
   plant: {
     fromSeedLot: (lot: string) => `बीज संग्रह “${lot}” से उगाया गया`,
@@ -611,7 +611,7 @@ export const hi: Messages = {
     useBackup: 'बैकअप की प्रति लें',
     unknownFiles: (n: number) => `${n} अज्ञात फ़ाइल(ें) अनदेखी की जाएँगी।`,
     importAction: 'आयात करें',
-    imported: (n: number) => `${n} रिकॉर्ड आयात हुए`,
+    imported: (n: number) => (n === 1 ? '1 रिकॉर्ड आयात हुआ' : `${n} रिकॉर्ड आयात हुए`),
     importErrors: {
       'not-a-zip': 'यह PlantPal बैकअप फ़ाइल नहीं है।',
       'no-manifest': 'यह zip फ़ाइल PlantPal बैकअप नहीं है (मैनिफ़ेस्ट नहीं मिला)।',
@@ -674,6 +674,12 @@ export const hi: Messages = {
     keyRemoved: 'पुरानी कुंजी इस ब्राउज़र से हटा दी गई',
     backupFirst: 'पहले आपके पुराने डेटा की बैकअप फ़ाइल डाउनलोड होगी। उसे सुरक्षित रखें।',
     start: 'बैकअप लें और ले आएँ',
+    startFile: 'ले आएँ',
+    descriptionFile: (name) =>
+      `${name} में PlantPal के पिछले संस्करण का डेटा मिला है। उसे देखें, फिर ले आएँ।`,
+    fileNone: (name) => `${name} में पुराना PlantPal डेटा नहीं मिला।`,
+    fileAgain: 'फ़ाइल फिर से चुनें',
+    fileAgainBody: 'चुनी गई फ़ाइल एक बार पढ़ी जाती है और रखी नहीं जाती, इसलिए उसे आयात में फिर से चुनें।',
     running: 'आपका डेटा लाया जा रहा है…',
     steps: {
       gardens: 'बगीचे',

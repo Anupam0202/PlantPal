@@ -9,7 +9,7 @@ import { useFormat, useT } from '../../i18n';
 import { usePrefs } from '../../state/prefs';
 import { reportError } from '../garden/errors';
 import { RadioChips } from '../plan/RadioChips';
-import { useCareT } from './messages';
+import { careTitle, useCareT, type CareMessages } from './messages';
 import { useCare, type CareTask } from './useCare';
 
 const ICON: Record<string, ReactNode> = {
@@ -27,10 +27,8 @@ function kindOf(task: CareTask): TaskLog['kind'] {
 }
 
 /** A custom task (a reminder, a health follow-up) shows its own title; others their kind. */
-function titleOf(task: CareTask, kinds: Record<TaskLog['kind'], string>): string {
-  return task.type === 'schedule' && task.occ.kind === 'custom' && task.occ.title
-    ? task.occ.title
-    : kinds[kindOf(task)];
+function titleOf(task: CareTask, m: CareMessages): string {
+  return careTitle(m, kindOf(task), task.type === 'schedule' ? task.occ.title : null);
 }
 
 function useDayName() {
@@ -251,7 +249,7 @@ function TaskCard({ task, garden, today }: { task: CareTask; garden: Garden; tod
   const date = task.type === 'water' ? task.check.checkBy : task.occ.date;
   const overdue = date < today;
   const name = task.specimen?.displayName ?? (task.type === 'schedule' ? task.occ.title : '');
-  const title = titleOf(task, m.kinds);
+  const title = titleOf(task, m);
   const base = {
     gardenId: garden.id,
     occurrenceKey: task.key,
@@ -403,7 +401,8 @@ export function CareCockpit({ garden }: { garden: Garden }) {
             <ul className="mt-2 flex flex-col gap-1">
               {queue.welcomeBack.checks.map((c, i) => (
                 <li key={i} className="text-body-s">
-                  {c.missed[0]?.title || m.kinds[c.missed[0]?.kind ?? 'custom']} · {m.missed(c.missed.length)}
+                  {careTitle(m, c.missed[0]?.kind ?? 'custom', c.missed[0]?.title ?? null)} ·{' '}
+                  {m.missed(c.missed.length)}
                 </li>
               ))}
             </ul>
@@ -428,7 +427,7 @@ export function CareCockpit({ garden }: { garden: Garden }) {
                 <ul className="mt-1 flex flex-col gap-0.5 text-caption text-muted">
                   {tasks.slice(0, 4).map((task) => (
                     <li key={task.key} className="truncate">
-                      {titleOf(task, m.kinds)}
+                      {titleOf(task, m)}
                       {task.specimen ? ` · ${task.specimen.displayName}` : ''}
                     </li>
                   ))}

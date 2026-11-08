@@ -618,7 +618,7 @@ export const es: Messages = {
     useBackup: 'Usar la copia de la copia de seguridad',
     unknownFiles: (n: number) => `Se ignorarán ${n} archivo(s) desconocido(s).`,
     importAction: 'Importar',
-    imported: (n: number) => `${n} registros importados`,
+    imported: (n: number) => (n === 1 ? '1 registro importado' : `${n} registros importados`),
     importErrors: {
       'not-a-zip': 'Este no es un archivo de copia de PlantPal.',
       'no-manifest': 'Este zip no es una copia de PlantPal (no tiene manifiesto).',
@@ -683,6 +683,12 @@ export const es: Messages = {
     keyRemoved: 'Clave antigua quitada de este navegador',
     backupFirst: 'Primero se descarga una copia de tus datos antiguos. Guárdala en un lugar seguro.',
     start: 'Hacer copia y traer los datos',
+    startFile: 'Traer los datos',
+    descriptionFile: (name) =>
+      `Encontramos datos de la versión anterior de PlantPal en ${name}. Revísalos y tráelos.`,
+    fileNone: (name) => `No hay datos anteriores de PlantPal en ${name}.`,
+    fileAgain: 'Vuelve a elegir el archivo',
+    fileAgainBody: 'Un archivo elegido se lee una vez y no se guarda; vuelve a elegirlo en Importar.',
     running: 'Trayendo tus datos…',
     steps: {
       gardens: 'Jardines',

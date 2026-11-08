@@ -9,7 +9,7 @@ import { createSchedule, deleteSchedule, markPlanted, updateSchedule } from '../
 import { useSchedules } from '../../data/queries';
 import { useFormat, useT } from '../../i18n';
 import { reportError } from '../garden/errors';
-import { useCareT } from './messages';
+import { careTitle, useCareT } from './messages';
 
 export function draftsFor(specimen: Specimen, plantedOn: string, today: string): ScheduleDraft[] {
   const taxon = specimen.catalogTaxonId ? taxonById(specimen.catalogTaxonId) : undefined;
@@ -109,9 +109,7 @@ export function CarePanel({ specimen, garden }: { specimen: Specimen; garden: Ga
                 const paused = s.pausedUntil !== null && s.pausedUntil >= today;
                 return (
                   <li key={s.id} className="flex flex-wrap items-center gap-2 py-2 text-body-s">
-                    <span className="font-medium text-ink">
-                      {s.kind === 'custom' && s.title ? s.title : m.kinds[s.kind]}
-                    </span>
+                    <span className="font-medium text-ink">{careTitle(m, s.kind, s.title)}</span>
                     <span className="text-muted">
                       <RuleText s={s} />
                     </span>
