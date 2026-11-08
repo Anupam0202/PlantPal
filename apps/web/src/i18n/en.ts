@@ -24,6 +24,7 @@ export const en = {
     goTo: 'Go to',
     commands: 'Commands',
     toggleTheme: 'Toggle theme',
+    // Copies of each page's own title, so the palette loads no other section's text; a test keeps them equal.
     pages: {
       sun: 'Sun Hours Finder',
       calendar: 'Calendar',
@@ -615,7 +616,7 @@ export const en = {
     useBackup: 'Use the backup’s copy',
     unknownFiles: (n: number) => `${n} unknown file(s) will be ignored.`,
     importAction: 'Import',
-    imported: (n: number) => `Imported ${n} records`,
+    imported: (n: number) => (n === 1 ? 'Imported 1 record' : `Imported ${n} records`),
     importErrors: {
       'not-a-zip': 'This is not a PlantPal backup file.',
       'no-manifest': 'This zip file is not a PlantPal backup (no manifest).',
@@ -678,6 +679,12 @@ export const en = {
     keyRemoved: 'Old key removed from this browser',
     backupFirst: 'A backup file of your old data downloads first. Keep it somewhere safe.',
     start: 'Back up and bring it over',
+    startFile: 'Bring it over',
+    descriptionFile: (name: string) =>
+      `We found data from the previous version of PlantPal in ${name}. Review it, then bring it over.`,
+    fileNone: (name: string) => `No earlier PlantPal data found in ${name}.`,
+    fileAgain: 'Choose the file again',
+    fileAgainBody: 'A file you choose is read once and not kept, so choose it again under Import.',
     running: 'Bringing your data over…',
     steps: {
       gardens: 'Gardens',

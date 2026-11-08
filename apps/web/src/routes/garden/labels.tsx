@@ -12,14 +12,13 @@ import { GardenHeader } from '../../features/garden/GardenHeader';
 import { GardenLoading, NoGarden } from '../../features/garden/NoGarden';
 import { taxonById } from '../../features/plan/engine';
 import { useLabelT, type LabelMessages } from '../../features/labels/messages';
+import type { LabelSize } from '../../features/labels/render';
 import { useFormat, useT } from '../../i18n';
 import { downloadBlob } from '../../lib/download';
 
 export const Route = createFileRoute('/garden/labels')({
   component: LabelsPage,
 });
-
-type Size = 'stake' | 'front';
 
 /** Three care basics from cited catalogue traits; nothing when the plant is not in the catalogue. */
 function basicsOf(s: Specimen, m: LabelMessages): string[] {
@@ -41,7 +40,7 @@ function LabelsPage() {
   const fmt = useFormat();
   const { garden, gardens } = useActiveGarden();
   const specimens = useSpecimens(garden?.id);
-  const [size, setSize] = useState<Size>('front');
+  const [size, setSize] = useState<LabelSize>('front');
   const [skip, setSkip] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
 
@@ -101,7 +100,7 @@ function LabelsPage() {
             />
           ) : (
             <>
-              <SegmentedControl<Size>
+              <SegmentedControl<LabelSize>
                 label={m.size}
                 value={size}
                 onValueChange={setSize}

@@ -14,6 +14,7 @@ import { gardenBloomWheel } from '../../features/nature/bloomData';
 import { groupName, useNatureT, type NatureMessages } from '../../features/nature/messages';
 import { useFormat } from '../../i18n';
 import { downloadBlob } from '../../lib/download';
+import { fitLine } from '../../lib/fitLine';
 
 export const Route = createFileRoute('/nature/story')({
   validateSearch: (s: Record<string, unknown>): { year?: number } => {
@@ -94,9 +95,10 @@ function StoryFor({ garden }: { garden: Garden }) {
     if (!data) return;
     setSaving(true);
     try {
-      const blob = await storyCard(m, kg, garden.name, data.story, withPhotos);
+      const blob = await storyCard({ m, fmt, kg, name: garden.name, s: data.story, withPhotos });
       downloadBlob(blob, `plantpal-story-${year}.png`);
-    } catch {
+    } catch (e) {
+      console.error(e);
       toast.error(m.story.imageFailed);
     } finally {
       setSaving(false);
@@ -173,7 +175,7 @@ function StoryFor({ garden }: { garden: Garden }) {
                       <span className="text-muted">
                         {[
                           h.massG ? kg(h.massG) : null,
-                          h.count ? `${h.count} ${h.countLabel ?? ''}`.trim() : null,
+                          h.count ? `${fmt.number(h.count)} ${h.countLabel ?? ''}`.trim() : null,
                         ]
                           .filter(Boolean)
                           .join(' · ')}
@@ -191,7 +193,7 @@ function StoryFor({ garden }: { garden: Garden }) {
                   {data.story.visitors.map((v) => (
                     <li key={v.group} className="flex justify-between gap-2">
                       <span className="text-ink">{groupName(m, v.group)}</span>
-                      <span className="text-muted">{v.individuals}</span>
+                      <span className="text-muted">{fmt.number(v.individuals)}</span>
                     </li>
                   ))}
                 </ul>
@@ -269,13 +271,21 @@ function Thumb({ id }: { id: string }) {
 }
 
 /** A 1080 × 1350 image card drawn on a canvas: numbers from the records, photos only when chosen. */
-async function storyCard(
-  m: NatureMessages,
-  kg: (g: number) => string,
-  name: string,
-  s: Story,
-  withPhotos: boolean,
-): Promise<Blob> {
+async function storyCard({
+  m,
+  fmt,
+  kg,
+  name,
+  s,
+  withPhotos,
+}: {
+  m: NatureMessages;
+  fmt: ReturnType<typeof useFormat>;
+  kg: (g: number) => string;
+  name: string;
+  s: Story;
+  withPhotos: boolean;
+}): Promise<Blob> {
   const W = 1080;
   const H = 1350;
   const canvas = document.createElement('canvas');
@@ -289,23 +299,28 @@ async function storyCard(
   ctx.fillStyle = color('--color-accent', '#2f7d4f');
   ctx.fillRect(0, 0, W, 16);
   ctx.fillStyle = color('--color-ink', '#1d2a22');
+  // Lines are fitted to the card's width with the font they are drawn in; a long garden or plant
+  // name is shortened, never the year or the label around it.
+  const fit = (make: (part: string) => string, part: string) =>
+    fitLine((line) => ctx.measureText(line).width, W - 144, make, part);
   ctx.font = '600 64px Fraunces Variable, Georgia, serif';
-  ctx.fillText(m.story.heading(s.year, name).slice(0, 32), 72, 150);
+  const title = fit((g) => m.story.heading(s.year, g), name);
+  ctx.fillText(title, 72, 150);
   ctx.font = '400 36px Inter Variable, system-ui, sans-serif';
+  const harvest = s.harvests
+    .slice(0, 3)
+    .map((h) => `${h.name} ${h.massG ? kg(h.massG) : fmt.number(h.count)}`)
+    .join(', ');
   const lines = [
     s.firstPlantings.length ? m.story.card.plantings(s.firstPlantings.length) : null,
-    s.harvests.length
-      ? m.story.card.harvest(
-          s.harvests
-            .slice(0, 3)
-            .map((h) => (h.massG ? `${h.name} ${kg(h.massG)}` : `${h.name} ${h.count}`))
-            .join(', '),
-        )
-      : null,
+    s.harvests.length ? fit(m.story.card.harvest, harvest) : null,
     s.visits ? m.story.card.visits(s.visits) : null,
-    s.rainLitres ? m.story.card.rain(String(s.rainLitres)) : null,
+    s.rainLitres ? m.story.card.rain(fmt.number(s.rainLitres)) : null,
   ].filter((x): x is string => Boolean(x));
-  lines.forEach((l, i) => ctx.fillText(l.slice(0, 48), 72, 260 + i * 64));
+  lines.forEach((l, i) => {
+    const line = fit((x) => x, l);
+    ctx.fillText(line, 72, 260 + i * 64);
+  });
   if (withPhotos && s.photos.length) {
     const size = 300;
     for (const [i, id] of s.photos.slice(0, 6).entries()) {

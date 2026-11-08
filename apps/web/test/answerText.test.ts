@@ -48,6 +48,22 @@ describe('Copilot answer text', () => {
     expect(blocks[2]).toEqual({ kind: 'p', spans: [{ text: '<b>not html</b> 2 * 3', bold: false }] });
   });
 
+  it('a numbered list broken by a paragraph goes on from its own number', () => {
+    const blocks = blocksOf(
+      '1. Water the basil\nIt dries out fast in this heat.\n2. Feed the tomatoes\n3. Prune the mint',
+    );
+    expect(blocks).toMatchObject([
+      { kind: 'list', ordered: true, start: 1, items: [[{ text: 'Water the basil' }]] },
+      { kind: 'p' },
+      {
+        kind: 'list',
+        ordered: true,
+        start: 2,
+        items: [[{ text: 'Feed the tomatoes' }], [{ text: 'Prune the mint' }]],
+      },
+    ]);
+  });
+
   it('copes with text that is still streaming in', () => {
     expect(spansOf('Water **soon')).toEqual([
       { text: 'Water ', bold: false },

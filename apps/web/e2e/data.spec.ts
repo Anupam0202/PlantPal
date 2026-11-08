@@ -107,3 +107,37 @@ test('with no earlier data, the migration page says so and nothing else', async 
   await page.getByRole('link', { name: 'Your data' }).last().click();
   await expect(page).toHaveURL(/\/settings\/data$/);
 });
+
+test('an earlier-data backup file is named on the migration page and asked for again after a reload', async ({
+  page,
+}) => {
+  const file = (name: string, keys: Record<string, string>) => ({
+    name,
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({ format: 'plantpal-v3-backup', exportedAt: '2026-01-05T10:00:00.000Z', keys }),
+    ),
+  });
+
+  await page.goto('/settings/data');
+  await page.getByTestId('import-input').setInputFiles(file('old-plantpal.json', legacyFixture));
+  await expect(
+    page.getByText('We found data from the previous version of PlantPal in old-plantpal.json.', {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(page.getByRole('row', { name: /^Plants/ }).getByRole('cell')).toHaveText(['6', '4', '2']);
+  // The file is the backup, so none is downloaded first.
+  await expect(page.getByRole('button', { name: 'Bring it over' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Back up and bring it over' })).toHaveCount(0);
+
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Choose the file again' })).toBeVisible();
+
+  await page.goto('/settings/data');
+  await page.getByTestId('import-input').setInputFiles(file('empty.json', {}));
+  await expect(
+    page.getByRole('heading', { name: 'No earlier PlantPal data found in empty.json.' }),
+  ).toBeVisible();
+  await expect(page.getByText('in this browser', { exact: false })).toHaveCount(0);
+});

@@ -6,10 +6,14 @@ export interface Span {
   bold: boolean;
 }
 
-export type Block = { kind: 'p'; spans: Span[] } | { kind: 'list'; ordered: boolean; items: Span[][] };
+/** A paragraph, or a list; a numbered list keeps the number its first item had. */
+export type Block =
+  | { kind: 'p'; spans: Span[] }
+  | { kind: 'list'; ordered: false; items: Span[][] }
+  | { kind: 'list'; ordered: true; start: number; items: Span[][] };
 
 const BULLET = /^\s*[-*•]\s+/;
-const NUMBERED = /^\s*\d{1,3}[.)]\s+/;
+const NUMBERED = /^\s*(\d{1,3})[.)]\s+/;
 const HEADING = /^\s{0,3}#{1,6}\s+/;
 
 /**
@@ -39,12 +43,15 @@ export function blocksOf(text: string): Block[] {
   for (const raw of text.split('\n')) {
     const line = raw.trimEnd();
     if (!line.trim()) continue;
-    const ordered = NUMBERED.test(line);
+    const number = NUMBERED.exec(line);
+    const ordered = number !== null;
     if (ordered || BULLET.test(line)) {
       const item = spansOf(line.replace(ordered ? NUMBERED : BULLET, ''));
       const last = blocks.at(-1);
       if (last?.kind === 'list' && last.ordered === ordered) last.items.push(item);
-      else blocks.push({ kind: 'list', ordered, items: [item] });
+      // A list that picks up after a paragraph ("2. …") goes on from its own number, not from 1.
+      else if (number) blocks.push({ kind: 'list', ordered: true, start: Number(number[1]), items: [item] });
+      else blocks.push({ kind: 'list', ordered: false, items: [item] });
     } else if (HEADING.test(line)) {
       blocks.push({
         kind: 'p',
@@ -80,15 +87,19 @@ export function AnswerText({ text }: { text: string }) {
               <Spans spans={b.spans} />
             </p>
           );
-        const List = b.ordered ? 'ol' : 'ul';
-        return (
-          <List key={i} className={`${b.ordered ? 'list-decimal' : 'list-disc'} flex flex-col gap-1 pl-5`}>
-            {b.items.map((item, k) => (
-              <li key={k}>
-                <Spans spans={item} />
-              </li>
-            ))}
-          </List>
+        const items = b.items.map((item, k) => (
+          <li key={k}>
+            <Spans spans={item} />
+          </li>
+        ));
+        return b.ordered ? (
+          <ol key={i} start={b.start} className="flex list-decimal flex-col gap-1 pl-5">
+            {items}
+          </ol>
+        ) : (
+          <ul key={i} className="flex list-disc flex-col gap-1 pl-5">
+            {items}
+          </ul>
         );
       })}
     </div>

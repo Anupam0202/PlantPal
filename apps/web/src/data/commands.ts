@@ -65,6 +65,7 @@ import { CLIENT_SCHEMA, db, getMeta, setMeta } from './db';
 import { RecordNotFoundError, VersionConflictError } from './errors';
 import { withQuotaRecovery } from './storage';
 import { processImage, type ProcessedImage } from './media';
+import { HEALTH_CHECK_TITLE_PREFIX } from './titles';
 
 const META_WORKSPACE = 'activeWorkspaceId';
 const META_GARDEN = 'activeGardenId';
@@ -1451,7 +1452,7 @@ export async function openHealthCase(input: OpenCaseInput, now = Date.now()): Pr
           specimenId: input.specimenId,
           zoneId: null,
           kind: 'custom',
-          title: `Health check: ${input.title}`.slice(0, 200),
+          title: `${HEALTH_CHECK_TITLE_PREFIX}${input.title}`.slice(0, 200),
           rule: { freq: 'daily', interval: 1, startOn: day, until: day },
         },
         today,
