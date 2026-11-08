@@ -22,6 +22,11 @@ test('earlier PlantPal data is previewed, backed up without the API key, migrate
   await page.getByRole('button', { name: 'Remove the old key' }).click();
   await expect(page.getByText('An old Gemini API key is saved unprotected')).toBeHidden();
   expect(await page.evaluate(() => localStorage.getItem('plantpal-user-gemini-api-key'))).toBeNull();
+  // On a desktop screen the confirmation toast settles over the next button. A click while it is still
+  // sliding in can press the button but release on the toast, so let it close first.
+  const removed = page.getByText('Old key removed from this browser');
+  await expect(removed).toBeVisible();
+  await expect(removed).toBeHidden({ timeout: 10_000 });
 
   const [download] = await Promise.all([
     page.waitForEvent('download'),
