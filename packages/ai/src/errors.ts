@@ -18,18 +18,26 @@ export class AiError extends Error {
     return this.opts.retryAfterMs ?? null;
   }
 
-  /** Worth one more attempt (network trouble, server errors, short rate limits). */
+  /**
+   * Worth one more attempt (network trouble, server errors, short rate limits). A timeout is not:
+   * asking the same slow model again only doubles the wait.
+   */
   get retryable(): boolean {
-    if (this.code === 'NETWORK' || this.code === 'TIMEOUT') return true;
+    if (this.code === 'NETWORK') return true;
     if (this.code === 'RATE_LIMITED') return (this.retryAfterMs ?? 0) <= 20_000;
     return false;
   }
 
   /** The user can fix it in Settings › AI (key, project, billing); pending actions resume afterwards. */
   get fixableInSettings(): boolean {
-    return ['KEY_MISSING', 'KEY_INVALID', 'PERMISSION_DENIED', 'BILLING_REQUIRED', 'DAILY_QUOTA'].includes(
-      this.code,
-    );
+    return [
+      'KEY_MISSING',
+      'KEY_INVALID',
+      'PERMISSION_DENIED',
+      'BILLING_REQUIRED',
+      'SEARCH_UNAVAILABLE',
+      'DAILY_QUOTA',
+    ].includes(this.code);
   }
 }
 
@@ -50,6 +58,9 @@ function retryDelayMs(details: GoogleErrorDetail[]): number | null {
   const m = /^(\d+(?:\.\d+)?)s$/.exec(d);
   return m ? Math.round(Number(m[1]) * 1000) : null;
 }
+
+/** Marks a 429 that names no quota and gives no retry time (see classifyGeminiError). */
+export const NO_QUOTA_DETAIL = 'NO_QUOTA_DETAIL';
 
 /** Maps a Gemini API error response to the taxonomy. */
 export function classifyGeminiError(
@@ -86,7 +97,14 @@ export function classifyGeminiError(
       return new AiError('BILLING_REQUIRED', msg, { status });
     if (quotaIds.some((q) => q.includes('perday')) || text.includes('per day'))
       return new AiError('DAILY_QUOTA', msg, { status, retryAfterMs });
-    return new AiError('RATE_LIMITED', msg, { status, retryAfterMs: retryAfterMs ?? 30_000 });
+    // A quota refusal that names no quota and gives no time to wait: how Google turns down a feature
+    // the key's plan does not include, such as web search on the free tier.
+    const bare = quotaIds.length === 0 && retryAfterMs === null;
+    return new AiError('RATE_LIMITED', msg, {
+      status,
+      retryAfterMs: retryAfterMs ?? 30_000,
+      ...(bare ? { detail: NO_QUOTA_DETAIL } : {}),
+    });
   }
   if (status === 400 && text.includes('billing')) return new AiError('BILLING_REQUIRED', msg, { status });
   if (status === 404 || e.status === 'NOT_FOUND') return new AiError('MODEL_UNAVAILABLE', msg, { status });
