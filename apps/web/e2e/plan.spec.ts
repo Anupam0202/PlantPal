@@ -189,6 +189,20 @@ test('Sun Hours Finder and the Plan page work after onboarding, accessibly', asy
   await expect(page.getByRole('img', { name: /Sun paths over the year/ })).toBeVisible();
   await page.getByRole('radio', { name: 'N', exact: true }).check();
   await expect(page.getByTestId('sun-summary')).toContainText('h of direct sun');
+  // "Open all round" wraps in the narrow compass; its lines stay centred and inside the button.
+  const open = await page.locator('input[type=radio][value=open] + span').evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const text = range.getBoundingClientRect();
+    return {
+      inside:
+        text.top >= box.top && text.bottom <= box.bottom && text.left >= box.left && text.right <= box.right,
+      offCentre: Math.abs(text.left - box.left - (box.right - text.right)),
+    };
+  });
+  expect(open.inside).toBe(true);
+  expect(open.offCentre).toBeLessThanOrEqual(2);
   await page.getByRole('tab', { name: 'What I saw' }).click();
   await page.getByRole('tab', { name: 'Facing' }).click();
   // Moving along the tab strip with the keyboard shows where focus is.
