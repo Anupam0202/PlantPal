@@ -191,6 +191,18 @@ test('Sun Hours Finder and the Plan page work after onboarding, accessibly', asy
   await expect(page.getByTestId('sun-summary')).toContainText('h of direct sun');
   await page.getByRole('tab', { name: 'What I saw' }).click();
   await page.getByRole('tab', { name: 'Facing' }).click();
+  // Moving along the tab strip with the keyboard shows where focus is.
+  await page.keyboard.press('ArrowRight');
+  const focused = await page.evaluate(() => {
+    const el = document.activeElement as HTMLElement;
+    const s = getComputedStyle(el);
+    return {
+      role: el.getAttribute('role'),
+      ring: s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) > 0,
+    };
+  });
+  expect(focused).toEqual({ role: 'tab', ring: true });
+  await page.getByRole('tab', { name: 'Facing' }).click();
   await expectNoA11yViolations(page, 'sun finder');
   await page.getByRole('button', { name: 'Save to this space' }).click();
   await expect(page.getByText('Sun profile saved')).toBeVisible();

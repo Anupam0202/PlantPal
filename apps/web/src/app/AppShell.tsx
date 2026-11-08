@@ -4,6 +4,7 @@ import { Plus, Search, Settings } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import { useT } from '../i18n';
+import { useWideScreen } from '../lib/useWideScreen';
 import { useCapture } from '../state/capture';
 import { destinations } from './nav';
 import { ThemeController } from './ThemeController';
@@ -78,8 +79,12 @@ function Logo({ compact = false }: { compact?: boolean }) {
   );
 }
 
+/** Clears the phone Log care button (5rem up, 3.5rem tall) and the safe area below it. */
+const ABOVE_CAPTURE = 'calc(9rem + env(safe-area-inset-bottom))';
+
 export function AppShell({ children }: { children: ReactNode }) {
   const t = useT();
+  const wide = useWideScreen();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Onboarding and the plant-sitter page (no account, no garden) show without app navigation.
@@ -253,9 +258,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Suspense>
       )}
       <Toaster
-        position="bottom-center"
-        offset={88}
-        mobileOffset={{ bottom: 88 }}
+        // Toasts sit just above the Log care button, so they never cover it: in the corner on wide
+        // screens, clear of the main column, and above the bottom bar on phones.
+        position={wide ? 'bottom-right' : 'bottom-center'}
+        offset={wide ? { bottom: 96, right: 32 } : { bottom: ABOVE_CAPTURE }}
+        mobileOffset={{ bottom: ABOVE_CAPTURE }}
         toastOptions={{
           className: '!rounded-lg !border !border-line !bg-raised !text-ink !shadow-3 !font-sans',
           classNames: {
