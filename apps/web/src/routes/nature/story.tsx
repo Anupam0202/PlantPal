@@ -5,11 +5,13 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ChevronLeft, ChevronRight, Download, Printer } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Page } from '../../app/Page';
 import { db } from '../../data/db';
 import { useActiveGarden, useMediaUrl } from '../../data/queries';
 import { GardenLoading, NoGarden } from '../../features/garden/NoGarden';
 import { gardenBloomWheel } from '../../features/nature/bloomData';
+import { groupName, useNatureT, type NatureMessages } from '../../features/nature/messages';
 import { useFormat } from '../../i18n';
 import { downloadBlob } from '../../lib/download';
 
@@ -22,7 +24,6 @@ export const Route = createFileRoute('/nature/story')({
 });
 
 const alive = <T extends { deletedAt: number | null }>(r: T) => r.deletedAt === null;
-const MONTHS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
 function StoryPage() {
   const { garden, gardens } = useActiveGarden();
@@ -43,6 +44,7 @@ function StoryPage() {
 
 function StoryFor({ garden }: { garden: Garden }) {
   const fmt = useFormat();
+  const m = useNatureT();
   const navigate = useNavigate({ from: '/nature/story' });
   const thisYear = Number(todayIn(garden.timezone).slice(0, 4));
   const { year = thisYear } = Route.useSearch();
@@ -86,14 +88,16 @@ function StoryFor({ garden }: { garden: Garden }) {
   }, [garden, year]);
 
   const go = (y: number) => void navigate({ search: { year: y }, replace: true });
-  const kg = (g: number) => `${fmt.number(g / 1000, 1)} kg`;
+  const kg = (g: number) => m.harvest.totalsMass(fmt.number(g / 1000, 1));
 
   const saveImage = async () => {
     if (!data) return;
     setSaving(true);
     try {
-      const blob = await storyCard(garden.name, data.story, withPhotos);
+      const blob = await storyCard(m, kg, garden.name, data.story, withPhotos);
       downloadBlob(blob, `plantpal-story-${year}.png`);
+    } catch {
+      toast.error(m.story.imageFailed);
     } finally {
       setSaving(false);
     }
@@ -102,7 +106,7 @@ function StoryFor({ garden }: { garden: Garden }) {
   return (
     <Page>
       <div className="print-story">
-        <PageHeader title={`${year} in ${garden.name}`} eyebrow="Garden Story" />
+        <PageHeader title={m.story.heading(year, garden.name)} eyebrow={m.story.title} />
         <div className="no-print mt-3 flex items-center gap-2">
           <Button
             size="sm"
@@ -122,16 +126,12 @@ function StoryFor({ garden }: { garden: Garden }) {
         {!data ? (
           <Spinner />
         ) : data.story.empty ? (
-          <EmptyState
-            className="mt-6"
-            title={`Nothing recorded in ${year} yet`}
-            description="Plantings, harvests, nature visits, rainwater and photos you record will tell this year’s story."
-          />
+          <EmptyState className="mt-6" title={m.story.empty(year)} description={m.story.emptyBody} />
         ) : (
           <div className="mt-6 flex flex-col gap-4">
             {data.story.firstPlantings.length > 0 && (
               <Card>
-                <h2 className="text-h3 text-ink">First plantings</h2>
+                <h2 className="text-h3 text-ink">{m.story.plantings}</h2>
                 <ul className="mt-2 flex flex-col gap-1 text-body-s">
                   {data.story.firstPlantings.map((p) => (
                     <li key={`${p.name}${p.on}`} className="flex justify-between gap-2">
@@ -143,22 +143,20 @@ function StoryFor({ garden }: { garden: Garden }) {
               </Card>
             )}
             <Card>
-              <h2 className="text-h3 text-ink">Bloom for pollinators</h2>
-              <p className="mt-1 text-body-s text-muted">
-                Months with known forage now, from the catalogue and your own flowering checks.
-              </p>
-              <ol className="mt-3 grid grid-cols-12 gap-1" aria-label="Months with known forage">
-                {MONTHS.map((m, i) => {
+              <h2 className="text-h3 text-ink">{m.story.bloom}</h2>
+              <p className="mt-1 text-body-s text-muted">{m.story.bloomBody}</p>
+              <ol className="mt-3 grid grid-cols-12 gap-1" aria-label={m.story.bloomLabel}>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const month = new Date(Date.UTC(2026, i, 15));
                   const on = data.forage.includes(i + 1);
                   return (
                     <li
                       key={i}
                       className={`rounded-sm py-1 text-center text-caption ${on ? 'bg-accent text-on-accent' : 'bg-sunken text-muted'}`}
                     >
-                      <span aria-hidden="true">{m}</span>
+                      <span aria-hidden="true">{fmt.date(month, { month: 'narrow' })}</span>
                       <span className="sr-only">
-                        {fmt.date(new Date(Date.UTC(2026, i, 15)), { month: 'long' })}:{' '}
-                        {on ? 'forage' : 'no known forage'}
+                        {fmt.date(month, { month: 'long' })}: {on ? m.story.forage : m.story.noForage}
                       </span>
                     </li>
                   );
@@ -167,7 +165,7 @@ function StoryFor({ garden }: { garden: Garden }) {
             </Card>
             {data.story.harvests.length > 0 && (
               <Card>
-                <h2 className="text-h3 text-ink">Top harvests</h2>
+                <h2 className="text-h3 text-ink">{m.story.harvests}</h2>
                 <ul className="mt-2 flex flex-col gap-1 text-body-s">
                   {data.story.harvests.map((h) => (
                     <li key={h.name} className="flex justify-between gap-2">
@@ -187,14 +185,12 @@ function StoryFor({ garden }: { garden: Garden }) {
             )}
             {data.story.visits > 0 && (
               <Card>
-                <h2 className="text-h3 text-ink">Visitors observed</h2>
-                <p className="mt-1 text-body-s text-muted">
-                  {data.story.visits} nature visits. Counts reflect when and where you looked.
-                </p>
+                <h2 className="text-h3 text-ink">{m.story.visitors}</h2>
+                <p className="mt-1 text-body-s text-muted">{m.story.visitorsBody(data.story.visits)}</p>
                 <ul className="mt-2 flex flex-col gap-1 text-body-s">
                   {data.story.visitors.map((v) => (
                     <li key={v.group} className="flex justify-between gap-2">
-                      <span className="text-ink">{v.group}</span>
+                      <span className="text-ink">{groupName(m, v.group)}</span>
                       <span className="text-muted">{v.individuals}</span>
                     </li>
                   ))}
@@ -206,15 +202,15 @@ function StoryFor({ garden }: { garden: Garden }) {
             )}
             {data.story.rainLitres > 0 && (
               <Card>
-                <h2 className="text-h3 text-ink">Rainwater used</h2>
+                <h2 className="text-h3 text-ink">{m.story.rain}</h2>
                 <p className="mt-1 text-body text-ink">
-                  {fmt.number(data.story.rainLitres)} litres, as logged
+                  {m.story.rainBody(fmt.number(data.story.rainLitres))}
                 </p>
               </Card>
             )}
             {data.story.photos.length > 0 && (
               <Card className={withPhotos ? '' : 'no-print'}>
-                <h2 className="text-h3 text-ink">Photo timeline</h2>
+                <h2 className="text-h3 text-ink">{m.story.photos}</h2>
                 <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {data.story.photos.map((id) => (
                     <li key={id}>
@@ -230,14 +226,12 @@ function StoryFor({ garden }: { garden: Garden }) {
 
       {data && !data.story.empty && (
         <Card className="no-print mt-6 flex flex-col gap-3">
-          <h2 className="text-body font-semibold text-ink">Share this story</h2>
-          <Notice>
-            Only the garden’s name appears, never its address or coordinates. Check what you share first.
-          </Notice>
+          <h2 className="text-body font-semibold text-ink">{m.story.share}</h2>
+          <Notice>{m.story.shareNote}</Notice>
           {data.story.photos.length > 0 && (
             <CheckboxField
-              label="Include photos"
-              description="Photos can show faces or details of where you live. Look through them before sharing."
+              label={m.story.withPhotos}
+              description={m.story.withPhotosHint}
               checked={withPhotos}
               onCheckedChange={setWithPhotos}
             />
@@ -248,14 +242,14 @@ function StoryFor({ garden }: { garden: Garden }) {
               icon={<Download className="size-4" aria-hidden="true" />}
               onClick={() => void saveImage()}
             >
-              Save as image
+              {m.story.saveImage}
             </Button>
             <Button
               variant="secondary"
               icon={<Printer className="size-4" aria-hidden="true" />}
               onClick={() => window.print()}
             >
-              Print or save as PDF
+              {m.story.print}
             </Button>
           </div>
         </Card>
@@ -275,7 +269,13 @@ function Thumb({ id }: { id: string }) {
 }
 
 /** A 1080 × 1350 image card drawn on a canvas: numbers from the records, photos only when chosen. */
-async function storyCard(name: string, s: Story, withPhotos: boolean): Promise<Blob> {
+async function storyCard(
+  m: NatureMessages,
+  kg: (g: number) => string,
+  name: string,
+  s: Story,
+  withPhotos: boolean,
+): Promise<Blob> {
   const W = 1080;
   const H = 1350;
   const canvas = document.createElement('canvas');
@@ -290,18 +290,20 @@ async function storyCard(name: string, s: Story, withPhotos: boolean): Promise<B
   ctx.fillRect(0, 0, W, 16);
   ctx.fillStyle = color('--color-ink', '#1d2a22');
   ctx.font = '600 64px Fraunces Variable, Georgia, serif';
-  ctx.fillText(`${s.year} in ${name}`.slice(0, 32), 72, 150);
+  ctx.fillText(m.story.heading(s.year, name).slice(0, 32), 72, 150);
   ctx.font = '400 36px Inter Variable, system-ui, sans-serif';
   const lines = [
-    s.firstPlantings.length ? `${s.firstPlantings.length} new plantings` : null,
+    s.firstPlantings.length ? m.story.card.plantings(s.firstPlantings.length) : null,
     s.harvests.length
-      ? `Harvest: ${s.harvests
-          .slice(0, 3)
-          .map((h) => (h.massG ? `${h.name} ${(h.massG / 1000).toFixed(1)} kg` : `${h.name} ${h.count}`))
-          .join(', ')}`
+      ? m.story.card.harvest(
+          s.harvests
+            .slice(0, 3)
+            .map((h) => (h.massG ? `${h.name} ${kg(h.massG)}` : `${h.name} ${h.count}`))
+            .join(', '),
+        )
       : null,
-    s.visits ? `${s.visits} nature visits` : null,
-    s.rainLitres ? `${s.rainLitres} litres of rainwater used` : null,
+    s.visits ? m.story.card.visits(s.visits) : null,
+    s.rainLitres ? m.story.card.rain(String(s.rainLitres)) : null,
   ].filter((x): x is string => Boolean(x));
   lines.forEach((l, i) => ctx.fillText(l.slice(0, 48), 72, 260 + i * 64));
   if (withPhotos && s.photos.length) {
@@ -329,7 +331,7 @@ async function storyCard(name: string, s: Story, withPhotos: boolean): Promise<B
   }
   ctx.fillStyle = color('--color-muted', '#5b6b60');
   ctx.font = '400 28px Inter Variable, system-ui, sans-serif';
-  ctx.fillText('From my PlantPal records', 72, H - 72);
+  ctx.fillText(m.story.card.footer, 72, H - 72);
   return new Promise((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not draw the image'))), 'image/png'),
   );

@@ -16,7 +16,7 @@ import { voidEntry } from '../../data/commands';
 import { useActiveGarden, useNatureVisits } from '../../data/queries';
 import { reportError } from '../../features/garden/errors';
 import { GardenLoading, NoGarden } from '../../features/garden/NoGarden';
-import { POMS_URL, useNatureT, type NatureMessages } from '../../features/nature/messages';
+import { groupName, type NatureMessages, POMS_URL, useNatureT } from '../../features/nature/messages';
 import { useFormat, useT } from '../../i18n';
 import { downloadBlob } from '../../lib/download';
 
@@ -25,15 +25,6 @@ export const Route = createFileRoute('/nature/log')({
 });
 
 const targetKey = (v: NatureVisit) => v.targetTaxonId ?? v.targetName.trim().toLowerCase();
-
-function groupName(m: NatureMessages, g: string): string {
-  return (
-    (m.groups as Record<string, string>)[g] ??
-    (m.sightingGroups as Record<string, string>)[g] ??
-    (m.phases as Record<string, string>)[g] ??
-    (g === 'bird' ? m.birds.species : g)
-  );
-}
 
 function Trend({ visits, m }: { visits: NatureVisit[]; m: NatureMessages }) {
   const fmt = useFormat();

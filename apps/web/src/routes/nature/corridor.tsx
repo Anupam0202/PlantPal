@@ -9,7 +9,7 @@ import { GardenLoading, NoGarden } from '../../features/garden/NoGarden';
 import { coarseCell } from '../../features/community/hooks';
 import { LazyMap } from '../../features/maps/LazyMap';
 import { useMapT } from '../../features/maps/messages';
-import { useFormat } from '../../i18n';
+import { useFormat, useT } from '../../i18n';
 import { accountsUnavailable, call } from '../../sync/api';
 
 const OSM_COPYRIGHT = 'https://www.openstreetmap.org/copyright';
@@ -55,6 +55,7 @@ function Corridor() {
 
 function CorridorBody({ gardenKey, lat, lon }: { gardenKey: string; lat: number; lon: number }) {
   const m = useMapT();
+  const t = useT();
   const fmt = useFormat();
   // The coarse tile is computed here; only its id goes to the server (which asks OpenStreetMap).
   const tile = useQuery({
@@ -134,7 +135,7 @@ function CorridorBody({ gardenKey, lat, lon }: { gardenKey: string; lat: number;
         <p className="text-body-s text-muted">{m.corridor.share(share)}</p>
         <div className="flex flex-wrap items-center gap-2">
           <FreshnessPill at={g.provenance.retrievedAt} stale={g.provenance.stale} />
-          {g.provenance.demo && <Badge tone="warning">Demo data</Badge>}
+          {g.provenance.demo && <Badge tone="warning">{t.common.demoData}</Badge>}
         </div>
       </Card>
       <LazyMap

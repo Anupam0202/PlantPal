@@ -14,6 +14,18 @@ import { taxaObserved } from './nature';
 
 export type LedgerMethod = 'MEASURED' | 'ESTIMATED' | 'DERIVED';
 
+/** Where a line's figure comes from. The app words it in the person's language. */
+export type LedgerSource = 'own' | 'catalogue-native' | 'bloom-bridge' | 'catalogue-spread' | 'not-estimated';
+
+/** What limits a line's figure, with the numbers the wording needs. */
+export type LedgerNote =
+  | { kind: 'unlinked'; plants: number }
+  | { kind: 'missing-months' }
+  | { kind: 'effort' }
+  | { kind: 'substrate'; containers: number }
+  | { kind: 'spread'; lo: number; hi: number; plants: number }
+  | { kind: 'no-method' };
+
 export type LedgerMetric =
   | 'food-mass'
   | 'food-count'
@@ -42,8 +54,8 @@ export interface LedgerRow {
   /** For counts: the label ("bunch", "piece"). */
   label?: string;
   method: LedgerMethod;
-  source: string;
-  uncertainty: string | null;
+  source: LedgerSource;
+  uncertainty: LedgerNote | null;
 }
 
 export interface LedgerInput {
@@ -71,7 +83,7 @@ const r1 = (v: number) => Math.round(v * 10) / 10;
 export function impactLedger(i: LedgerInput): LedgerRow[] {
   const rows: LedgerRow[] = [];
   const p = i.period;
-  const own = 'Your records';
+  const own: LedgerSource = 'own';
 
   const harvests = i.harvests.filter((h) => h.deletedAt === null && inPeriod(h.harvestedOn, p));
   const food = totalsOf(harvests);
@@ -178,21 +190,22 @@ export function impactLedger(i: LedgerInput): LedgerRow[] {
   );
   const linked = active.map((s) => ({ s, t: i.taxonOf(s) }));
   const natives = linked.filter(({ t }) => t && i.nativeStatus(t) === 'NATIVE').length;
+  const unlinked = linked.filter(({ t }) => !t).length;
   rows.push({
     metric: 'native-specimens',
     value: natives,
     unit: 'count',
     method: 'DERIVED',
-    source: 'PlantPal catalogue native statuses (drafts until reviewed against WCVP)',
-    uncertainty: `${linked.filter(({ t }) => !t).length} plants not linked to the catalogue are not counted`,
+    source: 'catalogue-native',
+    uncertainty: unlinked ? { kind: 'unlinked', plants: unlinked } : null,
   });
   rows.push({
     metric: 'bloom-months',
     value: i.forageMonths,
     unit: 'months',
     method: 'DERIVED',
-    source: 'Bloom Bridge (catalogue reference timing and your flowering checks)',
-    uncertainty: i.forageMonths === null ? null : 'Months with missing data are not counted',
+    source: 'bloom-bridge',
+    uncertainty: i.forageMonths === null ? null : { kind: 'missing-months' },
   });
 
   const visits = i.visits.filter((v) => v.deletedAt === null && inPeriod(v.occurredOn, p));
@@ -218,7 +231,7 @@ export function impactLedger(i: LedgerInput): LedgerRow[] {
     unit: 'count',
     method: 'DERIVED',
     source: own,
-    uncertainty: 'Depends on time spent looking; groups and species are counted as names',
+    uncertainty: { kind: 'effort' },
   });
 
   const known = i.containers.filter((c) => c.deletedAt === null && c.substrateType !== null);
@@ -234,9 +247,7 @@ export function impactLedger(i: LedgerInput): LedgerRow[] {
     unit: '%',
     method: 'DERIVED',
     source: own,
-    uncertainty: known.length
-      ? `${known.length} containers with a recorded substrate; counts peat-free and coir mixes (plain "potting mix" may contain peat)`
-      : null,
+    uncertainty: known.length ? { kind: 'substrate', containers: known.length } : null,
   });
 
   let area = 0;
@@ -257,8 +268,8 @@ export function impactLedger(i: LedgerInput): LedgerRow[] {
     value: counted ? r1(area) : null,
     unit: 'm²',
     method: 'ESTIMATED',
-    source: 'Mature spread ranges in the PlantPal catalogue (drafts)',
-    uncertainty: counted ? `${r1(lo)}–${r1(hi)} m² from the spread ranges; ${counted} plants` : null,
+    source: 'catalogue-spread',
+    uncertainty: counted ? { kind: 'spread', lo: r1(lo), hi: r1(hi), plants: counted } : null,
   });
   rows.push({
     metric: 'trees',
@@ -273,8 +284,8 @@ export function impactLedger(i: LedgerInput): LedgerRow[] {
     value: null,
     unit: 'kg CO₂',
     method: 'ESTIMATED',
-    source: 'Not estimated',
-    uncertainty: 'Needs a cited allometric method for woody plants; herbs and annuals are not counted',
+    source: 'not-estimated',
+    uncertainty: { kind: 'no-method' },
   });
   return rows;
 }

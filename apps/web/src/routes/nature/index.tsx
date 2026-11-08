@@ -185,8 +185,8 @@ function NatureIndex() {
           {
             to: '/nature/story',
             icon: BookHeart,
-            title: 'Garden Story',
-            body: 'Your year told from your records, to keep or share.',
+            title: n.story.title,
+            body: n.story.hubBody,
             tone: 'text-ink',
           },
           {

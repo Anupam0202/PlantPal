@@ -75,7 +75,7 @@ function SettingsPage() {
                 value: l,
                 label: localeNames[l],
               }))}
-              description="Hindi and Spanish are draft translations awaiting review by native speakers."
+              description={t.settings.languageDraft}
             />
             <div className="flex flex-col gap-2">
               <span className="text-body-s font-medium text-ink">{t.settings.units}</span>

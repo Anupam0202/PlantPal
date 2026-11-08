@@ -356,4 +356,11 @@ describe('Impact Ledger v1', () => {
     expect(row('carbon')?.value).toBeNull();
     expect(ledger.filter((r) => /co₂|co2/i.test(r.unit)).every((r) => r.value === null)).toBe(true);
   });
+
+  it('says where each figure comes from and what limits it as codes, for the app to word', () => {
+    expect(row('carbon')).toMatchObject({ source: 'not-estimated', uncertainty: { kind: 'no-method' } });
+    expect(row('nature-minutes')).toMatchObject({ source: 'own', uncertainty: null });
+    expect(row('taxa-observed')).toMatchObject({ uncertainty: { kind: 'effort' } });
+    expect(ledger.every((r) => typeof r.source === 'string' && !r.source.includes(' '))).toBe(true);
+  });
 });

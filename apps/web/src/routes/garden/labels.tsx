@@ -11,6 +11,7 @@ import { reportError } from '../../features/garden/errors';
 import { GardenHeader } from '../../features/garden/GardenHeader';
 import { GardenLoading, NoGarden } from '../../features/garden/NoGarden';
 import { taxonById } from '../../features/plan/engine';
+import { useLabelT, type LabelMessages } from '../../features/labels/messages';
 import { useFormat, useT } from '../../i18n';
 import { downloadBlob } from '../../lib/download';
 
@@ -21,21 +22,22 @@ export const Route = createFileRoute('/garden/labels')({
 type Size = 'stake' | 'front';
 
 /** Three care basics from cited catalogue traits; nothing when the plant is not in the catalogue. */
-function basicsOf(s: Specimen): string[] {
+function basicsOf(s: Specimen, m: LabelMessages): string[] {
   const t = s.catalogTaxonId ? taxonById(s.catalogTaxonId) : null;
   if (!t) return [];
   const sun = trait(t, 'sunHours');
   const water = trait(t, 'waterNeed');
   const height = trait(t, 'heightCm');
   return [
-    sun ? `Sun: ${sun.min === sun.max ? sun.min : `${sun.min}–${sun.max}`} h direct` : null,
-    water ? `Water: ${water} need` : null,
-    height ? `Grows to ${height.max} cm` : null,
+    sun ? m.sun(sun.min === sun.max ? String(sun.min) : `${sun.min}–${sun.max}`) : null,
+    water ? m.water(m.levels[water]) : null,
+    height ? m.height(height.max) : null,
   ].filter((x): x is string => Boolean(x));
 }
 
 function LabelsPage() {
   const t = useT();
+  const m = useLabelT();
   const fmt = useFormat();
   const { garden, gardens } = useActiveGarden();
   const specimens = useSpecimens(garden?.id);
@@ -69,15 +71,15 @@ function LabelsPage() {
           name: p.displayName,
           scientificName: p.scientificName,
           plantedOn: p.plantedOn
-            ? `Planted ${fmt.date(new Date(`${p.plantedOn}T12:00:00Z`), { dateStyle: 'medium' })}`
+            ? m.planted(fmt.date(new Date(`${p.plantedOn}T12:00:00Z`), { dateStyle: 'medium' }))
             : null,
-          basics: basicsOf(p),
+          basics: basicsOf(p, m),
           url: `${location.origin}/garden/plants/${p.id}`,
         })),
         size,
       );
       downloadBlob(blob, `plantpal-labels-${size}.pdf`);
-      toast.success(`${chosen.length} labels ready`);
+      toast.success(m.ready(chosen.length));
     } catch (e) {
       reportError(t, e);
     } finally {
@@ -89,33 +91,28 @@ function LabelsPage() {
     <Page>
       <GardenHeader garden={garden} gardens={gardens} />
       <div className="mt-6 flex flex-col gap-6">
-        <Section title="Plant labels" headingLevel={2}>
-          <p className="text-body-s text-muted">
-            Printable labels with the plant’s name, planted date, three care basics and a QR code to its page
-            in PlantPal. Made on this device; print on A4 and cut along the dashed lines.
-          </p>
+        <Section title={m.title} headingLevel={2}>
+          <p className="text-body-s text-muted">{m.intro}</p>
           {plants.length === 0 ? (
             <EmptyState
               illustration={<Tag className="size-14" strokeWidth={1.25} aria-hidden="true" />}
-              title="No plants to label yet"
-              description="Add a plant first; its label appears here."
+              title={m.empty}
+              description={m.emptyBody}
             />
           ) : (
             <>
               <SegmentedControl<Size>
-                label="Label size"
+                label={m.size}
                 value={size}
                 onValueChange={setSize}
                 options={[
-                  { value: 'front', label: 'Container front' },
-                  { value: 'stake', label: 'Pot stake' },
+                  { value: 'front', label: m.sizes.front },
+                  { value: 'stake', label: m.sizes.stake },
                 ]}
               />
-              <p className="text-caption text-muted">
-                {size === 'front' ? 'Each label is 70 × 45 mm.' : 'Each label is a 90 × 25 mm strip.'}
-              </p>
+              <p className="text-caption text-muted">{m.sizeNotes[size]}</p>
               <fieldset className="flex flex-col">
-                <legend className="mb-1 text-body-s font-medium text-ink">Plants</legend>
+                <legend className="mb-1 text-body-s font-medium text-ink">{m.plants}</legend>
                 {plants.map((p) => (
                   <CheckboxField
                     key={p.id}
@@ -132,10 +129,7 @@ function LabelsPage() {
                   />
                 ))}
               </fieldset>
-              <Notice>
-                The QR code opens the plant’s page on a device that has this garden. Care basics come from
-                cited catalogue facts; plants not in the catalogue get none.
-              </Notice>
+              <Notice>{m.qrNote}</Notice>
               <div>
                 <Button
                   loading={busy}
@@ -143,7 +137,7 @@ function LabelsPage() {
                   icon={<Printer className="size-4" aria-hidden="true" />}
                   onClick={() => void make()}
                 >
-                  Make labels (PDF)
+                  {m.make}
                 </Button>
               </div>
             </>

@@ -7,6 +7,7 @@ import { catalogs as copilot } from '../src/features/copilot/messages';
 import { catalogs as designer } from '../src/features/designer/messages';
 import { catalogs as seeds } from '../src/features/garden/seedMessages';
 import { catalogs as health } from '../src/features/health/messages';
+import { catalogs as labels } from '../src/features/labels/messages';
 import { catalogs as learn } from '../src/features/learn/messages';
 import { catalogs as maps } from '../src/features/maps/messages';
 import { catalogs as nature } from '../src/features/nature/messages';
@@ -49,6 +50,7 @@ const catalogs: Record<string, Record<'en' | 'hi' | 'es', object>> = {
   designer,
   seeds,
   health,
+  labels,
   learn,
   maps,
   nature,
@@ -64,6 +66,7 @@ const sameWord: Record<string, { hi?: string[]; es?: string[] }> = {
   },
   aiSettings: { es: ['roles.embed'] },
   care: { es: ['climate.koppenGroups.A', 'climate.koppenGroups.D', 'climate.koppenGroups.E'] },
+  nature: { es: ['impact.units.min'] },
   plan: { es: ['seed.minutesOptions.15', 'seed.minutesOptions.30', 'plan.title'] },
 };
 

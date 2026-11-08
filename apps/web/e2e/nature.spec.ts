@@ -67,6 +67,12 @@ test('W7: timed pollinator counts with a zero, review, log, trend gate and Darwi
   expect(text).not.toMatch(/\d+\.\d{3,},\d/);
 
   await expectNoA11yViolations(page);
+
+  // The year's story names the groups seen, as the log does.
+  await page.goto('/nature/story');
+  const visitors = page.getByRole('heading', { name: 'Visitors observed' }).locator('..');
+  await expect(visitors).toContainText('Bumblebees');
+  await expect(visitors).not.toContainText('bumblebees');
 });
 
 test('Lens, Bloom Bridge and four-state phenology checks with catalogue plants', async ({ page }) => {
