@@ -9,6 +9,7 @@ import {
   keyInputProblem,
   listModels,
   MAX_KEY_LENGTH,
+  NO_QUOTA_DETAIL,
   pickModels,
   probeModel,
   redactKeys,
@@ -84,8 +85,33 @@ describe('error taxonomy', () => {
     expect(e.retryable).toBe(false);
   });
 
+  it('marks a quota refusal that names no quota and gives no wait, and only that one', () => {
+    const bare = classifyGeminiError(429, {
+      error: {
+        code: 429,
+        status: 'RESOURCE_EXHAUSTED',
+        message: 'You exceeded your current quota, please check your plan and billing details.',
+      },
+    });
+    expect(bare.code).toBe('RATE_LIMITED');
+    expect(bare.opts.detail).toBe(NO_QUOTA_DETAIL);
+    const timed = classifyGeminiError(
+      429,
+      quota('GenerateRequestsPerMinutePerProjectPerModel-FreeTier', [
+        { '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay: '12s' },
+      ]),
+    );
+    expect(timed.opts.detail).toBeUndefined();
+  });
+
+  it('retries network trouble but not a timeout, which would only double the wait', () => {
+    expect(new AiError('NETWORK', '').retryable).toBe(true);
+    expect(new AiError('TIMEOUT', '').retryable).toBe(false);
+  });
+
   it('marks key and quota problems as fixable in Settings', () => {
     expect(new AiError('KEY_MISSING', '').fixableInSettings).toBe(true);
+    expect(new AiError('SEARCH_UNAVAILABLE', '').fixableInSettings).toBe(true);
     expect(new AiError('SAFETY_BLOCKED', '').fixableInSettings).toBe(false);
   });
 

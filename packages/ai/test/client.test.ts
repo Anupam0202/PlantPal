@@ -268,7 +268,7 @@ describe('GeminiClient.generateStructured', () => {
     }
   });
 
-  it('network failure retries once; a timeout is TIMEOUT; an abort is CANCELLED', async () => {
+  it('network failure retries once; a timeout is TIMEOUT and not retried; an abort is CANCELLED', async () => {
     const net = client([new TypeError('Failed to fetch'), new TypeError('Failed to fetch')]);
     await expect(net.c.generateStructured(planExplainV1, planInput)).rejects.toMatchObject({
       code: 'NETWORK',
@@ -282,19 +282,23 @@ describe('GeminiClient.generateStructured', () => {
       { code: 'CANCELLED' },
     );
 
+    let slowCalls = 0;
     const slow = new GeminiClient({
       getKey: async () => FAKE_KEY,
       roles: () => ({ balanced: 'gemini-3.5-flash' }),
       deadlineMs: 20,
       sleep: async () => undefined,
-      fetch: ((_u: string, init: RequestInit) =>
-        new Promise((_r, reject) =>
+      fetch: ((_u: string, init: RequestInit) => {
+        slowCalls++;
+        return new Promise((_r, reject) =>
           init.signal?.addEventListener('abort', () => reject(new DOMException('x', 'AbortError'))),
-        )) as typeof fetch,
+        );
+      }) as typeof fetch,
     });
     await expect(slow.generateStructured(planExplainV1, planInput)).rejects.toMatchObject({
       code: 'TIMEOUT',
     });
+    expect(slowCalls).toBe(1);
   });
 
   it('every request asks for an explicit, small amount of thinking (F1 was cut off without one)', async () => {

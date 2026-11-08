@@ -69,6 +69,10 @@ const en = {
       title: 'This model needs billing',
       body: 'The model is not on the free tier for your key. Pick another model in Settings › AI.',
     },
+    SEARCH_UNAVAILABLE: {
+      title: 'Web search isn’t available with this key',
+      body: 'Google turned down the web search this needs. Free-tier keys often don’t include it; a key from a Google Cloud project with billing does.',
+    },
     MODEL_UNAVAILABLE: {
       title: 'No suitable model',
       body: 'PlantPal could not find a model for this. Re-check models in Settings › AI.',
@@ -199,6 +203,10 @@ const hi: AiMessages = {
       title: 'इस मॉडल के लिए बिलिंग चाहिए',
       body: 'यह मॉडल आपकी कुंजी के मुफ़्त स्तर में नहीं है। सेटिंग्स › AI में दूसरा मॉडल चुनें।',
     },
+    SEARCH_UNAVAILABLE: {
+      title: 'इस कुंजी से वेब खोज उपलब्ध नहीं',
+      body: 'Google ने इसके लिए ज़रूरी वेब खोज मना कर दी। मुफ़्त स्तर की कुंजियों में यह अक्सर शामिल नहीं होती; बिलिंग वाले Google Cloud प्रोजेक्ट की कुंजी में होती है।',
+    },
     MODEL_UNAVAILABLE: {
       title: 'कोई उपयुक्त मॉडल नहीं',
       body: 'सेटिंग्स › AI में मॉडल फिर से जाँचें।',
@@ -320,6 +328,10 @@ const es: AiMessages = {
     BILLING_REQUIRED: {
       title: 'Este modelo requiere facturación',
       body: 'El modelo no está en el nivel gratuito de tu clave. Elige otro en Ajustes › IA.',
+    },
+    SEARCH_UNAVAILABLE: {
+      title: 'La búsqueda web no está disponible con esta clave',
+      body: 'Google rechazó la búsqueda web que esto necesita. Las claves del nivel gratuito a menudo no la incluyen; una clave de un proyecto de Google Cloud con facturación sí.',
     },
     MODEL_UNAVAILABLE: {
       title: 'Ningún modelo adecuado',

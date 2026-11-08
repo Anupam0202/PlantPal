@@ -1,7 +1,7 @@
 import type { AiDataCategory, ModelRole } from '@plantpal/schemas';
 import { z } from 'zod';
 import { GEMINI_BASE } from './discovery';
-import { AiError, classifyGeminiError, containsApiKey, redactKeys } from './errors';
+import { AiError, classifyGeminiError, containsApiKey, NO_QUOTA_DETAIL, redactKeys } from './errors';
 import { sharedPolicy, type PolicyContext } from './policy';
 import {
   consentedSections,
@@ -200,7 +200,7 @@ export function responseSchema(schema: z.ZodType): Record<string, unknown> {
 
 /**
  * Gemini over REST with `fetch` (ADR-0009). The key travels only in the `x-goog-api-key` header.
- * Policy: ≤ 2 attempts and only for retryable failures; 30 s deadline; one schema repair; re-discover
+ * Policy: ≤ 2 attempts and only for retryable failures; 60 s deadline; one schema repair; re-discover
  * once on MODEL_UNAVAILABLE; never hop across a list of models; no background calls.
  */
 export interface GroundedResult {
@@ -208,6 +208,20 @@ export interface GroundedResult {
   /** Web sources from the grounding metadata, deduplicated. */
   sources: Array<{ url: string; title: string }>;
   meta: AiRunMeta;
+}
+
+/**
+ * A web search Google turned down for this key (a free-tier key without search, or a search limit of
+ * 0) reads as that, not as a model that needs billing or a wait that will not help.
+ */
+function searchRefusal(e: unknown): AiError | null {
+  if (!(e instanceof AiError)) return null;
+  const refused =
+    e.code === 'BILLING_REQUIRED' || (e.code === 'RATE_LIMITED' && e.opts.detail === NO_QUOTA_DETAIL);
+  if (!refused) return null;
+  return new AiError('SEARCH_UNAVAILABLE', e.message, {
+    ...(e.opts.status !== undefined ? { status: e.opts.status } : {}),
+  });
 }
 
 /** A prose request with Google Search grounding (F3 step 1). */
@@ -481,25 +495,31 @@ export class GeminiClient implements AiClient {
     const key = await this.keyOrThrow(opts.signal);
     const meta = this.newMeta(m.id, m.version, m.role);
     const system = `${sharedPolicy(m.policy(input))}\n\n${m.task}`;
-    const { text, json } = await this.send(
-      m.role,
-      meta,
-      opts.signal,
-      { thinking: m.thinking ?? 'low', maxOutputTokens: m.maxOutputTokens },
-      (model, tuning) =>
-        this.post(
-          model,
-          key,
-          {
-            systemInstruction: { parts: [{ text: system }] },
-            contents: [{ role: 'user', parts: [{ text: m.prompt(input) }] }],
-            tools: [{ google_search: {} }],
-            generationConfig: { temperature: m.temperature, ...generationTuning(tuning) },
-          },
+    const { text, json } = await (async () => {
+      try {
+        return await this.send(
+          m.role,
           meta,
           opts.signal,
-        ),
-    );
+          { thinking: m.thinking ?? 'low', maxOutputTokens: m.maxOutputTokens },
+          (model, tuning) =>
+            this.post(
+              model,
+              key,
+              {
+                systemInstruction: { parts: [{ text: system }] },
+                contents: [{ role: 'user', parts: [{ text: m.prompt(input) }] }],
+                tools: [{ google_search: {} }],
+                generationConfig: { temperature: m.temperature, ...generationTuning(tuning) },
+              },
+              meta,
+              opts.signal,
+            ),
+        );
+      } catch (e) {
+        throw searchRefusal(e) ?? e;
+      }
+    })();
     const chunks = ((
       json.candidates?.[0] as { groundingMetadata?: { groundingChunks?: GroundingChunk[] } } | undefined
     )?.groundingMetadata?.groundingChunks ?? []) as GroundingChunk[];
@@ -673,7 +693,7 @@ export class GeminiClient implements AiClient {
     meta: AiRunMeta,
     signal: AbortSignal | undefined,
   ): Promise<{ text: string; json: GeminiResponse }> {
-    const deadline = AbortSignal.timeout(this.o.deadlineMs ?? 30_000);
+    const deadline = AbortSignal.timeout(this.o.deadlineMs ?? 60_000);
     const combined = signal ? AbortSignal.any([signal, deadline]) : deadline;
     let res: Response;
     try {

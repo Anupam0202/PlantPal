@@ -185,9 +185,51 @@ describe('F3 species draft', () => {
     expect(r.calls[0]!.url).not.toContain(FAKE_KEY);
   });
 
-  it('grounded research keeps the error taxonomy (billing for grounding)', async () => {
+  it('a web search Google turns down reads as unavailable search, not billing or a wait', async () => {
+    for (const body of [
+      { error: { code: 429, message: 'Quota exceeded for metric: grounding, limit: 0' } },
+      {
+        error: {
+          code: 429,
+          status: 'RESOURCE_EXHAUSTED',
+          message: 'You exceeded your current quota, please check your plan and billing details.',
+        },
+      },
+    ]) {
+      const r = replayFetch([jsonResponse(body, 429)]);
+      const c = new GeminiClient({
+        getKey: async () => FAKE_KEY,
+        roles: () => ({ balanced: 'gemini-3.5-flash' }),
+        fetch: r.fetch,
+      });
+      await expect(
+        c.generateGrounded(speciesResearchV1, { policy, scientificName: 'x', family: null }),
+      ).rejects.toMatchObject({ code: 'SEARCH_UNAVAILABLE' });
+      expect(r.calls).toHaveLength(1);
+    }
+  });
+
+  it('a real rate limit on a web search stays a rate limit, with its wait', async () => {
     const r = replayFetch([
-      jsonResponse({ error: { code: 429, message: 'Quota exceeded for metric: grounding, limit: 0' } }, 429),
+      jsonResponse(
+        {
+          error: {
+            code: 429,
+            status: 'RESOURCE_EXHAUSTED',
+            message: 'Quota exceeded',
+            details: [
+              {
+                '@type': 'type.googleapis.com/google.rpc.QuotaFailure',
+                violations: [
+                  { quotaId: 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', quotaValue: '10' },
+                ],
+              },
+              { '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay: '40s' },
+            ],
+          },
+        },
+        429,
+      ),
     ]);
     const c = new GeminiClient({
       getKey: async () => FAKE_KEY,
@@ -196,6 +238,6 @@ describe('F3 species draft', () => {
     });
     await expect(
       c.generateGrounded(speciesResearchV1, { policy, scientificName: 'x', family: null }),
-    ).rejects.toMatchObject({ code: 'BILLING_REQUIRED' });
+    ).rejects.toMatchObject({ code: 'RATE_LIMITED', retryAfterMs: 40_000 });
   });
 });
