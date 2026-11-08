@@ -157,9 +157,11 @@ export function CompassPicker({
             />
             <span
               className={cn(
-                'flex h-11 cursor-pointer items-center justify-center rounded-md border border-line-strong bg-surface text-body-s font-semibold text-ink',
+                // A label that wraps ("Open all round") stays centred, and a longer one grows the row
+                // instead of spilling out of its button.
+                'flex h-full min-h-11 cursor-pointer items-center justify-center rounded-md border border-line-strong bg-surface text-center text-body-s font-semibold text-ink',
                 'peer-checked:border-accent peer-checked:bg-accent-soft peer-checked:text-accent-ink peer-focus-visible:outline-2 peer-focus-visible:outline-focus',
-                v === 'open' && 'text-caption font-medium',
+                v === 'open' && 'text-caption leading-tight font-medium',
               )}
             >
               {v === 'open' ? openLabel : v}
