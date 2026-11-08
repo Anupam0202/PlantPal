@@ -36,6 +36,7 @@ import { useActiveGarden, useSpecimens } from '../../data/queries';
 import { useT } from '../../i18n';
 import { useCapture, type CaptureMode } from '../../state/capture';
 import { useDrafts } from '../../state/drafts';
+import { useWideScreen } from '../../lib/useWideScreen';
 import { reportError } from './errors';
 import { useUnits } from './format';
 import { PhotoField } from './Media';
@@ -47,20 +48,6 @@ const OTHER_CARE = CARE_KINDS.filter((k) => !['water', 'feed', 'prune'].includes
 type Created =
   | { table: 'careEvents' | 'observations' | 'harvests'; id: string }
   | { table: 'careSchedules'; id: string; version: number };
-
-function useWideScreen() {
-  const [wide, setWide] = useState(
-    () => typeof matchMedia !== 'undefined' && matchMedia('(min-width: 768px)').matches,
-  );
-  useEffect(() => {
-    if (typeof matchMedia === 'undefined') return;
-    const mq = matchMedia('(min-width: 768px)');
-    const on = () => setWide(mq.matches);
-    mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
-  }, []);
-  return wide;
-}
 
 export function QuickCapture() {
   const t = useT();

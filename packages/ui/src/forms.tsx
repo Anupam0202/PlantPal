@@ -446,7 +446,7 @@ export function Tabs<V extends string>({
           <BaseTabs.Tab
             key={t.value}
             value={t.value}
-            className="relative h-11 shrink-0 px-3 text-body-s font-medium whitespace-nowrap text-muted outline-none hover:text-ink data-active:text-ink focus-visible:outline-2 focus-visible:outline-focus"
+            className="relative h-11 shrink-0 px-3 text-body-s font-medium whitespace-nowrap text-muted outline-hidden hover:text-ink data-active:text-ink focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
           >
             {t.label}
           </BaseTabs.Tab>
@@ -457,7 +457,7 @@ export function Tabs<V extends string>({
         <BaseTabs.Panel
           key={t.value}
           value={t.value}
-          className="pt-4 outline-none focus-visible:outline-2 focus-visible:outline-focus"
+          className="pt-4 outline-hidden focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
         >
           {t.content}
         </BaseTabs.Panel>
